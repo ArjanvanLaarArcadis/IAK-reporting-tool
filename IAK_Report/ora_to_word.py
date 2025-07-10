@@ -247,10 +247,10 @@ def main():
     config = load_config("data\config.json")
 
     # Constants and configurations
-    OPLEVERLIJST_PATH = 'data\ora-to-word\Objecten SSK-raming.xlsx'
-    ORA_TEMPLATE_PATH = 'data\ora-to-word\FORMAT_SSK-raming_schades.docx'
-    PHOTO_BASE_LOC = os.path.join('data',config['batch'])
-    SAVE_LOCATION = 'data'
+    OPLEVERLIJST_PATH = os.path.join(config["path_data_ssk"], "Objecten SSK-raming.xlsx")
+    ORA_TEMPLATE_PATH = os.path.join(config["path_data_ssk"], "FORMAT_SSK-raming_schades.docx")
+    PHOTO_BASE_LOC = os.path.join(config["path_batch"], config["batch"])
+    SAVE_LOCATION = config["path_batch"]
 
     # Load delivery list
     opleverlijst = load_opleverlijst(OPLEVERLIJST_PATH)
