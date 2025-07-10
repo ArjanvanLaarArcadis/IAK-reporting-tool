@@ -18,6 +18,7 @@ from docx.enum.style import WD_STYLE_TYPE
 from utils import (
     load_config)
 import logging
+import time
 
 
 def load_opleverlijst(filepath: str) -> pd.DataFrame:
@@ -244,13 +245,15 @@ def main():
     """
     Main function to execute the script.
     """
-    config = load_config("data\config.json")
+    config = load_config(r"data\config.json")
 
     # Constants and configurations
     OPLEVERLIJST_PATH = os.path.join(config["path_data_ssk"], "Objecten SSK-raming.xlsx")
     ORA_TEMPLATE_PATH = os.path.join(config["path_data_ssk"], "FORMAT_SSK-raming_schades.docx")
     PHOTO_BASE_LOC = os.path.join(config["path_batch"], config["batch"])
-    SAVE_LOCATION = config["path_batch"]
+    timestamp = time.strftime("%Y%m%dT%H%M%S")
+    output_dir = f"Report-{timestamp}"
+    SAVE_LOCATION = os.path.join(config["path_batch_local"], output_dir)
 
     # Load delivery list
     opleverlijst = load_opleverlijst(OPLEVERLIJST_PATH)
