@@ -25,8 +25,8 @@ Run this script directly to generate "Bijlage 3" documents for all objects in th
 
 import logging
 
-from src.export_excel_to_pdf import run_macro_on_workbook
-from src.utils import (
+from export_excel_to_pdf import run_macro_on_workbook
+from utils import (
     load_config,
     get_object_paths_codes,
     setup_logger,
