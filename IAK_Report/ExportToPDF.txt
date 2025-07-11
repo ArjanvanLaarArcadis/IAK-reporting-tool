@@ -1,0 +1,82 @@
+Sub ExportActiveSheetToPDF(Optional LocalPath As String)
+    Dim wb As Workbook
+    Dim ws As Worksheet
+    Dim FilePath As String, FileName As String, FullPath As String
+    Dim PrintArea As String, SubFolderPath As String
+    Dim werkPakket As String, ObjectName As String
+    Dim sheetFound As Boolean
+    
+    ' Initialize variables
+    sheetFound = False
+    Set wb = ActiveWorkbook
+
+    ' Loop through sheets to find the one starting with "ORA"
+    For Each ws In wb.Worksheets
+        If Left(ws.Name, 3) = "ORA" Then
+            sheetFound = True
+            Exit For
+        End If
+    Next ws
+
+    ' Exit if no sheet with name starting with "ORA" is found
+    If Not sheetFound Then
+        MsgBox "No sheet with name starting with 'ORA' was found.", vbExclamation
+        Exit Sub
+    End If
+
+    ' Define paths and file-related variables
+    ObjectName = ws.Range("C4").Value
+    werkPakket = ws.Range("K6").Value
+    
+    ' Use the provided LocalPath if available; otherwise, fallback to wb.Path
+    If LocalPath <> "" Then
+        FilePath = LocalPath
+    Else
+        FilePath = wb.Path
+    End If
+
+    SubFolderPath = FilePath & "\" & werkPakket & "\" & ObjectName
+    FileName = "Bijlage 3 " & ws.Name & ".pdf"
+    FullPath = FilePath & "\Sammie\" & FileName
+
+    ' Set cell value for K5
+    ws.Range("K5").Value = "1.0 - Definitief"
+
+    ' Hide unnecessary columns
+    ws.Columns("AJ:BI").Hidden = True
+    ws.Columns("CB:CG").Hidden = True
+
+    ' Configure page setup
+    With ws.PageSetup
+        .TopMargin = Application.CentimetersToPoints(1.91)
+        .BottomMargin = Application.CentimetersToPoints(1.91)
+        .LeftMargin = Application.CentimetersToPoints(0.64)
+        .RightMargin = Application.CentimetersToPoints(0.64)
+        .HeaderMargin = Application.CentimetersToPoints(0.76)
+        .FooterMargin = Application.CentimetersToPoints(0.76)
+        .FitToPagesWide = 1
+        .FitToPagesTall = False
+    End With
+
+    ' Set rows to repeat at the top correctly
+    ws.PageSetup.PrintTitleRows = "$8:$11"
+
+    ' Set the print area
+    ws.PageSetup.PrintArea = "A:CZ"
+
+    ' Check if workbook is saved
+    If FilePath = "" Then
+        MsgBox "The workbook has not been saved yet. Save it before exporting to PDF.", vbExclamation
+        Exit Sub
+    End If
+
+    ' Export to PDF
+    On Error GoTo ErrorHandler
+    ws.ExportAsFixedFormat Type:=xlTypePDF, FileName:=FullPath, Quality:=xlQualityStandard, _
+        IncludeDocProperties:=True, IgnorePrintAreas:=False, OpenAfterPublish:=False
+    Exit Sub
+
+ErrorHandler:
+    MsgBox "An error occurred while exporting the worksheet to PDF.", vbCritical
+End Sub
+
