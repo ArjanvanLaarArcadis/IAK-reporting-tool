@@ -50,7 +50,6 @@ from export_excel_to_pdf import run_macro_on_workbook
 JpegImagePlugin._getmp = lambda: None
 
 # Constants for font styles
-
 FONT_ARIAL_7 = Font(name='Arial', size=7, bold=False)
 FONT_ARIAL_8 = Font(name='Arial', size=8, bold=False)
 FONT_ARIAL_10 = Font(name='Arial', size=10, bold=False)
@@ -62,27 +61,26 @@ FONT_ARIAL_18 = Font(name='Arial', size=18, bold=False)
 # Constants for the alignment style
 ALIGNMENT_LEFT = Alignment(horizontal="left", vertical="top", wrap_text=True)
 
-
 def load_workbook(path: str) -> openpyxl.Workbook:
     """
-    Load an Excel workbook.
+    Load an Excel workbook, returning the workbook object.
 
     Parameters:
-        path (str): Path to the Excel workbook.
+        path (str): Full path to the Excel workbook.
 
     Returns:
         openpyxl.Workbook: Loaded workbook object.
     """
     try:
-        logging.info("Loading Excel workbook from %s...", path)
+        logging.info(f"Loading Excel workbook from [{path}]...")
         wb = openpyxl.load_workbook(path)
         logging.info("Workbook loaded successfully.")
         return wb
     except FileNotFoundError:
-        logging.error("Error: The file at %s was not found.", path)
+        logging.error(f"Error: The file at [{path}] was not found.")
         raise
     except Exception as e:
-        logging.error("An unexpected error occurred while loading the workbook: %s", e)
+        logging.error(f"An unexpected error occurred while loading the workbook: {e}")
         raise
 
 
@@ -92,33 +90,25 @@ def find_inspectierapport(directory: str) -> str:
     and ending with '.xlsx' directly in the given directory.
 
     Parameters:
-        directory (str): Directory to search in.
+        directory (str): Directory to search in. Subdirs are not searched.
 
     Returns:
-        str: Path to the most recent matching file if found.
+        str: fullfilename of the most recent matching file if found.
         None: If no matching file is found.
     """
-    logging.info(
-        "Searching for files in %s starting with 'inspectieRapport' (case insensitive) and ending with '.xlsx'...",
-        directory,
-    )
+    logging.info(f"Searching for .xlsx-files in [{directory}], starting with 'inspectieRapport' (case insensitive)")
 
     matching_files = []
 
     # List all files in the given directory
-    try:
-        for file in os.listdir(directory):
-            if file.lower().startswith("inspectierapport") and file.lower().endswith(
-                ".xlsx"
-            ):
-                file_path = os.path.join(directory, file)
-                file_mtime = os.path.getmtime(file_path)
-                matching_files.append((file_path, file_mtime))
-                logging.debug("Found matching file: %s", file_path)
-
-    except FileNotFoundError:
-        logging.error("The directory '%s' does not exist.", directory)
-        return None
+    for file in os.listdir(directory):
+        if file.lower().startswith("inspectierapport") and \
+            file.lower().endswith(".xlsx"):
+            # Get the full path and modification time of the inspectie
+            file_path = os.path.join(directory, file)
+            file_mtime = os.path.getmtime(file_path)
+            matching_files.append((file_path, file_mtime))
+            logging.debug(f"Found matching file: [{file_path}]")
 
     if not matching_files:
         logging.info("No matching file found.")
@@ -126,7 +116,7 @@ def find_inspectierapport(directory: str) -> str:
 
     # Sort by modification time (most recent first) and return the most recent
     most_recent_file = max(matching_files, key=lambda x: x[1])[0]
-    logging.info("Most recent file found: %s", most_recent_file)
+    logging.info(f"Most recent file found: {most_recent_file}")
     return most_recent_file
 
 
