@@ -46,11 +46,11 @@ def file_starts_with_bijlage3(directory: str) -> str | None:
 
     # Check if any file in the (sub)directory starts with "Bijlage 3"
     for root, _, files in os.walk(directory):
-        logging.debug("Checking directory: %s", root)
+        logging.debug(f"Checking directory: [{root}]")
         for file in files:
             if file.startswith("Bijlage 3"):
                 full_path = os.path.join(root, file)
-                logging.info("Found file: [%s]", file)
+                logging.info(f"Found file: [{file}]")
                 return full_path  # Return the full path of the first found file
 
     logging.info("No file starting with 'Bijlage 3' found in object directory.")
@@ -70,7 +70,7 @@ if __name__ == "__main__":
         try:
             bijlage_3 = file_starts_with_bijlage3(object_path)
             if not bijlage_3:
-                logger.info("Generating ORA for object %s...", object_code)
+                logger.info(f"Generating ORA for object [{object_code}]...")
                 logger.info("Checking if ORA exists...")
                 ora_path = utils.return_most_recent_ora(object_path)
                 logger.info("ORA found.")
@@ -79,15 +79,13 @@ if __name__ == "__main__":
                     os.makedirs(save_loc)
                 logger.info("Generating the PDF...")
                 run_macro_on_workbook(ora_path, "ORA", "ExportActiveSheetToPDF")
-                logger.info("Successfully generated ORA for object %s.", object_code)
+                logger.info(f"Successfully generated ORA for object [{object_code}].")
             else:
-                logger.info(
-                    "ORA for object %s already exists with name %s.",
-                    object_code,
-                    bijlage_3,
-                )
+                logger.info(f"ORA for object [{object_code}] already exists with name [{bijlage_3}].")
         except Exception as e:
-            logger.error("An error occurred: %s", e)
-            logger.error("Failed to generate ORA for object %s.", object_code)
+            logger.error(f"An error occurred: {e}")
+            logger.error("Failed to generate ORA for object [{object_code}].")
+            continue  # Continue to the next object in case of an error
+            
 
 # TODO: Gaat nog niet
