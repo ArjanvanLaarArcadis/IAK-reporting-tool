@@ -23,16 +23,13 @@ Usage:
 Run this script directly to generate "Bijlage 3" documents for all objects in the batch.
 """
 
+# Built-in modules
+import os
 import logging
 
+# Local imports
+import utils
 from export_excel_to_pdf import run_macro_on_workbook
-from utils import (
-    load_config,
-    get_object_paths_codes,
-    setup_logger,
-    return_most_recent_ora,
-)
-import os
 
 
 def file_starts_with_bijlage3(directory: str) -> str | None:
@@ -43,43 +40,39 @@ def file_starts_with_bijlage3(directory: str) -> str | None:
         directory (str): The path to the directory to search in.
 
     Returns:
-        str | None: The name of the first file that starts with "Bijlage 3",
+        str | None: The full filename of the first file that starts with "Bijlage 3",
         or None if no such file exists.
     """
-    # List all files in the provided directory
-    files = os.listdir(directory)
 
-    # Check if any file starts with "Bijlage 3"
-    for file in files:
-        if file.startswith("Bijlage 3"):
-            logging.info("Found file: %s", file)
-            return file
-
-    # Check the 'Sammie' subdirectory if it exists
-    sammie_path = os.path.join(directory, "Sammie")
-    if os.path.exists(sammie_path) and os.path.isdir(sammie_path):
-        files = os.listdir(sammie_path)
+    # Check if any file in the (sub)directory starts with "Bijlage 3"
+    for root, _, files in os.walk(directory):
+        logging.debug("Checking directory: %s", root)
         for file in files:
             if file.startswith("Bijlage 3"):
-                logging.info("Found file in Sammie: %s", file)
-                return file
+                full_path = os.path.join(root, file)
+                logging.info("Found file: [%s]", file)
+                return full_path  # Return the full path of the first found file
 
     logging.info("No file starting with 'Bijlage 3' found in object directory.")
     return None
 
 
 if __name__ == "__main__":
-    logger = setup_logger("generate_bijlage_3.log", logging.INFO)
+    # Set up logging and load configuration
+    logger = utils.setup_logger("generate_bijlage_3.log", logging.INFO)
     logger.info("Starting the script to generate Bijlage 3...")
-    config = load_config()
+    config = utils.load_config()
+
+    print("hopsa")
+
     path_batch = os.path.join(config["path_batch"], config["batch"])
-    for object_path, object_code in get_object_paths_codes(path_batch):
+    for object_path, object_code in utils.get_object_paths_codes(path_batch):
         try:
             bijlage_3 = file_starts_with_bijlage3(object_path)
             if not bijlage_3:
                 logger.info("Generating ORA for object %s...", object_code)
                 logger.info("Checking if ORA exists...")
-                ora_path = return_most_recent_ora(object_path)
+                ora_path = utils.return_most_recent_ora(object_path)
                 logger.info("ORA found.")
                 save_loc = os.path.join(object_path, config["save_dir"])
                 if not os.path.exists(save_loc):
