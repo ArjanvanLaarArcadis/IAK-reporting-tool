@@ -1,13 +1,22 @@
-import pandas as pd
+"""
+Utility module for IAK Report generation
+
+This module provides utility functions for handling file paths, converting documents,
+loading configurations, and logging for the IAK Report generation process.
+"""
+
+# Built-in imports
 import os
 import re
-from docx2pdf import convert
-import logging
-import docx
 import json
+import logging
+
+# External imports
+import docx
+from docx2pdf import convert
 
 
-# Path to the configuration file
+# Default path to the configuration file
 CONFIG_FILE = "data/config.json"
 
 
@@ -30,6 +39,7 @@ def load_config(config_path=CONFIG_FILE):
 
 def get_matching_codes(folder_path):
     # Define the regex pattern for the object code
+    # Two digits, a letter, a hyphen, three digits, a hyphen, and two digits
     pattern = r"^\d{2}[A-Z]-\d{3}-\d{2}$"
 
     # List all files in the folder
@@ -43,7 +53,7 @@ def get_matching_codes(folder_path):
 
 def get_object_paths_codes(batch_path=None):
     """
-    Get the paths of all directories in the given batch path.
+    Get the paths and codes of all objects in the given batch path.
 
     Parameters:
         batch_path (str): Path to the batch directory.
@@ -52,13 +62,17 @@ def get_object_paths_codes(batch_path=None):
         list: List of tuples containing the path and code of each directory.
     """
     if not batch_path:
-        config = load_config("data/config.json")
+        config = load_config(CONFIG_FILE)
         batch_path = os.path.join(config["path_batch"], config["batch"])
-    return [
-        (os.path.join(batch_path, code), code)
-        for code in get_matching_codes(batch_path)
-        if os.path.isdir(os.path.join(batch_path, code))
+    
+    # Get all matching object codes in the batch path
+    object_paths_codes = [
+        (os.path.join(batch_path, code), code)            # Tuple: (path, code)
+        for code in get_matching_codes(batch_path)        # Get all codes with an object code pattern
+        if os.path.isdir(os.path.join(batch_path, code))  # Only include directories
     ]
+
+    return object_paths_codes  # List of tuples (path, code)
 
 
 def convert_docx_to_pdf(input_path: str, output_path: str) -> None:
