@@ -30,23 +30,22 @@ TODO:
 - The sc
 """
 
+# Built-in modules
 import os
-from datetime import datetime
 import math
 import logging
-import openpyxl
+import datetime as dt
+
+# External imports
 import pandas as pd
-from PIL import Image, JpegImagePlugin
-import io
-from src.get_voortgang import get_voortgang_params
-from src.export_excel_to_pdf import run_macro_on_workbook
-from src.utils import (
-    load_config,
-    get_object_paths_codes,
-    update_config_with_voortgang,
-    setup_logger,
-)
+import openpyxl
 from openpyxl.styles import Alignment, Font
+from PIL import Image, JpegImagePlugin
+
+# Local imports
+import utils
+from get_voortgang import get_voortgang_params
+from export_excel_to_pdf import run_macro_on_workbook
 
 JpegImagePlugin._getmp = lambda: None
 
@@ -963,7 +962,7 @@ def update_config_variables(
     config_variables["object_omschrijving"] = sheet["H8"].value
     config_variables["object_naam"] = sheet["H9"].value
     config_variables["object_beheer"] = sheet["H10"].value
-    current_date = datetime.now().strftime("%d-%m-%Y")
+    current_date = dt.datetime.now().strftime("%d-%m-%Y")
     config_variables["datum"] = (
         current_date
         if pd.isna(config_variables["datum"])
@@ -1111,17 +1110,17 @@ def main() -> None:
     """
     Main function to orchestrate the processing of the PI report.
     """
-    logger = setup_logger("generate_pi_report.log", log_level="INFO")
-    config = load_config()
+    logger = utils.setup_logger("generate_pi_report.log", log_level="INFO")
+    config = utils.load_config()
     logger.info("Starting PI report processing for batch %s", config["batch"])
     failed_objects = []
 
-    for object_path, object_code in get_object_paths_codes():
+    for object_path, object_code in utils.get_object_paths_codes():
         try:
             logger.info("Processing object %s", object_code)
             logger.info("Updating the configuration variables with voortgang...")
             voortgang = get_voortgang_params(object_code)
-            variables = update_config_with_voortgang(config, voortgang)
+            variables = utils.update_config_with_voortgang(config, voortgang)
             pi_report_path = find_inspectierapport(object_path)
             if not pi_report_path:
                 logger.error("Could not find inspectierapport for %s", object_code)
