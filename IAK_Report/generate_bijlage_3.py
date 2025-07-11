@@ -63,8 +63,6 @@ if __name__ == "__main__":
     logger.info("Starting the script to generate Bijlage 3...")
     config = utils.load_config()
 
-    print("hopsa")
-
     path_batch = os.path.join(config["path_batch"], config["batch"])
     for object_path, object_code in utils.get_object_paths_codes(path_batch):
         try:
