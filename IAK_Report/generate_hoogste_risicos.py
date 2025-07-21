@@ -246,13 +246,8 @@ def main():
         config["path_data_hoogste-risico"], "FORMAT_hoogste-risico.docx"
     )
 
-    # Maak een unieke outputmap aan: Report-YYYYMMDD-HHMMSS
-    timestamp = time.strftime("%Y%m%dT%H%M%S")
-    output_dir = f"Report-{timestamp}"
-    batch_dir = config.get("path_batch_local", ".")
-    SAVE_LOCATION = os.path.join(batch_dir, output_dir)
-    os.makedirs(SAVE_LOCATION, exist_ok=True)
-    logger.info(f"Paths for output directory configured: {SAVE_LOCATION}")
+    SAVE_LOCATION = os.path.join(config["path_batch"], config["batch"])
+    logger.info("Paths for template and save location configured.")
 
     # List all directories in BATCH_PATH
     object_paths_codes = get_object_paths_codes()
