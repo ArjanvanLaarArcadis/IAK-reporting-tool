@@ -39,8 +39,9 @@ def load_config(config_path=CONFIG_FILE):
 
 def get_matching_codes(folder_path):
     # Define the regex pattern for the object code
-    # Two digits, a letter, a hyphen, three digits, a hyphen, and two digits
-    pattern = r"^\d{2}[A-Z]-\d{3}-\d{2}$"
+    # Starting with Two digits, a letter, a hyphen, three digits, a hyphen, and two digits. 
+    # Optional trailing characters.
+    pattern = r"^\d{2}[A-Z]-\d{3}-\d{2}"
 
     # List all files in the folder
     all_files = os.listdir(folder_path)
