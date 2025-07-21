@@ -65,15 +65,50 @@ def get_object_paths_codes(batch_path=None):
     if not batch_path:
         config = load_config(CONFIG_FILE)
         batch_path = os.path.join(config["path_batch"], config["batch"])
-    
-    # Get all matching object codes in the batch path
-    object_paths_codes = [
-        (os.path.join(batch_path, code), code)            # Tuple: (path, code)
-        for code in get_matching_codes(batch_path)        # Get all codes with an object code pattern
-        if os.path.isdir(os.path.join(batch_path, code))  # Only include directories
-    ]
+    else:
+        config = load_config(CONFIG_FILE)
 
-    return object_paths_codes  # List of tuples (path, code)
+    # Validate that the batch directory exists
+    if not os.path.isdir(batch_path):
+        logging.error("Batch directory not found: %s", batch_path)
+        raise FileNotFoundError(f"Batch directory not found: {batch_path}")
+
+    logging.info("Batch directory validated: %s", batch_path)
+
+    # Check if specific object codes are provided
+    if config["object_code"]:
+        logging.info("Specific object codes provided: %s", config["object_code"])
+        object_paths_codes = []
+
+        # Handle both single string and list of object codes
+        object_codes = (
+            config["object_code"]
+            if isinstance(config["object_code"], list)
+            else [config["object_code"]]
+        )
+
+        for object_code in object_codes:
+            object_path = os.path.join(batch_path, object_code)
+            if os.path.isdir(object_path):
+                object_paths_codes.append((object_path, object_code))
+                logging.info("Found object directory: %s", object_path)
+            else:
+                logging.error("Object directory not found: %s", object_path)
+                raise FileNotFoundError(f"Object directory not found: {object_path}")
+
+        return object_paths_codes
+    else:
+        # If no specific object codes, return all matching codes
+        logging.info("No specific object codes provided, returning all matching codes")
+        object_paths_codes = [
+            (os.path.join(batch_path, code), code)  # Tuple: (path, code)
+            for code in get_matching_codes(
+                batch_path
+            )  # Get all codes with an object code pattern
+            if os.path.isdir(os.path.join(batch_path, code))  # Only include directories
+        ]
+
+        return object_paths_codes  # List of tuples (path, code)
 
 
 def convert_docx_to_pdf(input_path: str, output_path: str) -> None:
