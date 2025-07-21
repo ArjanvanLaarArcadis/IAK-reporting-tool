@@ -389,8 +389,7 @@ def main():
         )
         voortgang = get_voortgang_params(object_code)
         variables = update_config_with_voortgang(config, voortgang)
-        # Overschrijf save_loc zodat alles in de nieuwe outputmap komt
-        variables["save_loc"] = output_path
+
         try:
             path_ora = return_most_recent_ora(object_path)
             print("Checking for images...")
