@@ -40,13 +40,14 @@ import datetime as dt
 import pandas as pd
 import openpyxl
 from openpyxl.styles import Alignment, Font
-from PIL import Image, JpegImagePlugin
+from PIL import JpegImagePlugin
 
 # Local imports
 import utils
 from get_voortgang import get_voortgang_params
 from export_excel_to_pdf import run_macro_on_workbook
 
+# Workaround for PIL bug with JpegImagePlugin
 JpegImagePlugin._getmp = lambda: None
 
 # Constants for font styles
@@ -60,28 +61,6 @@ FONT_ARIAL_18 = Font(name='Arial', size=18, bold=False)
 
 # Constants for the alignment style
 ALIGNMENT_LEFT = Alignment(horizontal="left", vertical="top", wrap_text=True)
-
-def load_workbook(path: str) -> openpyxl.Workbook:
-    """
-    Load an Excel workbook, returning the workbook object.
-
-    Parameters:
-        path (str): Full path to the Excel workbook.
-
-    Returns:
-        openpyxl.Workbook: Loaded workbook object.
-    """
-    try:
-        logging.info(f"Loading Excel workbook from [{path}]...")
-        wb = openpyxl.load_workbook(path)
-        logging.info("Workbook loaded successfully.")
-        return wb
-    except FileNotFoundError:
-        logging.error(f"Error: The file at [{path}] was not found.")
-        raise
-    except Exception as e:
-        logging.error(f"An unexpected error occurred while loading the workbook: {e}")
-        raise
 
 
 def find_inspectierapport(directory: str) -> str:
@@ -118,43 +97,6 @@ def find_inspectierapport(directory: str) -> str:
     most_recent_file = max(matching_files, key=lambda x: x[1])[0]
     logging.info(f"Most recent file found: {most_recent_file}")
     return most_recent_file
-
-
-def save_and_finalize_workbook(
-    wb: openpyxl.Workbook, variables: dict, target_dir: str
-) -> None:
-    """
-    Save and finalize the workbook.
-
-    Parameters:
-        wb (openpyxl.Workbook): Workbook to save.
-        variables (dict): Dictionary of variables.
-        target_dir (str): Directory to save the workbook.
-    """
-    object_code = variables.get("object_code", "UNKNOWN")
-    filename_excel = f"PI rapport {object_code}.xlsx"
-    filepath_excel = os.path.join(target_dir, filename_excel)
-
-    # Create target directory if it doesn't exist
-    if not os.path.exists(target_dir):
-        os.makedirs(target_dir)
-        logging.info("Created directory: %s", target_dir)
-
-    # Remove 'Document map' sheet if it exists
-    if "Document map" in wb.sheetnames:
-        del wb["Document map"]
-
-    # Set active sheet to 'Sheet2'
-    wb.active = wb["Sheet2"]
-
-    # Ensure all sheets are marked as selected
-    for sheet in wb:
-        sheet.views.sheetView[0].tabSelected = True
-
-    # Save the workbook
-    logging.info("Saving workbook to %s...", filepath_excel)
-    wb.save(filepath_excel)
-    logging.info("Workbook saved: %s", filepath_excel)
 
 
 def set_footer(
@@ -961,46 +903,6 @@ def update_config_variables(
     logging.info("Config variables updated successfully.")
     return config_variables
 
-
-def find_mpo_references(workbook):
-    """
-    Find references to images with `.mpo` extensions in the workbook.
-    MPO references lead to problems in saving the workbook.
-
-    Args:
-        workbook: The openpyxl workbook object.
-
-    Returns:
-        A list of tuples containing (sheet_name, image_reference).
-    """
-    mpo_references = []
-    for sheet in workbook.worksheets:
-        if hasattr(sheet, "_images"):  # Check if the sheet contains images
-            for img in sheet._images:
-                # Check if the image has a path attribute and contains '.mpo'
-                if hasattr(img, "path") and ".mpo" in img.path:
-                    mpo_references.append((sheet.title, img))
-    return mpo_references
-
-
-def delete_images(workbook, image_references):
-    """
-    Delete images from the workbook based on the provided references.
-    I was unable to find a way to convert them. I also cannot find the mpo files in the underlying zip file.
-
-    Args:
-        workbook: The openpyxl workbook object.
-        image_references: A list of tuples containing (sheet_name, image_reference).
-
-    Returns:
-        None
-    """
-    for sheet_name, img in image_references:
-        sheet = workbook[sheet_name]  # Get the sheet by name
-        if hasattr(sheet, "_images"):  # Ensure the sheet has images
-            if img in sheet._images:  # Check if the image is in the sheet's images
-                sheet._images.remove(img)  # Remove the image
-                logging.error("Deleted image: %s from sheet: %s", img.path, sheet_name)
 
 
 def process_pi_report_for_object(
