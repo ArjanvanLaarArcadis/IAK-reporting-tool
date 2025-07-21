@@ -7,16 +7,13 @@ import docx
 import json
 
 
-# Path to the configuration file
-CONFIG_FILE = "data/config.json"
-
-
-def load_config(config_path=CONFIG_FILE):
+def load_config(config_path="./config.json"):
     """
     Load configuration parameters from a JSON file.
 
     Parameters:
         config_path (str): Path to the configuration JSON file.
+        by default, it looks for 'config.json' in the current directory.
 
     Returns:
         dict: Dictionary containing configuration parameters.

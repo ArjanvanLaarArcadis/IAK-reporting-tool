@@ -44,6 +44,7 @@ from PIL import JpegImagePlugin
 
 # Local imports
 import utils
+import utilsxls
 from get_voortgang import get_voortgang_params
 from export_excel_to_pdf import run_macro_on_workbook
 
@@ -922,17 +923,17 @@ def process_pi_report_for_object(
     logging.info("Target Directory: %s", TARGET_DIR)
 
     # Load workbooks
-    wb_report = load_workbook(report_path)
+    wb_report = utilsxls.load_workbook(report_path)
     sheet_names = wb_report.sheetnames
 
     # Delete mpo images
-    mpo_images = find_mpo_references(wb_report)
+    mpo_images = utilsxls.find_mpo_references(wb_report)
     logging.info("Found `.mpo` images: %s", mpo_images)
 
     # Step 2: Replace `.mpo` images with `.png`
     if mpo_images:
-        delete_images(wb_report, mpo_images)
-        logging.error("Found `.mpo` images: %s for object %s", mpo_images, object_path)
+        utilsxls.delete_images(wb_report, mpo_images)
+        logging.info("Deleted `.mpo` images: %s for object %s", mpo_images, object_path)
 
     # update variables
     config_variables = update_config_variables(wb_report["Sheet2"], config)
@@ -982,7 +983,7 @@ def process_pi_report_for_object(
     logging.info("Finished populating the PI report.")
 
     # Save the workbook
-    save_and_finalize_workbook(wb_report, config_variables, TARGET_DIR)
+    utilsxls.save_and_finalize_workbook(wb_report, config_variables, TARGET_DIR)
 
     logging.info("Done for %s", config_variables["object_code"])
 
