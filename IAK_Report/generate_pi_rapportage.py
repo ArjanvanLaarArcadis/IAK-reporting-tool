@@ -45,7 +45,7 @@ from PIL import JpegImagePlugin
 # Local imports
 import utils
 import utilsxls
-from get_voortgang import get_voortgang_params
+from get_voortgang import get_voortgang, get_voortgang_params
 from export_excel_to_pdf import run_macro_on_workbook
 
 # Workaround for PIL bug with JpegImagePlugin
@@ -1004,15 +1004,19 @@ def main() -> None:
     Main function to orchestrate the processing of the PI report.
     """
     logger = utils.setup_logger("generate_pi_report.log", log_level="INFO")
-    config = utils.load_config()
+    config = utils.load_config('IAK_Report/config.json')
     logger.info("Starting PI report processing for batch %s", config["batch"])
     failed_objects = []
+
+    # Get the voortgangs data, based on the excel file (as set in config.json)
+    voortgangs_data = get_voortgang(config)
+      
 
     for object_path, object_code in utils.get_object_paths_codes():
         try:
             logger.info("Processing object %s", object_code)
             logger.info("Updating the configuration variables with voortgang...")
-            voortgang = get_voortgang_params(object_code)
+            voortgang = get_voortgang_params(voortgangs_data, object_code)
             variables = utils.update_config_with_voortgang(config, voortgang)
             pi_report_path = find_inspectierapport(object_path)
             if not pi_report_path:

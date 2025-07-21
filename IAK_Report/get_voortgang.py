@@ -1,10 +1,16 @@
-import pandas as pd
+"""module to retrieve and process voortgang data from an Excel file."""
+
+# Built-in modules
+import os
 import re
 import logging
 
+# External imports
+import pandas as pd
+
 PATH_TO_FILE = r"data\Voortgang_IAK_test.xlsx"
 
-cols = [
+COLS = [
     "Batch",
     "BH_code",
     "Objectnaam",
@@ -20,27 +26,19 @@ cols = [
     "Constructieve beoordeling"
 ]
 
-names = {
+# List of names to expand abbreviations
+NAMES = {
     "TT": "Theo Test",
     "JD": "John Doe"
 }
 
-def _load_data(path_to_file=PATH_TO_FILE, columns=cols):
-    # A function to load data from an Excel file using pandas.
-    # It reads the specified columns from the sheet "Blad1" and skips the first row.
-    data = pd.read_excel(
-        path_to_file,
-        engine="openpyxl",
-        sheet_name="Blad1",
-        skiprows=1,
-        usecols=columns,
-        dtype=str,
-    )
-    return data
 
-def _clean_data(df):
-    # Add your data cleaning steps here
-    # For example, replace initials with full names
+def expand_abbreviations(df):
+    """
+    Expands abbreviations in the DataFrame.
+    """
+    # Select the columns where initials appear
+    # These are the columns that contain names with initials
     name_cols = [
         "Inspecteur 1",
         "Inspecteur 2",
@@ -52,7 +50,7 @@ def _clean_data(df):
     for col in name_cols:
         df[col] = df[col].apply(
             lambda x: ", ".join(
-                names.get(
+                NAMES.get(
                     name.strip(), name.strip()
                 )  # Apply mapping or keep the original name
                 for name in re.split(r"[+\s]", str(x))  # Split on spaces or "+"
@@ -61,7 +59,7 @@ def _clean_data(df):
     return df
 
 
-def get_voortgang() -> pd.DataFrame:
+def get_voortgang(config, columns=COLS) -> pd.DataFrame:
     """
     Retrieves and processes the 'voortgang' data.
 
@@ -71,14 +69,32 @@ def get_voortgang() -> pd.DataFrame:
     Returns:
         pd.DataFrame: A DataFrame containing the cleaned and processed 'voortgang' data.
     """
+    # Check if the provided file exists
+    if not config.get("voortgangs_sheet"):
+        raise KeyError("Voortgangs sheet file not found in config.")
+    excelfile = config["voortgangs_sheet"]
+    if not os.path.exists(excelfile):
+        raise FileNotFoundError(f"Voortgangs sheet file does not exist: {excelfile}")
+    
     logging.info("Loading and cleaning voortgang data.")
-    df = _load_data()
-    df = _clean_data(df)
+    # First, load data from an Excel file using pandas.
+    # It reads the specified columns from the sheet "Blad1" and skips the first row.
+    data = pd.read_excel(
+        excelfile,
+        engine="openpyxl",
+        sheet_name="Blad1",
+        skiprows=1,
+        usecols=columns,
+        dtype=str,
+    )
+    
+    # Columns with personal names are cleaned to replace initials with full names.
+    data = expand_abbreviations(data)
     logging.info("Data loaded and cleaned successfully.")
-    return df
+    return data
 
 
-def get_voortgang_params(bh_code: str):
+def get_voortgang_params(df_voortgang: pd.DataFrame, bh_code: str):
     """
     Fetches and returns a dictionary of parameters for a given BH_code from the voortgang dataset.
     This function retrieves a specific row from the voortgang dataset based on the provided BH_code.
@@ -111,17 +127,18 @@ def get_voortgang_params(bh_code: str):
         - Logs debug information for each column value retrieved.
     """
     logging.info("Fetching parameters for BH_code: %s", bh_code)
-    df = get_voortgang()
-    rows = df[df['BH_code'] == bh_code]
+    
+    # From the DataFrame, filter rows where 'BH_code' matches the provided bh_code.
+    my_rows = df_voortgang[df_voortgang['BH_code'] == bh_code]
 
-    if rows.empty:
+    if my_rows.empty:
         logging.error("No records found for BH_code: %s", bh_code)
         raise ValueError(f"No records found for BH_code: {bh_code}")
-    elif len(rows) > 1:
+    elif len(my_rows) > 1:
         logging.error("Multiple records found for BH_code: %s", bh_code)
         raise ValueError(f"Multiple records found for BH_code: {bh_code}")
 
-    row = rows.iloc[0]
+    row = my_rows.iloc[0]
     logging.info("Record found for BH_code: %s", bh_code)
 
     def get_value(column):

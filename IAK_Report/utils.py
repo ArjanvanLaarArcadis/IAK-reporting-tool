@@ -18,7 +18,7 @@ def load_config(config_path="./config.json"):
     Returns:
         dict: Dictionary containing configuration parameters.
     """
-    print(f"Loading configuration from {config_path}...")
+    print(f"Loading configuration from [{config_path}]...")
     with open(config_path, "r") as f:
         config = json.load(f)
     print("Configuration loaded successfully.")
