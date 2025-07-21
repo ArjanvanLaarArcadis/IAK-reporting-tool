@@ -375,21 +375,12 @@ def main():
     TEMPLATE_WORD_GEEN = os.path.join(config["path_data_aandachtspunten_beheerder"], "FORMAT_Bijlage9_GeenAandachtspuntBeheerder.docx")
     failed_objects = []
 
-    # Maak een unieke outputmap aan: Report-YYYYMMDDTHHMMSS
-    timestamp = time.strftime("%Y%m%dT%H%M%S")
-    output_dir = f"Report-{timestamp}"
-    # Gebruik de batchmap als basis, of de huidige werkmap
-    batch_dir = config.get("path_batch_local", ".")
-    output_path = os.path.join(batch_dir, output_dir)
-    os.makedirs(output_path, exist_ok=True)
-
     for object_path, object_code in get_object_paths_codes():
         logger.info(
             "Processing object path: %s, object code: %s", object_path, object_code
         )
         voortgang = get_voortgang_params(object_code)
         variables = update_config_with_voortgang(config, voortgang)
-
         try:
             path_ora = return_most_recent_ora(object_path)
             print("Checking for images...")
