@@ -245,6 +245,7 @@ def main():
     ORA_TEMPLATE_PATH = os.path.join(
         config["path_data_hoogste-risico"], "FORMAT_hoogste-risico.docx"
     )
+
     SAVE_LOCATION = os.path.join(config["path_batch"], config["batch"])
     logger.info("Paths for template and save location configured.")
 
@@ -290,12 +291,12 @@ def main():
     logger.info("All risks added to the Word document.")
 
     # Save the document
-    save_document(document, SAVE_LOCATION, f"{config["batch"]} Hoogste Risicos.docx")
+    save_document(document, SAVE_LOCATION, f"{config['batch']} Hoogste Risicos.docx")
     logger.info("Document saved successfully at: %s", SAVE_LOCATION)
     time.sleep(1)
     convert_docx_to_pdf(
-        os.path.join(SAVE_LOCATION, f"{config["batch"]} Hoogste Risicos.docx"),
-        os.path.join(SAVE_LOCATION, f"{config["batch"]} Hoogste Risicos.pdf"),
+        os.path.join(SAVE_LOCATION, f"{config['batch']} Hoogste Risicos.docx"),
+        os.path.join(SAVE_LOCATION, f"{config['batch']} Hoogste Risicos.pdf"),
     )
 
     # Save the DataFrame to an Excel file

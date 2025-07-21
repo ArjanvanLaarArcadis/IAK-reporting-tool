@@ -18,6 +18,7 @@ from docx.enum.style import WD_STYLE_TYPE
 from utils import (
     load_config)
 import logging
+import time
 
 
 def load_opleverlijst(filepath: str) -> pd.DataFrame:
@@ -238,68 +239,3 @@ def process_measure(
     )
     table.cell(counter + 1, 5).text = adviesjaar
     table.cell(counter + 1, 5).paragraphs[0].style = cell_style
-
-
-def main():
-    """
-    Main function to execute the script.
-    """
-    config = load_config("data\config.json")
-
-    # Constants and configurations
-    OPLEVERLIJST_PATH = os.path.join(config["path_data_ssk"], "Objecten SSK-raming.xlsx")
-    ORA_TEMPLATE_PATH = os.path.join(config["path_data_ssk"], "FORMAT_SSK-raming_schades.docx")
-    PHOTO_BASE_LOC = os.path.join(config["path_batch"], config["batch"])
-    SAVE_LOCATION = config["path_batch"]
-
-    # Load delivery list
-    opleverlijst = load_opleverlijst(OPLEVERLIJST_PATH)
-
-    for _, row in opleverlijst.iterrows():
-        object_code = row.iloc[0]
-        object_name = row.iloc[1]
-        oplever_datum = str(row.iloc[2])
-        werkmap = row.iloc[3]
-
-        # Generate complex code
-        complex_code = extract_complexcode(object_code)
-
-        # Define paths
-        dir_object = os.path.join(
-            './Opleveringen',
-            f"{oplever_datum} {werkmap}",
-            object_code
-        )
-        path_ora = os.path.join(dir_object, f"ORA {object_code} {object_name} V1 + DISK.xlsb")
-
-        # Load and process ORA data
-        ora = load_ora(path_ora)
-        ora_maatregel = extract_relevant_ora_data(ora)
-
-        # Create and configure Word document
-        document = create_word_document(ORA_TEMPLATE_PATH, object_name, object_code)
-
-        # Define photo location
-        photo_loc = os.path.join(PHOTO_BASE_LOC, object_code)
-
-        # Precompute indices for 'schades'
-        idx_schades = ora[ora['Schade nummer'].notnull()].index
-
-        # Process each measure and add to document
-        for counter, (idx, measure) in enumerate(ora_maatregel.iterrows()):
-            process_measure(
-                document=document,
-                measure=measure,
-                counter=counter,
-                idx=idx,
-                idx_schades=idx_schades,
-                cell_style='Cell'
-            )
-            add_photos_to_document(document, measure, photo_loc, counter + 1)
-
-        # Save the document
-        save_document(document, SAVE_LOCATION, object_code)
-
-
-if __name__ == "__main__":
-    main()
