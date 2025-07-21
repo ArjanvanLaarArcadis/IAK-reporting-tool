@@ -372,6 +372,16 @@ def main():
     config = load_config()
     TEMPLATE_WORD = os.path.join(config["path_data_aandachtspunten_beheerder"], "FORMAT_Bijlage9_AandachtspuntBeheerder.docx")
     TEMPLATE_WORD_GEEN = os.path.join(config["path_data_aandachtspunten_beheerder"], "FORMAT_Bijlage9_GeenAandachtspuntBeheerder.docx")
+
+    # Check if both template files exist
+    if not os.path.exists(TEMPLATE_WORD):
+        logger.error("Template file not found: %s", TEMPLATE_WORD)
+        raise FileNotFoundError(f"Template file not found: {TEMPLATE_WORD}")
+    if not os.path.exists(TEMPLATE_WORD_GEEN):
+        logger.error("Template file not found: %s", TEMPLATE_WORD_GEEN)
+        raise FileNotFoundError(f"Template file not found: {TEMPLATE_WORD_GEEN}")
+
+    logger.info("Template files validated successfully.")
     failed_objects = []
 
     # Maak een unieke outputmap aan: Report-YYYYMMDDTHHMMSS
