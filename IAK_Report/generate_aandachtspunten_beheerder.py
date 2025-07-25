@@ -370,15 +370,14 @@ def main():
     """
     logger = setup_logger("generate_aandachtspunten_beheerder.log", "INFO")
     logger.info("Starting the generation process for aandachtspunten beheerder.")
-    config = load_config()
+    config_path = "./config.json"
+    config = load_config(config_path=config_path)
     TEMPLATE_WORD = os.path.join(config["path_data_aandachtspunten_beheerder"], "FORMAT_Bijlage9_AandachtspuntBeheerder.docx")
     TEMPLATE_WORD_GEEN = os.path.join(config["path_data_aandachtspunten_beheerder"], "FORMAT_Bijlage9_GeenAandachtspuntBeheerder.docx")
     failed_objects = []
 
-    for object_path, object_code in get_object_paths_codes():
-        logger.info(
-            "Processing object path: %s, object code: %s", object_path, object_code
-        )
+    for object_path, object_code in get_object_paths_codes(config_file=config_path):
+        logger.info("Processing object path: %s, object code: %s", object_path, object_code)
         voortgang = get_voortgang_params(object_code)
         variables = update_config_with_voortgang(config, voortgang)
         try:
