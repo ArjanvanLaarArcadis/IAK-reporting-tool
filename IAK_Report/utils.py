@@ -1,10 +1,18 @@
-import pandas as pd
+"""
+Utility module for IAK Report generation
+
+This module provides utility functions for handling file paths, converting documents,
+loading configurations, and logging for the IAK Report generation process.
+"""
+
+# Built-in imports
 import os
 import re
-from docx2pdf import convert
-import logging
-import docx
 import json
+import logging
+
+# External imports
+import docx
 from docx2pdf import convert
 
 # Default path to the configuration file
@@ -33,7 +41,9 @@ def load_config(config_path="./config.json"):
 
 def get_matching_codes(folder_path):
     # Define the regex pattern for the object code
-    pattern = r"^\d{2}[A-Z]-\d{3}-\d{2}$"
+    # Starting with Two digits, a letter, a hyphen, three digits, a hyphen, and two digits. 
+    # Optional trailing characters.
+    pattern = r"^\d{2}[A-Z]-\d{3}-\d{2}"
 
     # List all content in the folder
     logging.debug("scanning folder: %s", folder_path)
@@ -47,7 +57,7 @@ def get_matching_codes(folder_path):
 
 def get_object_paths_codes(batch_path=None, config_file=CONFIG_FILE):
     """
-    Get the paths of all directories in the given batch path.
+    Get the paths and codes of all objects in the given batch path.
 
     Parameters:
         batch_path (str): Path to the batch directory.

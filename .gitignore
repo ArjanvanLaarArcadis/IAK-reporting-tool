@@ -1,5 +1,3 @@
-# Node modules
-node_modules/
 
 # Logs
 logs/
@@ -20,7 +18,7 @@ Thumbs.db
 dist/
 build/
 
-# VSCode settings
+# IDE settings
 .vscode/
 
 # PyCharm settings
@@ -46,6 +44,9 @@ __pycache__/
 # Python virtual environment
 .venv/
 
+
+# Additional data files
+data_original/
 
 # Configuration files
 *config.json

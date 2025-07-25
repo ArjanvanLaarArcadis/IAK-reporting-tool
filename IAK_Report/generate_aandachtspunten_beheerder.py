@@ -144,11 +144,13 @@ def extract_relevant_data(ORA: pd.DataFrame) -> pd.DataFrame:
     logging.info(
         "Filtering ORA DataFrame for rows containing 'aandachtspunt' and 'beheerder' (case-insensitive)."
     )
+    relevant_columns = [column for column in ORA.columns if column.startswith('Categorie')]
+    select_column = relevant_columns[0] if relevant_columns else "Advies mutatie I-ORA & Onderhoud"
     return ORA[
-        ORA["Advies mutatie I-ORA & Onderhoud"].str.contains(
+        ORA[select_column].str.contains(
             "aandachtspunt", case=False, na=False
         )
-        & ORA["Advies mutatie I-ORA & Onderhoud"].str.contains(
+        & ORA[select_column].str.contains(
             "beheerder", case=False, na=False
         )
     ]
@@ -298,13 +300,14 @@ def process_aandachtspunten_beheerder(
         bevinding_ora = row["Bevinding:\n- Inspectie\n- Onderhoud\n- Overig"].partition(
             ": "
         )[2]
-        fotos = list_of_fotonummers(row["Alle Foto's"])
+        foto_column = [column for column, value in row.items() if "Foto" in column][0]
+        fotos = list_of_fotonummers(row[foto_column])
         foto1 = fotos[0] if fotos else None
         foto2 = fotos[1] if len(fotos) > 1 else None
         path_foto1 = find_foto_path(foto1, path_imgs) if foto1 else None
         path_foto2 = find_foto_path(foto2, path_imgs) if foto2 else None
 
-        logging.debug(
+        logging.info(
             "Aandachtspunt: %s, Foto1: %s, Foto2: %s", aandachtspunt, foto1, foto2
         )
 
@@ -316,16 +319,12 @@ def process_aandachtspunten_beheerder(
         word_document.tables[i].cell(2, 1).paragraphs[0].style = cell_style
         word_document.tables[i].cell(4, 0).text = str(bevinding_ora)
         word_document.tables[i].cell(4, 0).paragraphs[0].style = cell_style
-        word_document.tables[i].cell(
-            4, 0
-        ).vertical_alignment = WD_CELL_VERTICAL_ALIGNMENT.TOP
-        word_document.tables[i].cell(6, 0).text = str(
-            row["Advies mutatie I-ORA & Onderhoud"]
-        )
+        word_document.tables[i].cell(4, 0).vertical_alignment = WD_CELL_VERTICAL_ALIGNMENT.TOP
+        relevant_columns = [column for column, value in row.items() if column.startswith('Categorie')]
+        select_column = relevant_columns[0] if relevant_columns else "Advies mutatie I-ORA & Onderhoud"
+        word_document.tables[i].cell(6, 0).text = str(row[select_column])
         word_document.tables[i].cell(6, 0).paragraphs[0].style = cell_style
-        word_document.tables[i].cell(
-            6, 0
-        ).vertical_alignment = WD_CELL_VERTICAL_ALIGNMENT.TOP
+        word_document.tables[i].cell(6, 0).vertical_alignment = WD_CELL_VERTICAL_ALIGNMENT.TOP
 
         if foto1:
             logging.debug("Adding Foto1 to table %d.", i)
@@ -337,7 +336,7 @@ def process_aandachtspunten_beheerder(
             word_document.tables[i].cell(6, 2).paragraphs[0].add_run().add_picture(
                 path_foto2, width=2350000
             )
-
+        logging.info("Processed single aandachtspunt %d.", i + 1)
     logging.info("Finished processing aandachtspunten beheerder.")
     return word_document
 
@@ -368,12 +367,22 @@ def main():
     """
     Main function to orchestrate the processing of the PI report.
     """
-    logger = setup_logger("generate_aandachtspunten_beheerder.log", "INFO")
+    logger = setup_logger("generate_aandachtspunten_beheerder.log", "DEBUG")
     logger.info("Starting the generation process for aandachtspunten beheerder.")
     config_path = "./config.json"
     config = load_config(config_path=config_path)
     TEMPLATE_WORD = os.path.join(config["path_data_aandachtspunten_beheerder"], "FORMAT_Bijlage9_AandachtspuntBeheerder.docx")
     TEMPLATE_WORD_GEEN = os.path.join(config["path_data_aandachtspunten_beheerder"], "FORMAT_Bijlage9_GeenAandachtspuntBeheerder.docx")
+
+    # Check if both template files exist
+    if not os.path.exists(TEMPLATE_WORD):
+        logger.error("Template file not found: %s", TEMPLATE_WORD)
+        raise FileNotFoundError(f"Template file not found: {TEMPLATE_WORD}")
+    if not os.path.exists(TEMPLATE_WORD_GEEN):
+        logger.error("Template file not found: %s", TEMPLATE_WORD_GEEN)
+        raise FileNotFoundError(f"Template file not found: {TEMPLATE_WORD_GEEN}")
+
+    logger.info("Template files validated successfully.")
     failed_objects = []
 
     for object_path, object_code in get_object_paths_codes(config_file=config_path):
