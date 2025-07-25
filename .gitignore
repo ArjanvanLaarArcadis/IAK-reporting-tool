@@ -1,5 +1,3 @@
-# Node modules
-node_modules/
 
 # Logs
 logs/
@@ -20,8 +18,9 @@ Thumbs.db
 dist/
 build/
 
-# VSCode settings
+# IDE settings
 .vscode/
+.idea/
 
 # Coverage reports
 coverage/
@@ -43,3 +42,6 @@ __pycache__/
 # Python virtual environment
 .venv/
 
+
+# Additional data files
+data_original/

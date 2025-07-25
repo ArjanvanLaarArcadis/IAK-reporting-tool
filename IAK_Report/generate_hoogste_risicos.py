@@ -246,6 +246,13 @@ def main():
         config["path_data_hoogste-risico"], "FORMAT_hoogste-risico.docx"
     )
 
+    # Check if template file exists
+    if not os.path.exists(ORA_TEMPLATE_PATH):
+        logger.error("Template file not found: %s", ORA_TEMPLATE_PATH)
+        raise FileNotFoundError(f"Template file not found: {ORA_TEMPLATE_PATH}")
+
+    logger.info("Template file validated successfully.")
+
     SAVE_LOCATION = os.path.join(config["path_batch"], config["batch"])
     logger.info("Paths for template and save location configured.")
 
