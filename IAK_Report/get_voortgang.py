@@ -8,8 +8,6 @@ import logging
 # External imports
 import pandas as pd
 
-PATH_TO_FILE = r"data\Voortgang_IAK_test.xlsx"
-
 COLS = [
     "Batch",
     "BH_code",
