@@ -55,7 +55,7 @@ from utils import (
     setup_logger,
     save_document,
 )
-from get_voortgang import get_voortgang_params
+from get_voortgang import get_voortgang, get_voortgang_params
 from ora_to_word import load_ora
 import logging
 
@@ -369,9 +369,13 @@ def main():
     """
     logger = setup_logger("generate_aandachtspunten_beheerder.log", "DEBUG")
     logger.info("Starting the generation process for aandachtspunten beheerder.")
-    config = load_config()
+    config_path = "./config.json"
+    config = load_config(config_path=config_path)
     TEMPLATE_WORD = os.path.join(config["path_data_aandachtspunten_beheerder"], "FORMAT_Bijlage9_AandachtspuntBeheerder.docx")
     TEMPLATE_WORD_GEEN = os.path.join(config["path_data_aandachtspunten_beheerder"], "FORMAT_Bijlage9_GeenAandachtspuntBeheerder.docx")
+
+    # Load the voortgang data
+    df_voortgang = get_voortgang(config)
 
     # Check if both template files exist
     if not os.path.exists(TEMPLATE_WORD):
@@ -384,11 +388,10 @@ def main():
     logger.info("Template files validated successfully.")
     failed_objects = []
 
-    for object_path, object_code in get_object_paths_codes():
-        logger.info(
-            "Processing object path: %s, object code: %s", object_path, object_code
-        )
-        voortgang = get_voortgang_params(object_code)
+    for object_path, object_code in get_object_paths_codes(config_file=config_path):
+        logger.info("Processing object path: %s, object code: %s", object_path, object_code)
+        
+        voortgang = get_voortgang_params(df_voortgang=df_voortgang, bh_code=object_code)
         variables = update_config_with_voortgang(config, voortgang)
         try:
             path_ora = return_most_recent_ora(object_path)
@@ -416,21 +419,14 @@ def main():
                 document_path,
                 os.path.join(variables["save_loc"], f"Bijlage 9 - {object_code}.pdf"),
             )
-            logging.info(
-                "PDF document generated successfully for object code: %s",
-                object_code,
-            )
+            logging.info(f"PDF document for object code: {object_code} at [{variables['save_loc']}]")
             logging.info("Successfully processed object code: %s", object_code)
         except Exception as e:
             failed_objects.append(object_code)
-            logging.error(
-                "Failed to generate for object code: %s. Error: %s", object_code, e
-            )
+            logging.error(f"Failed to generate for object code: {object_code}. Error: {e}")
 
-    logging.info(
-        "Processing completed. Failed objects: [%s]",
-        ", ".join(failed_objects) if failed_objects else "None",
-    )
+    logging.info(f"Processing completed. Failed objects: [{', '.join(failed_objects) if failed_objects else 'None'}]")
+
 
 if __name__ == "__main__":
     main()

@@ -1,0 +1,24 @@
+{
+  "path_batch": "..\\data",
+  "batch": "WP-LC-WB-23-322",
+  "object_code": "",
+
+  "path_data_ssk": "data\\ora-to-word",
+  "path_data_hoogste-risico": "data\\hoogste-risico",
+  "path_data_ssk_raming": "data\\ssk\\IAK_WP-LC-AR-24-102_Kostenraming_v1.0.xlsm",
+  "path_data_aandachtspunten_beheerder": "data\\aandachtspunten_beheerder",
+  "target_dir": "pirapport_python",
+  "save_dir": "rapportje",
+  
+  "opdrachtgever": "Rijkswaterstaat, Grote Projecten en Onderhoud (GPO)",
+  "contactpersoon_rws": "<Contactpersoon RWS>",
+  "zaaknummer": 23421234,
+  
+  "versie": 1,
+  "datum": "",
+  "omschrijving": "Definitief",
+  
+  "opdrachtnemer": "<bedrijf>",
+  "projectleider": "<naam projectleider>",
+  "projectnummer": 1
+}
