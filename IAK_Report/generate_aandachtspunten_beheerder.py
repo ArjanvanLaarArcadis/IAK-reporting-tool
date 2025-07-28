@@ -341,7 +341,7 @@ def process_aandachtspunten_beheerder(
     return word_document
 
 
-def save_aandachtspunten_beheerder(document: docx.Document, variables) -> str:
+def save_aandachtspunten_beheerder(document: docx.Document, object_path, object_code) -> str:
     """
     Save the Word document (Bijlage 9 - Aandachtspunten Beheerder) to the specified location.
 
@@ -353,14 +353,13 @@ def save_aandachtspunten_beheerder(document: docx.Document, variables) -> str:
         str: The path of the saved document.
     """
     # Extract the save location and construct the file name
-    save_loc = variables["save_loc"]
-    file_name = f"Bijlage 9 - Aandachtspunten Beheerder {variables['object_code']}.docx"
+    file_name = f"Bijlage 9 - Aandachtspunten Beheerder {object_code}.docx"
 
     # Delegate saving to the save_document function
-    save_document(document, save_loc, file_name)
+    save_document(document, object_path, file_name)
 
     # Construct and return the full save path for reference (optional)
-    return os.path.join(save_loc, file_name)
+    return os.path.join(object_path, file_name)
 
 
 def main():
@@ -418,7 +417,7 @@ def main():
                     word_document, ora_filtered, path_imgs
                 )
             
-            document_path = save_aandachtspunten_beheerder(word_document, variables)
+            document_path = save_aandachtspunten_beheerder(word_document, object_path, object_code)
             logging.info(f"Word document saved successfully at: {document_path}")
             time.sleep(1)
             pdf_document_path = convert_docx_to_pdf(document_path)
