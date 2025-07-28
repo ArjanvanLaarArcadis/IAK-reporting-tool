@@ -44,9 +44,14 @@ __pycache__/
 # Python virtual environment
 .venv/
 
+# Ignore the templates folder, since these are company specific
+templates/*
+# Except the .gitignore file
+!templates/.gitignore
+
 
 # Additional data files
 data_original/
 
-# Configuration files
+# Configuration files (except the example)
 *config.json
