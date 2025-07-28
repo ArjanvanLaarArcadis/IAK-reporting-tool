@@ -197,10 +197,6 @@ def find_pictures_for_object_path(object_path):
             return full_path
 
     # If no matching directory is found, raise an exception
-    logging.error(
-        "No directory found in '%s' that starts with 'Inspectiefotos' and ends with 'verkleind'.",
-        object_path,
-    )
     raise FileNotFoundError(
         f"No directory found in '{object_path}' that starts with 'Inspectiefotos' and ends with 'verkleind'."
     )

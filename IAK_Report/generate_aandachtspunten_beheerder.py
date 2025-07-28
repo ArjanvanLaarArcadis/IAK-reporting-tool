@@ -192,7 +192,7 @@ def list_of_fotonummers(fotonummers: str) -> list:
     return fotonummers_list  # list of photo numbers as strings (filename)
 
 
-def find_foto_path(fotonummer: str, path_imgs: str) -> str:
+def find_foto_path(fotonummer: str, imgs: list) -> str:
     """
     Finds the file path of an image based on a given photo number.
 
@@ -203,7 +203,7 @@ def find_foto_path(fotonummer: str, path_imgs: str) -> str:
 
     Args:
         fotonummer (str): The photo number to search for in the image filenames.
-        path_imgs (str): The directory path where the images are stored.
+        imgs (list): The list of fullfilenames of all available images.
 
     Returns:
         str: The full file path of the matching image, or raises FileNotFoundError if no match is found.
@@ -218,7 +218,7 @@ def find_foto_path(fotonummer: str, path_imgs: str) -> str:
     # Continue with just the name
     
     # The last part of the full filename contains the foto numbers
-    for fullfilename in path_imgs:
+    for fullfilename in imgs:
         # Get only the name of the file, excluding the extension
         filename = os.path.basename(fullfilename)
         name, ext = os.path.splitext(filename)
@@ -226,8 +226,9 @@ def find_foto_path(fotonummer: str, path_imgs: str) -> str:
             # Nice, found! Continue the proces by returning this filename
             return fullfilename
 
+    common_path = os.path.commonpath(imgs)
     raise FileNotFoundError(
-        f"Image with fotonummer {fotonummer} not found in {path_imgs}."
+        f"Image with fotonummer [{fotonummer}] not found in [{common_path}]."
     )
 
 
@@ -244,13 +245,13 @@ def copy_last_table(word_document: docx.Document) -> None:
     Returns:
         None
     """
-    logging.debug("Copying the last table in the Word document.")
+    #logging.debug("Copying the last table in the Word document.")
     template = word_document.tables[-1]
     tbl = template._tbl
     new_tbl = copy.deepcopy(tbl)
     paragraph = word_document.add_paragraph()
     paragraph._p.addnext(new_tbl)
-    logging.debug("Successfully copied and appended the last table.")
+    #logging.debug("Successfully copied and appended the last table.")
 
 
 def remove_last_table(word_document: docx.Document) -> None:
@@ -405,7 +406,6 @@ def main():
         raise KeyError("Voortgangs sheet file not found in config.")
     excelfile = config["voortgangs_sheet"]
     df_voortgang = get_voortgang(excelfile=excelfile)
-
 
     list_of_object_codes = get_object_paths_codes(config_file=config_path)
     failed_objects = []
