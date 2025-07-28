@@ -3,11 +3,11 @@
   "batch": "WP-LC-WB-23-322",
   "object_code": "",
 
-  "voortgangs_sheet": <full-path-to-voortgangs_sheet.xlsx">
+  "voortgangs_sheet": <full-path-to-voortgangs-sheet.xlsx>
   "path_data_ssk": "data\\ora-to-word",
   "path_data_hoogste-risico": "data\\hoogste-risico",
   "path_data_ssk_raming": "data\\ssk\\IAK_WP-LC-AR-24-102_Kostenraming_v1.0.xlsm",
-  "path_data_aandachtspunten_beheerder": "data\\aandachtspunten_beheerder",
+  
   "target_dir": "pirapport_python",
   "save_dir": "rapportje",
   

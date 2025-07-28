@@ -16,10 +16,10 @@ import docx
 from docx2pdf import convert
 
 # Default path to the configuration file
-CONFIG_FILE = os.getenv("CONFIG_FILE", "config.json")
+CONFIG_FILE = os.getenv("CONFIG_FILE", "./config.json")
 
 
-def load_config(config_path="./config.json"):
+def load_config(config_path=CONFIG_FILE):
     """
     Load configuration parameters from a JSON file.
 
@@ -55,7 +55,7 @@ def get_matching_codes(folder_path):
     return matching_content
 
 
-def get_object_paths_codes(batch_path=None, config_file=CONFIG_FILE):
+def get_object_paths_codes(config_file=CONFIG_FILE):
     """
     Get the paths and codes of all objects in the given batch path.
 
@@ -65,25 +65,23 @@ def get_object_paths_codes(batch_path=None, config_file=CONFIG_FILE):
     Returns:
         list: List of tuples containing the path and code of each directory.
     """
-    if not batch_path:
-        config = load_config(config_file)
-        batch_path = os.path.join(config["path_batch"], config["batch"])
-    else:
-        config = load_config(config_file)
-
+    
+    config = load_config(config_file)
+    werkpakket_path = os.path.join(config["path_batch"], config["werkpakket"])
+    
     # Validate that the batch directory exists
-    if not os.path.isdir(batch_path):
-        logging.error("Batch directory not found: %s", batch_path)
-        raise FileNotFoundError(f"Batch directory not found: {batch_path}")
+    if not os.path.isdir(werkpakket_path):
+        logging.error(f"Werkpakket directory not found: {werkpakket_path}")
+        raise FileNotFoundError(f"Werkpakket directory not found: {werkpakket_path}")
+    logging.info(f"Werkpakket directory exists: {werkpakket_path}")
 
-    logging.info("Batch directory validated: %s", batch_path)
     object_paths_codes = []
-
     # Check if specific object codes are provided
-    if config["object_code"]:
-        logging.info("Specific object codes provided: %s", config["object_code"])
-        
-        # Handle both single string and list of object codes
+    # These could be a single string ('31W-443-43') a list of strings (['31A-001-32', '51B-002-03']), or nothing at all.
+    object_code = config["object_code"]
+    if object_code:
+        logging.info(f"Specific object codes provided: [{object_code}]")
+        # Ensure a list of codes, even if a single code is provided (list of one)
         object_codes = (
             config["object_code"]
             if isinstance(config["object_code"], list)
@@ -91,24 +89,23 @@ def get_object_paths_codes(batch_path=None, config_file=CONFIG_FILE):
         )
 
         for object_code in object_codes:
-            object_path = os.path.join(batch_path, object_code)
+            object_path = os.path.join(werkpakket_path, object_code)
             if os.path.isdir(object_path):
                 object_paths_codes.append((object_path, object_code))
-                logging.info("Found object directory: %s", object_path)
+                logging.info(f"Found object directory: {object_path}")
             else:
-                logging.error("Object directory not found: %s", object_path)
-                raise FileNotFoundError(f"Object directory not found: {object_path}")
-
+                logging.error(f"Object directory not found: {object_path}. Skipping." )
+                continue
         return object_paths_codes
-    else:
-        # If no specific object codes, return all matching codes
-        logging.info("No specific object codes provided, returning all matching codes")
-        
-        # Return all matching codes with their paths and stripped codes
-        for code_name in get_matching_codes(batch_path):
-            object_paths_codes.append(
-                (os.path.join(batch_path, code_name), re.match(r"^\d{2}[A-Z]-\d{3}-\d{2}", code_name).group())
-            )
+    
+    # If no specific object codes, return all matching codes
+    logging.info("No specific object codes provided, returning all matching codes")
+    
+    # Return all matching codes with their paths and stripped codes
+    for code_name in get_matching_codes(werkpakket_path):
+        object_paths_codes.append(
+            (os.path.join(werkpakket_path, code_name), re.match(r"^\d{2}[A-Z]-\d{3}-\d{2}", code_name).group())
+        )
 
     return object_paths_codes  # List of tuples (path with code_name, code)
 

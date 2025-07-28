@@ -371,11 +371,10 @@ def main():
     logger.info("Starting the generation process for aandachtspunten beheerder.")
     config_path = "./config.json"
     config = load_config(config_path=config_path)
-    TEMPLATE_WORD = os.path.join(config["path_data_aandachtspunten_beheerder"], "FORMAT_Bijlage9_AandachtspuntBeheerder.docx")
-    TEMPLATE_WORD_GEEN = os.path.join(config["path_data_aandachtspunten_beheerder"], "FORMAT_Bijlage9_GeenAandachtspuntBeheerder.docx")
 
-    # Load the voortgang data
-    df_voortgang = get_voortgang(config)
+    template_dir = "./templates"
+    TEMPLATE_WORD = os.path.join(template_dir, "FORMAT_Bijlage9_AandachtspuntBeheerder.docx")
+    TEMPLATE_WORD_GEEN = os.path.join(template_dir, "FORMAT_Bijlage9_GeenAandachtspuntBeheerder.docx")
 
     # Check if both template files exist
     if not os.path.exists(TEMPLATE_WORD):
@@ -384,11 +383,19 @@ def main():
     if not os.path.exists(TEMPLATE_WORD_GEEN):
         logger.error("Template file not found: %s", TEMPLATE_WORD_GEEN)
         raise FileNotFoundError(f"Template file not found: {TEMPLATE_WORD_GEEN}")
+    logger.info("Template files set successfully.")
+    
+    # Load the voortgang data
+    if not config.get("voortgangs_sheet"):
+        raise KeyError("Voortgangs sheet file not found in config.")
+    excelfile = config["voortgangs_sheet"]
+    df_voortgang = get_voortgang(excelfile=excelfile)
 
-    logger.info("Template files validated successfully.")
+
+    list_of_object_codes = get_object_paths_codes(config_file=config_path)
     failed_objects = []
 
-    for object_path, object_code in get_object_paths_codes(config_file=config_path):
+    for object_path, object_code in list_of_object_codes:
         logger.info("Processing object path: %s, object code: %s", object_path, object_code)
         
         voortgang = get_voortgang_params(df_voortgang=df_voortgang, bh_code=object_code)
