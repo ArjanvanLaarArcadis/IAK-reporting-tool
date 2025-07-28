@@ -132,8 +132,8 @@ def get_voortgang_params(df_voortgang: pd.DataFrame, bh_code: str):
     elif len(my_rows) > 1:
         logging.error("Multiple records found for BH_code: %s", bh_code)
         raise ValueError(f"Multiple records found for BH_code: {bh_code}")
-    
-    row = my_rows.iloc[0]
+
+    row = my_rows.squeeze()  # Convert the single-row DataFrame to a Series
     logging.info("Record found for BH_code: %s", bh_code)
 
     def get_value(column):

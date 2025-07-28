@@ -396,7 +396,7 @@ def main():
     failed_objects = []
 
     for object_path, object_code in list_of_object_codes:
-        logger.info("Processing object path: %s, object code: %s", object_path, object_code)
+        logger.info(f"Processing object path: {object_path}, object code: {object_code}")
         
         voortgang = get_voortgang_params(df_voortgang=df_voortgang, bh_code=object_code)
         variables = update_config_with_voortgang(config, voortgang)
@@ -406,10 +406,8 @@ def main():
             path_imgs = find_pictures_for_object_path(object_path)
             ora = load_ora(path_ora)
             ora_filtered = extract_relevant_data(ora)
-            logger.info(
-                "The number of aandachtspunten voor beheerder is: %d",
-                len(ora_filtered),
-            )
+            logger.info(f"The number of aandachtspunten voor beheerder is: {len(ora_filtered)}")
+            
             if len(ora_filtered) == 0:
                 logger.info("Making the word document with no aandachtspunten...")
                 word_document = create_word_document(TEMPLATE_WORD_GEEN, variables)
@@ -419,21 +417,17 @@ def main():
                 word_document = process_aandachtspunten_beheerder(
                     word_document, ora_filtered, path_imgs
                 )
+            
             document_path = save_aandachtspunten_beheerder(word_document, variables)
-            logging.info("Word document saved successfully at: %s", document_path)
+            logging.info(f"Word document saved successfully at: {document_path}")
             time.sleep(1)
-            convert_docx_to_pdf(
-                document_path,
-                os.path.join(variables["save_loc"], f"Bijlage 9 - {object_code}.pdf"),
-            )
-            logging.info(f"PDF document for object code: {object_code} at [{variables['save_loc']}]")
-            logging.info("Successfully processed object code: %s", object_code)
+            pdf_document_path = convert_docx_to_pdf(document_path)
+            logging.info(f"PDF document for object code: {object_code} at [{pdf_document_path}]")
         except Exception as e:
             failed_objects.append(object_code)
             logging.error(f"Failed to generate for object code: {object_code}. Error: {e}")
 
-    logging.info(f"Processing completed. Failed objects: [{', '.join(failed_objects) if failed_objects else 'None'}]")
-
+        logging.info(f"Processing completed. Failed objects: [{', '.join(failed_objects) if failed_objects else 'None'}]")
 
 if __name__ == "__main__":
     main()

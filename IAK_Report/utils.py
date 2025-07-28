@@ -110,13 +110,14 @@ def get_object_paths_codes(config_file=CONFIG_FILE):
     return object_paths_codes  # List of tuples (path with code_name, code)
 
 
-def convert_docx_to_pdf(input_path: str, output_path: str) -> None:
+def convert_docx_to_pdf(input_path: str, output_path=None) -> None:
     """
     Converts a .docx file to PDF using docx2pdf.
 
     Parameters:
         input_path (str): Path to the input .docx file.
         output_path (str): Path to save the output PDF file.
+        If None, the PDF will be saved in the same directory as the input file with the same name.
 
     Returns:
         None
@@ -125,11 +126,15 @@ def convert_docx_to_pdf(input_path: str, output_path: str) -> None:
         INFO: When the conversion is successful.
         ERROR: If an error occurs during the conversion.
     """
+    if output_path is None:
+        output_path = os.path.splitext(input_path)[0] + ".pdf"
+
     try:
         logging.info("Starting conversion of '%s' to '%s'.", input_path, output_path)
         # Convert the .docx file to PDF
         convert(input_path, output_path)
         logging.info("Successfully converted '%s' to '%s'.", input_path, output_path)
+        return output_path
     except Exception as e:
         logging.error("An error occurred during conversion: %s", e)
         raise
