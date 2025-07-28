@@ -57,7 +57,7 @@ def expand_abbreviations(df):
     return df
 
 
-def get_voortgang(config, columns=COLS) -> pd.DataFrame:
+def get_voortgang(excelfile, columns=COLS) -> pd.DataFrame:
     """
     Retrieves and processes the 'voortgang' data.
 
@@ -68,9 +68,6 @@ def get_voortgang(config, columns=COLS) -> pd.DataFrame:
         pd.DataFrame: A DataFrame containing the cleaned and processed 'voortgang' data.
     """
     # Check if the provided file exists
-    if not config.get("voortgangs_sheet"):
-        raise KeyError("Voortgangs sheet file not found in config.")
-    excelfile = config["voortgangs_sheet"]
     if not os.path.exists(excelfile):
         raise FileNotFoundError(f"Voortgangs sheet file does not exist: {excelfile}")
     
@@ -135,7 +132,7 @@ def get_voortgang_params(df_voortgang: pd.DataFrame, bh_code: str):
     elif len(my_rows) > 1:
         logging.error("Multiple records found for BH_code: %s", bh_code)
         raise ValueError(f"Multiple records found for BH_code: {bh_code}")
-
+    
     row = my_rows.iloc[0]
     logging.info("Record found for BH_code: %s", bh_code)
 
