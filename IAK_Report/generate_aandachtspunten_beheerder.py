@@ -49,7 +49,7 @@ from utils import (
     load_config,
     get_object_paths_codes,
     convert_docx_to_pdf,
-    find_pictures_for_object_path,
+    list_pictures_for_object,
     update_config_with_voortgang,
     return_most_recent_ora,
     setup_logger,
@@ -189,7 +189,7 @@ def list_of_fotonummers(fotonummers: str) -> list:
         fotonummers_list = [fotonummers.strip()]
 
     logging.debug("Resulting list of fotonummers: %s", fotonummers_list)
-    return fotonummers_list
+    return fotonummers_list  # list of photo numbers as strings (filename)
 
 
 def find_foto_path(fotonummer: str, path_imgs: str) -> str:
@@ -209,10 +209,22 @@ def find_foto_path(fotonummer: str, path_imgs: str) -> str:
         str: The full file path of the matching image, or raises FileNotFoundError if no match is found.
     """
     fotonummer = fotonummer.lower().replace(" ", "")
-    images = os.listdir(path_imgs)
-    for image in images:
-        if fotonummer in image.lower().replace(" ", ""):
-            return os.path.join(path_imgs, image)
+    
+    # Case with extension:
+    fotonummer, ext = os.path.splitext(fotonummer)
+    if ext: 
+        if not ext in ['.png', '.jpg', 'jpeg']:
+            raise ValueError(f"[{ext}], that's a weird extension!!")
+    # Continue with just the name
+    
+    # The last part of the full filename contains the foto numbers
+    for fullfilename in path_imgs:
+        # Get only the name of the file, excluding the extension
+        filename = os.path.basename(fullfilename)
+        name, ext = os.path.splitext(filename)
+        if fotonummer is name.lower():
+            # Nice, found! Continue the proces by returning this filename
+            return fullfilename
 
     raise FileNotFoundError(
         f"Image with fotonummer {fotonummer} not found in {path_imgs}."
@@ -264,7 +276,7 @@ def remove_last_table(word_document: docx.Document) -> None:
 
 
 def process_aandachtspunten_beheerder(
-    word_document: docx.Document, ora_filtered: pd.DataFrame, path_imgs: str
+    word_document: docx.Document, ora_filtered: pd.DataFrame, path_imgs: list
 ) -> docx.Document:
     """
     Processes the aandachtspunten beheerder and populates the Word document with relevant data.
@@ -294,12 +306,16 @@ def process_aandachtspunten_beheerder(
     for i, (idx, row) in enumerate(ora_filtered.iterrows()):
         logging.debug("Processing row %d: %s", idx, row.to_dict())
 
+        # Everything in front of the colon is the attention point
         aandachtspunt = row["Bevinding:\n- Inspectie\n- Onderhoud\n- Overig"].partition(
             ": "
         )[0]
+        # Everything after the colon is the observation
         bevinding_ora = row["Bevinding:\n- Inspectie\n- Onderhoud\n- Overig"].partition(
             ": "
         )[2]
+        
+        # Extract photo numbers and their paths
         foto_column = [column for column, value in row.items() if "Foto" in column][0]
         fotos = list_of_fotonummers(row[foto_column])
         foto1 = fotos[0] if fotos else None
@@ -402,7 +418,7 @@ def main():
         try:
             path_ora = return_most_recent_ora(object_path)
             print("Checking for images...")
-            path_imgs = find_pictures_for_object_path(object_path)
+            path_imgs = list_pictures_for_object(object_path)
             ora = load_ora(path_ora)
             ora_filtered = extract_relevant_data(ora)
             logger.info(f"The number of aandachtspunten voor beheerder is: {len(ora_filtered)}")

@@ -140,12 +140,26 @@ def convert_docx_to_pdf(input_path: str, output_path=None) -> None:
         raise
 
 
+def list_pictures_for_object(object_path):
+    """
+    Search in the object_path, and list ALL *.png and *.jpg files which are residing 
+    in the object_paths or in each subdirectory. 
+    It returns the full filenames of the pictures
+    """
+    picture_files = []
+    for root, dirs, files in os.walk(object_path):
+        for filename in files:
+            if filename.lower().endswith((".png", ".jpg", ".jpeg")):
+                picture_files.append(os.path.join(root, filename))
+    return picture_files  # List of all fullfilenames of pictures
+
+
 def find_pictures_for_object_path(object_path):
     """
     Finds the directory containing pictures that start with "Inspectiefotos"
     (case-insensitive and ignoring punctuation) and end with "verkleind"
     (case-insensitive and ignoring punctuation).
-
+    
     Parameters:
         object_path (str): The path to the object directory to search in.
 
