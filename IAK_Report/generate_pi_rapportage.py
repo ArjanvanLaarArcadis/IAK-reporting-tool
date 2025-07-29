@@ -916,13 +916,13 @@ def process_pi_report_for_object(
 
     Parameters:
         object_path (str): Path to the object.
-        report_path (str): Path to the report.
+        report_path (str): Path to the (original) report.
         config (dict): Configuration dictionary.
     """
-    TARGET_DIR = os.path.join(object_path, config["save_dir"])
+    # TARGET_DIR = os.path.join(object_path, config["save_dir"])
 
     logging.info(f"Processing PI report for {report_path}")
-    logging.info(f"Target Directory: {TARGET_DIR}")
+    # logging.info(f"Target Directory: {TARGET_DIR}")
 
     # Load workbooks
     wb_report = utilsxls.load_workbook(report_path)
@@ -985,7 +985,7 @@ def process_pi_report_for_object(
     logging.info("Finished populating the PI report.")
 
     # Save the workbook
-    utilsxls.save_and_finalize_workbook(wb_report, config_variables, TARGET_DIR)
+    utilsxls.save_and_finalize_workbook(wb_report, config_variables, save_dir=object_path)
 
     logging.info(f"Done for {config_variables['object_code']}")
 
@@ -1007,7 +1007,7 @@ def main() -> None:
     """
     logger = utils.setup_logger("generate_pi_report.log", log_level="INFO")
     config = utils.load_config('./config.json')
-    logger.info(f"Starting PI report processing for batch {config['werkpakket']}")
+    logger.info(f"Starting PI report processing for werkpakket [{config['werkpakket']}]")
     failed_objects = []
 
     # Get the voortgangs data, based on the excel file (as set in config.json)
@@ -1016,14 +1016,14 @@ def main() -> None:
     
     for object_path, object_code in utils.get_object_paths_codes():
         try:
-            logger.info(f"Processing object {object_code}")
+            logger.info(f"Processing object [{object_code}]")
             logger.info(f"Updating the configuration variables with voortgang...")
             voortgang = get_voortgang_params(voortgangs_data, object_code)
             config = utils.update_config_with_voortgang(config, voortgang)
             pi_report_path = find_inspectierapport(object_path)
             if not pi_report_path:
-                logger.error(f"Could not find inspectierapport for {object_code}")
-                raise FileNotFoundError(f"Could not find inspectierapport for {object_code}")
+                logger.error(f"Could not find inspectierapport for [{object_code}]")
+                raise FileNotFoundError(f"Could not find inspectierapport for [{object_code}]")
             process_pi_report_for_object(object_path, pi_report_path, config)
             save_loc = os.path.join(object_path, config["save_dir"])
             if not os.path.exists(save_loc):
