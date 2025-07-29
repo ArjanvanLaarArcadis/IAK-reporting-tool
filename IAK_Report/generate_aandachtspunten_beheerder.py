@@ -310,7 +310,7 @@ def process_aandachtspunten_beheerder(
 
     # Populate each table with data
     for i, (idx, row) in enumerate(ora_filtered.iterrows()):
-        logging.debug("Processing row %d: %s", idx, row.to_dict())
+        #logging.debug("Processing row %d: %s", idx, row.to_dict())
 
         # Everything in front of the colon is the attention point
         aandachtspunt = row["Bevinding:\n- Inspectie\n- Onderhoud\n- Overig"].partition(
