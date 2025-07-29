@@ -1025,9 +1025,7 @@ def main() -> None:
                 logger.error(f"Could not find inspectierapport for [{object_code}]")
                 raise FileNotFoundError(f"Could not find inspectierapport for [{object_code}]")
             process_pi_report_for_object(object_path, pi_report_path, config)
-            save_loc = os.path.join(object_path, config["save_dir"])
-            if not os.path.exists(save_loc):
-                os.makedirs(save_loc)
+            
             # print_excel_to_pdf(os.path.join(save_loc, f"PI rapport {object_code}.xlsx"))
         except Exception as e:
             logger.error(f"Error processing [{object_code}]: {e}")
