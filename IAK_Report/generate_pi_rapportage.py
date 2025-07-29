@@ -921,8 +921,8 @@ def process_pi_report_for_object(
     """
     TARGET_DIR = os.path.join(object_path, config["save_dir"])
 
-    logging.info("Processing PI report for %s", report_path)
-    logging.info("Target Directory: %s", TARGET_DIR)
+    logging.info(f"Processing PI report for {report_path}")
+    logging.info(f"Target Directory: {TARGET_DIR}")
 
     # Load workbooks
     wb_report = utilsxls.load_workbook(report_path)
@@ -930,12 +930,12 @@ def process_pi_report_for_object(
 
     # Delete mpo images
     mpo_images = utilsxls.find_mpo_references(wb_report)
-    logging.info("Found `.mpo` images: %s", mpo_images)
+    logging.info(f"Found `.mpo` images: {mpo_images}")
 
     # Step 2: Replace `.mpo` images with `.png`
     if mpo_images:
         utilsxls.delete_images(wb_report, mpo_images)
-        logging.info("Deleted `.mpo` images: %s for object %s", mpo_images, object_path)
+        logging.info(f"Deleted `.mpo` images: {mpo_images} for object {object_path}")
 
     # update variables
     config_variables = update_config_variables(wb_report["Sheet2"], config)
@@ -987,7 +987,7 @@ def process_pi_report_for_object(
     # Save the workbook
     utilsxls.save_and_finalize_workbook(wb_report, config_variables, TARGET_DIR)
 
-    logging.info("Done for %s", config_variables["object_code"])
+    logging.info(f"Done for {config_variables['object_code']}")
 
 
 def print_excel_to_pdf(path_of_pi_report: str) -> None:
@@ -1013,19 +1013,17 @@ def main() -> None:
     # Get the voortgangs data, based on the excel file (as set in config.json)
     excelfile = config.get("voortgangs_sheet", "")
     voortgangs_data = get_voortgang(excelfile)
-      
-
+    
     for object_path, object_code in utils.get_object_paths_codes():
         try:
             logger.info(f"Processing object {object_code}")
-            logger.info("Updating the configuration variables with voortgang...")
+            logger.info(f"Updating the configuration variables with voortgang...")
             voortgang = get_voortgang_params(voortgangs_data, object_code)
             config = utils.update_config_with_voortgang(config, voortgang)
             pi_report_path = find_inspectierapport(object_path)
             if not pi_report_path:
                 logger.error(f"Could not find inspectierapport for {object_code}")
                 raise FileNotFoundError(f"Could not find inspectierapport for {object_code}")
-            
             process_pi_report_for_object(object_path, pi_report_path, config)
             save_loc = os.path.join(object_path, config["save_dir"])
             if not os.path.exists(save_loc):
@@ -1034,7 +1032,6 @@ def main() -> None:
         except Exception as e:
             logger.error(f"Error processing [{object_code}]: {e}")
             failed_objects.append(object_code)
-    
     if failed_objects:
         logger.error(f"Failed to process the following objects: {failed_objects}")
     else:
