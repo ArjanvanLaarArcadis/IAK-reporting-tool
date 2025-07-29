@@ -161,7 +161,8 @@ def populate_title_page(
     contactpersoon_rws = variables.get('contactpersoon_rws', 'UNKNOWN')
     zaaknr = variables.get("zaaknummer", "UNKNOWN")
     versie = variables.get('versie', 'UNKNOWN')
-    datum = variables.get('datum', 'UNKNOWN')
+    # Use today's date as the default value for datum
+    datum = dt.date.today().strftime("%d-%m-%Y")
     omschrijving = variables.get('omschrijving', 'UNKNOWN')
     opdrachtnemer = variables.get('opdrachtnemer', 'UNKNOWN')
     opsteller = variables.get('opsteller', 'UNKNOWN')
