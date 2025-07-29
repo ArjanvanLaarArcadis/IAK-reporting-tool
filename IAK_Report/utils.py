@@ -206,12 +206,6 @@ def update_config_with_voortgang(config, voortgang):
     variables = config
     for key, value in voortgang.items():
         variables[key] = value
-    variables["save_loc"] = os.path.join(
-        variables["path_batch"],
-        variables["batch"],
-        variables["object_code"],
-        variables["save_dir"],
-    )
     return variables
 
 

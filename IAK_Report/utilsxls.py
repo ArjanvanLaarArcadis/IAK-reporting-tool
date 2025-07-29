@@ -81,7 +81,7 @@ def delete_images(workbook, image_references):
                 logging.info(f"Deleted image: {img.path} from sheet: {sheet_name}")
 
 
-def save_and_finalize_workbook(wb: openpyxl.Workbook, variables: dict, target_dir: str) -> None:
+def save_and_finalize_workbook(wb: openpyxl.Workbook, variables: dict, save_dir: str) -> None:
     """
     Save and finalize the workbook.
 
@@ -92,12 +92,12 @@ def save_and_finalize_workbook(wb: openpyxl.Workbook, variables: dict, target_di
     """
     object_code = variables.get("object_code", "UNKNOWN")
     filename_excel = f"PI rapport {object_code}.xlsx"
-    filepath_excel = os.path.join(target_dir, filename_excel)
+    filepath_excel = os.path.join(save_dir, filename_excel)
 
-    # Create target directory if it doesn't exist
-    if not os.path.exists(target_dir):
-        os.makedirs(target_dir)
-        logging.info("Created directory: %s", target_dir)
+    # Create save directory if it doesn't exist
+    if not os.path.exists(save_dir):
+        os.makedirs(save_dir)
+        logging.info(f"Created directory: {save_dir}")
 
     # Remove 'Document map' sheet if it exists
     if "Document map" in wb.sheetnames:
@@ -111,6 +111,6 @@ def save_and_finalize_workbook(wb: openpyxl.Workbook, variables: dict, target_di
         sheet.views.sheetView[0].tabSelected = True
 
     # Save the workbook
-    logging.info("Saving workbook to %s...", filepath_excel)
+    logging.debug(f"Saving workbook to {filepath_excel}...")
     wb.save(filepath_excel)
-    logging.info("Workbook saved: %s", filepath_excel)
+    logging.info(f"Workbook saved: {filename_excel}")
