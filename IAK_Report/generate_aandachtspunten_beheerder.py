@@ -309,7 +309,7 @@ def process_aandachtspunten_beheerder(
     else:
         for _ in range(len(ora_filtered) - 2):
             copy_last_table(word_document)
-        logging.info("Duplicated tables for %d aandachtspunten.", len(ora_filtered) - 1)
+        logging.info(f"Duplicated tables for {len(ora_filtered) - 1} aandachtspunten.")
 
     # Populate each table with data
     for i, (idx, row) in enumerate(ora_filtered.iterrows()):
@@ -360,16 +360,17 @@ def process_aandachtspunten_beheerder(
         word_document.tables[i].cell(6, 0).vertical_alignment = WD_CELL_VERTICAL_ALIGNMENT.TOP
 
         if foto1:
-            logging.debug("Adding Foto1 to table %d.", i)
+            logging.debug(f"Adding Foto1 to table {i}.")
             word_document.tables[i].cell(4, 2).paragraphs[0].add_run().add_picture(
                 path_foto1, width=2350000
             )
         if foto2:
-            logging.debug("Adding Foto2 to table %d.", i)
+            logging.debug(f"Adding Foto2 to table {i}.")
+            # TO DO: add an return between the two photos
             word_document.tables[i].cell(6, 2).paragraphs[0].add_run().add_picture(
                 path_foto2, width=2350000
             )
-        logging.info("Processed single aandachtspunt %d.", i + 1)
+        logging.info(f"Processed single aandachtspunt {i + 1}.")
     logging.info("Finished processing aandachtspunten beheerder.")
     return word_document
 
