@@ -1004,8 +1004,8 @@ def main() -> None:
     Main function to orchestrate the processing of the PI report.
     """
     logger = utils.setup_logger("generate_pi_report.log", log_level="INFO")
-    config = utils.load_config('IAK_Report/config.json')
-    logger.info("Starting PI report processing for batch %s", config["batch"])
+    config = utils.load_config('./config.json')
+    logger.info(f"Starting PI report processing for batch {config['werkpakket']}")
     failed_objects = []
 
     # Get the voortgangs data, based on the excel file (as set in config.json)
@@ -1014,13 +1014,13 @@ def main() -> None:
 
     for object_path, object_code in utils.get_object_paths_codes():
         try:
-            logger.info("Processing object %s", object_code)
+            logger.info(f"Processing object {object_code}")
             logger.info("Updating the configuration variables with voortgang...")
             voortgang = get_voortgang_params(voortgangs_data, object_code)
             variables = utils.update_config_with_voortgang(config, voortgang)
             pi_report_path = find_inspectierapport(object_path)
             if not pi_report_path:
-                logger.error("Could not find inspectierapport for %s", object_code)
+                logger.error(f"Could not find inspectierapport for {object_code}")
                 continue
             process_pi_report_for_object(object_path, pi_report_path, variables)
             save_loc = os.path.join(object_path, config["save_dir"])
@@ -1028,11 +1028,11 @@ def main() -> None:
                 os.makedirs(save_loc)
             # print_excel_to_pdf(os.path.join(save_loc, f"PI rapport {object_code}.xlsx"))
         except Exception as e:
-            logger.error("Error processing %s: %s", object_code, e)
+            logger.error(f"Error processing [{object_code}]: {e}")
             failed_objects.append(object_code)
     logger.info("Processing completed for all objects.")
     if failed_objects:
-        logger.error("Failed to process the following objects: %s", failed_objects)
+        logger.error(f"Failed to process the following objects: {failed_objects}")
     else:
         logger.info("All objects processed successfully.")
 
