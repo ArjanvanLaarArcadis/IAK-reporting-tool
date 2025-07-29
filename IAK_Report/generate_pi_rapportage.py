@@ -76,28 +76,30 @@ def find_inspectierapport(directory: str) -> str:
         str: fullfilename of the most recent matching file if found.
         None: If no matching file is found.
     """
-    logging.info(f"Searching for .xlsx-files in [{directory}], starting with 'inspectieRapport' (case insensitive)")
+    logging.debug(f"Searching for .xlsx-files in [{directory}], starting with 'inspectieRapport' (case insensitive)")
 
+    # List to hold tuples of (file_path, modification_time)
     matching_files = []
 
-    # List all files in the given directory
-    for file in os.listdir(directory):
-        if file.lower().startswith("inspectierapport") and \
-            file.lower().endswith(".xlsx"):
-            # Get the full path and modification time of the inspectie
-            file_path = os.path.join(directory, file)
-            file_mtime = os.path.getmtime(file_path)
-            matching_files.append((file_path, file_mtime))
-            logging.debug(f"Found matching file: [{file_path}]")
+    # Walk through the directory and its subdirectories
+    for root, dirs, files in os.walk(directory):
+        for file in files:
+            if file.lower().startswith("inspectierapport") and \
+                file.lower().endswith(".xlsx"):
+                # Get the full path and modification time of the inspectie
+                file_path = os.path.join(root, file)
+                file_mtime = os.path.getmtime(file_path)
+                matching_files.append((file_path, file_mtime))
+                logging.debug(f"Found matching file: [{file_path}]")
 
     if not matching_files:
         logging.info("No matching file found.")
         return None
 
-    # Sort by modification time (most recent first) and return the most recent
+    # Select the file name, based on the most recent time
     most_recent_file = max(matching_files, key=lambda x: x[1])[0]
-    logging.info(f"Most recent file found: {most_recent_file}")
-    return most_recent_file
+    logging.info(f"Most recent file found: [{most_recent_file}]")
+    return most_recent_file  # Full path of the most recent file
 
 
 def set_footer(
@@ -1009,7 +1011,8 @@ def main() -> None:
     failed_objects = []
 
     # Get the voortgangs data, based on the excel file (as set in config.json)
-    voortgangs_data = get_voortgang(config)
+    excelfile = config.get("voortgangs_sheet", "")
+    voortgangs_data = get_voortgang(excelfile)
       
 
     for object_path, object_code in utils.get_object_paths_codes():
@@ -1021,7 +1024,8 @@ def main() -> None:
             pi_report_path = find_inspectierapport(object_path)
             if not pi_report_path:
                 logger.error(f"Could not find inspectierapport for {object_code}")
-                continue
+                raise FileNotFoundError(f"Could not find inspectierapport for {object_code}")
+            
             process_pi_report_for_object(object_path, pi_report_path, variables)
             save_loc = os.path.join(object_path, config["save_dir"])
             if not os.path.exists(save_loc):
@@ -1030,7 +1034,7 @@ def main() -> None:
         except Exception as e:
             logger.error(f"Error processing [{object_code}]: {e}")
             failed_objects.append(object_code)
-    logger.info("Processing completed for all objects.")
+    
     if failed_objects:
         logger.error(f"Failed to process the following objects: {failed_objects}")
     else:
