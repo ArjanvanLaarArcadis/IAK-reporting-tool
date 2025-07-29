@@ -78,7 +78,7 @@ def find_inspectierapport(directory: str) -> str:
     """
     logging.debug(f"Searching for .xlsx-files in [{directory}], starting with 'inspectieRapport' (case insensitive)")
 
-    # List to hold tuples of (file_path, modification_time)
+    # List to hold all file paths
     matching_files = []
 
     # Walk through the directory and its subdirectories
@@ -88,8 +88,7 @@ def find_inspectierapport(directory: str) -> str:
                 file.lower().endswith(".xlsx"):
                 # Get the full path and modification time of the inspectie
                 file_path = os.path.join(root, file)
-                file_mtime = os.path.getmtime(file_path)
-                matching_files.append((file_path, file_mtime))
+                matching_files.append(file_path)
                 logging.debug(f"Found matching file: [{file_path}]")
 
     if not matching_files:
@@ -97,7 +96,7 @@ def find_inspectierapport(directory: str) -> str:
         return None
 
     # Select the file name, based on the most recent time
-    most_recent_file = max(matching_files, key=lambda x: x[1])[0]
+    most_recent_file = max(matching_files, key=os.path.getmtime)
     logging.info(f"Most recent file found: [{most_recent_file}]")
     return most_recent_file  # Full path of the most recent file
 
