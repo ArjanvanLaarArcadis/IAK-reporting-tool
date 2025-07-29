@@ -316,6 +316,11 @@ def process_aandachtspunten_beheerder(
         aandachtspunt = row["Bevinding:\n- Inspectie\n- Onderhoud\n- Overig"].partition(
             ": "
         )[0]
+        # However, sometimes it has an additional preliminary sentence, so we take only the two characters before
+        # the colon, which is the attention point number.
+        if len(aandachtspunt) > 2:
+            aandachtspunt = aandachtspunt[-2:]
+
         # Everything after the colon is the observation
         bevinding_ora = row["Bevinding:\n- Inspectie\n- Onderhoud\n- Overig"].partition(
             ": "
