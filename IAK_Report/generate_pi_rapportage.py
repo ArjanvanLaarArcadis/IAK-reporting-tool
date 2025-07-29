@@ -1020,13 +1020,13 @@ def main() -> None:
             logger.info(f"Processing object {object_code}")
             logger.info("Updating the configuration variables with voortgang...")
             voortgang = get_voortgang_params(voortgangs_data, object_code)
-            variables = utils.update_config_with_voortgang(config, voortgang)
+            config = utils.update_config_with_voortgang(config, voortgang)
             pi_report_path = find_inspectierapport(object_path)
             if not pi_report_path:
                 logger.error(f"Could not find inspectierapport for {object_code}")
                 raise FileNotFoundError(f"Could not find inspectierapport for {object_code}")
             
-            process_pi_report_for_object(object_path, pi_report_path, variables)
+            process_pi_report_for_object(object_path, pi_report_path, config)
             save_loc = os.path.join(object_path, config["save_dir"])
             if not os.path.exists(save_loc):
                 os.makedirs(save_loc)
