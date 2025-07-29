@@ -2,11 +2,8 @@
   "path_batch": "..\\data",
   "werkpakket": "WP-LC-WB-23-322",
   "object_code": "",
-
   "voortgangs_sheet": <full-path-to-voortgangs-sheet.xlsx>
-  "target_dir": "pirapport_python",
-  "save_dir": "rapportje",
-  
+
   "opdrachtgever": "Rijkswaterstaat, Grote Projecten en Onderhoud (GPO)",
   "contactpersoon_rws": "<Contactpersoon RWS>",
   "zaaknummer": 23421234,
