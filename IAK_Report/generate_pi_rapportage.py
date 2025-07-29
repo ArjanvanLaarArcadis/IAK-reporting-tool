@@ -172,7 +172,7 @@ def populate_title_page(
     sheet['H14'] = opdrachtgever
     sheet['H15'] = contactpersoon_rws
     sheet['H16'] = str(zaaknr)
-    sheet['F23'] = versie
+    sheet['F23'] = str(versie)
     sheet['J23'] = datum
     sheet['L23'] = omschrijving
     sheet['D25'] = opdrachtnemer
