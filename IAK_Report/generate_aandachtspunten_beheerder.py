@@ -312,19 +312,22 @@ def process_aandachtspunten_beheerder(
     for i, (idx, row) in enumerate(ora_filtered.iterrows()):
         #logging.debug("Processing row %d: %s", idx, row.to_dict())
 
+        cell_content = row["Bevinding:\n- Inspectie\n- Onderhoud\n- Overig"]
+        if not ": " in cell_content:
+            raise ValueError(
+                f"Cell content does not contain ': ': {cell_content}. "
+                "Please check the ORA sheet for correct formatting."
+            )
+
         # Everything in front of the colon is the attention point
-        aandachtspunt = row["Bevinding:\n- Inspectie\n- Onderhoud\n- Overig"].partition(
-            ": "
-        )[0]
-        # However, sometimes it has an additional preliminary sentence, so we take only the two characters before
+        aandachtspunt = cell_content.partition(": ")[0]
+        # However, sometimes it has an introduction-sentence, so we take only the two characters before
         # the colon, which is the attention point number.
         if len(aandachtspunt) > 2:
             aandachtspunt = aandachtspunt[-2:]
 
         # Everything after the colon is the observation
-        bevinding_ora = row["Bevinding:\n- Inspectie\n- Onderhoud\n- Overig"].partition(
-            ": "
-        )[2]
+        bevinding_ora = cell_content.partition(": ")[2]
         
         # Extract photo numbers and their paths
         foto_column = [column for column, value in row.items() if "Foto" in column][0]
