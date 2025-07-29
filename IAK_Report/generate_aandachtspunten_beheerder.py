@@ -455,7 +455,11 @@ def main():
             failed_objects.append(object_code)
             logging.error(f"Failed to generate for object code: {object_code}. Error: {e}")
 
-        logging.info(f"Processing completed. Failed objects: [{', '.join(failed_objects) if failed_objects else 'None'}]")
+    if failed_objects:
+        logger.error(f"Failed to process the following objects: {failed_objects}")
+    else:
+        logger.info("All objects processed successfully.")
+
 
 if __name__ == "__main__":
     main()
