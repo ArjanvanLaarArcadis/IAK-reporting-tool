@@ -422,7 +422,7 @@ def main():
     if not config.get("voortgangs_sheet"):
         raise KeyError("Voortgangs sheet file not found in config.")
     excelfile = config["voortgangs_sheet"]
-    df_voortgang = get_voortgang(excelfile=excelfile)
+    df_voortgang = get_voortgang(excelfile=excelfile, abbrev=False)
 
     list_of_object_codes = get_object_paths_codes(config_file=config_path)
     failed_objects = []

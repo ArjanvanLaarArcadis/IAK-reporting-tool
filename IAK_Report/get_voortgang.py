@@ -57,7 +57,7 @@ def expand_abbreviations(df):
     return df
 
 
-def get_voortgang(excelfile, columns=COLS) -> pd.DataFrame:
+def get_voortgang(excelfile, columns=COLS, abbrev=True) -> pd.DataFrame:
     """
     Retrieves and processes the 'voortgang' data.
 
@@ -83,8 +83,10 @@ def get_voortgang(excelfile, columns=COLS) -> pd.DataFrame:
         dtype=str,
     )
     
-    # Columns with personal names are cleaned to replace initials with full names.
-    data = expand_abbreviations(data)
+    # Optional, make use of abbreviations
+    if abbrev:
+        # Columns with personal names are cleaned to replace initials with full names.
+        data = expand_abbreviations(data)
     logging.info("Data loaded and cleaned successfully.")
     return data
 

@@ -1009,7 +1009,7 @@ def main() -> None:
 
     # Get the voortgangs data, based on the excel file (as set in config.json)
     excelfile = config.get("voortgangs_sheet", "")
-    voortgangs_data = get_voortgang(excelfile)
+    voortgangs_data = get_voortgang(excelfile, abbrev=False)
     
     for object_path, object_code in utils.get_object_paths_codes():
         try:
