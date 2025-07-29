@@ -17,11 +17,11 @@ COLS = [
     "Inspecteur 2",
     "door",
     "door.1",
-    "V&R-indicatie",
-    "Nader onderzoek",
-    "Directe maatregelen",
-    r"Niet schade gerelateerde / gebruiksspecifieke risico’s",
-    "Constructieve beoordeling"
+    # "V&R-indicatie",
+    # "Nader onderzoek",
+    # "Directe maatregelen",
+    # r"Niet schade gerelateerde / gebruiksspecifieke risico’s",
+    # "Constructieve beoordeling"
 ]
 
 # List of names to expand abbreviations
