@@ -271,32 +271,28 @@ def return_most_recent_ora(directory: str) -> str:
     """
     logging.info("Searching for ORA files in directory: %s", directory)
 
-    # List all files in the directory
-    files = os.listdir(directory)
-    logging.debug("Files in directory: %s", files)
-
-    # Filter files that start with "ORA" and have the correct extensions
-    ora_files = [
-        file
-        for file in files
-        if file.startswith("ORA") and file.endswith((".xlsm", ".xlsb", ".xlsx"))
-    ]
-    logging.debug("Filtered ORA files: %s", ora_files)
+    # Walk through the directory and all subdirectories to find matching files
+    ora_files = []
+    for root, dirs, files in os.walk(directory):
+        for file in files:
+            if file.startswith("ORA") and file.endswith((".xlsm", ".xlsb", ".xlsx")):
+                ora_files.append(os.path.join(root, file))
+    logging.debug(f"Filtered ORA files (with full paths): {ora_files}")
 
     if not ora_files:
         # Raise FileNotFoundError if no files with "ORA" are found
-        logging.error("No files starting with 'ORA' found in directory: %s", directory)
+        logging.error(f"No files starting with 'ORA' found in directory: {directory}")
         raise FileNotFoundError(
             f"No files starting with 'ORA' found in directory: {directory}"
         )
 
     # Get the full paths of the filtered files
     full_paths = [os.path.join(directory, file) for file in ora_files]
-    logging.debug("Full paths of ORA files: %s", full_paths)
+    logging.debug(f"Full paths of ORA files: {full_paths}")
 
     # Find the most recently modified file
     most_recent_file = max(full_paths, key=os.path.getmtime)
-    logging.info("Most recent ORA file found: %s", most_recent_file)
+    logging.info(f"Most recent ORA file found: {most_recent_file}")
 
     return most_recent_file
 

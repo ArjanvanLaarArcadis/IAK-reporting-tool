@@ -396,7 +396,7 @@ def main():
     """
     Main function to orchestrate the processing of the PI report.
     """
-    logger = setup_logger("generate_aandachtspunten_beheerder.log", "DEBUG")
+    logger = setup_logger("generate_aandachtspunten_beheerder.log", "INFO")
     logger.info("Starting the generation process for aandachtspunten beheerder.")
     config_path = "./config.json"
     config = load_config(config_path=config_path)
