@@ -148,7 +148,7 @@ def get_voortgang_params(df_voortgang: pd.DataFrame, bh_code: str):
         "inspecteurs": ", ".join(
             [get_value("Inspecteur 1"), get_value("Inspecteur 2")]
         ),
-        "besteknummer": get_value("zaakrn"),
+        "besteknummer": get_value("zaaknr"),
         "hulpmiddelen": get_value("VKM / HM"),
         "batch": get_value("Batch"),
         "object_naam": get_value("Objectnaam"),

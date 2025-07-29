@@ -117,30 +117,26 @@ def set_footer(
     complex = variables.get("complex_code", "UNKNOWN")
     objectcode = variables.get("object_code", "UNKNOWN")
     versie = variables.get("versie", "UNKNOWN")
-    datum = variables.get("datum", "UNKNOWN")
+    # Use today's date as the default value for datum
+    datum = dt.date.today().strftime("%d-%m-%Y")
     # object_beheer = variables.get("object_beheer", "UNKNOWN")  # te lang, zorgd voor problemen in de output
 
     FOOTER_LEFT = f"Complex: {complex}\nBeheerobject: {objectcode}\nVertrouwelijkheid: RWS Bedrijfsvertrouwelijk"
     FOOTER_RIGHT = f"Revisie: {versie}\nDatum: {datum}\nPagina &P van &N"
     for i in range(2, sheets_count):
         sheet = wb[sheet_names[i]]
-        list_of_footers = [
-            sheet.evenFooter.left,
-            sheet.evenFooter.center,
-            sheet.evenFooter.right,
-            sheet.oddFooter.left,
-            sheet.oddFooter.center,
-            sheet.oddFooter.right,
-        ]
-        sheet.evenFooter.left.text = FOOTER_LEFT
-        sheet.evenFooter.right.text = FOOTER_RIGHT
-        sheet.evenFooter.center.text = ""
-        sheet.oddFooter.left.text = FOOTER_LEFT
-        sheet.oddFooter.center.text = ""
-        sheet.oddFooter.right.text = FOOTER_RIGHT
-        for footer in list_of_footers:
-            footer.font = "Arial"
-            footer.size = 7
+        
+        # Define footer content mapping
+        footer_content = {'left': FOOTER_LEFT, 'center': "", 'right': FOOTER_RIGHT}
+        
+        # Set footer content for both even and odd footers
+        for footer_type in ['evenFooter', 'oddFooter']:
+            footer = getattr(sheet, footer_type)
+            for position, content in footer_content.items():
+                getattr(footer, position).text = content
+                getattr(footer, position).font = "Arial"
+                getattr(footer, position).size = 7
+
     logging.debug("Footers set successfully.")
 
 
@@ -881,7 +877,7 @@ def update_config_variables(
     sheet: openpyxl.worksheet.worksheet.Worksheet, variables: dict
 ) -> dict:
     """
-    Update the config variables.
+    Update the config variables with values FROM the original worksheet.
 
     Parameters:
         sheet (openpyxl.worksheet.worksheet.Worksheet): The worksheet object.
@@ -897,12 +893,7 @@ def update_config_variables(
     config_variables["object_omschrijving"] = sheet["H8"].value
     config_variables["object_naam"] = sheet["H9"].value
     config_variables["object_beheer"] = sheet["H10"].value
-    current_date = dt.datetime.now().strftime("%d-%m-%Y")
-    config_variables["datum"] = (
-        current_date
-        if pd.isna(config_variables["datum"])
-        else config_variables["datum"]
-    )
+
     logging.info("Config variables updated successfully.")
     return config_variables
 
@@ -1023,7 +1014,9 @@ def main() -> None:
                 raise FileNotFoundError(f"Could not find inspectierapport for [{object_code}]")
             process_pi_report_for_object(object_path, pi_report_path, config)
             
-            # print_excel_to_pdf(os.path.join(save_loc, f"PI rapport {object_code}.xlsx"))
+            # Start the printing to PDF
+            #logger.info(f"Printing PI report to PDF for [{object_code}]")
+            #print_excel_to_pdf(object_path, f"PI rapport {object_code}.xlsx")
         except Exception as e:
             logger.error(f"Error processing [{object_code}]: {e}")
             failed_objects.append(object_code)
