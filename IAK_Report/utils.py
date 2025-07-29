@@ -43,10 +43,12 @@ def get_matching_codes(folder_path):
     # Define the regex pattern for the object code
     # Starting with Two digits, a letter, a hyphen, three digits, a hyphen, and two digits. 
     # Optional trailing characters.
-    pattern = r"^\d{2}[A-Z]-\d{3}-\d{2}"
+    # Optional the prefix "ORA " can be present, but not required.
+    # Example: "31A-001-32", "51B-002-03", "ORA 31A-001-32", "ORA 51B-002-03"
+    pattern = r"^(ORA\s*)?\d{2}[A-Z]-\d{3}-\d{2}"
 
     # List all content in the folder
-    logging.debug("scanning folder: %s", folder_path)
+    logging.debug(f"scanning folder: {folder_path}")
     all_content = os.listdir(folder_path)
     
     # Filter content matching the pattern
@@ -103,9 +105,12 @@ def get_object_paths_codes(config_file=CONFIG_FILE):
     
     # Return all matching codes with their paths and stripped codes
     for code_name in get_matching_codes(werkpakket_path):
-        object_paths_codes.append(
-            (os.path.join(werkpakket_path, code_name), re.match(r"^\d{2}[A-Z]-\d{3}-\d{2}", code_name).group())
-        )
+        # Extract the object code, allowing for an optional "ORA " prefix
+        match = re.match(r"^(?:ORA\s*)?(\d{2}[A-Z]-\d{3}-\d{2})", code_name)
+        if match:
+            object_paths_codes.append(
+            (os.path.join(werkpakket_path, code_name), match.group(1))
+            )
 
     return object_paths_codes  # List of tuples (path with code_name, code)
 

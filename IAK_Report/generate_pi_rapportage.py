@@ -919,10 +919,7 @@ def process_pi_report_for_object(
         report_path (str): Path to the (original) report.
         config (dict): Configuration dictionary.
     """
-    # TARGET_DIR = os.path.join(object_path, config["save_dir"])
-
-    logging.info(f"Processing PI report for {report_path}")
-    # logging.info(f"Target Directory: {TARGET_DIR}")
+    logging.info(f"Processing PI report for [{report_path}]")
 
     # Load workbooks
     wb_report = utilsxls.load_workbook(report_path)
