@@ -214,7 +214,7 @@ def find_foto_path(fotonummer: str, imgs: list) -> str:
     fotonummer, ext = os.path.splitext(fotonummer)
     if ext: 
         if not ext in ['.png', '.jpg', 'jpeg']:
-            raise ValueError(f"[{ext}], that's a weird extension!!")
+            raise ValueError(f"[{ext}], that's a weird extension! Try to repair the ORA sheets")
     # Continue with just the name
     
     # The last part of the full filename contains the foto numbers
@@ -222,13 +222,18 @@ def find_foto_path(fotonummer: str, imgs: list) -> str:
         # Get only the name of the file, excluding the extension
         filename = os.path.basename(fullfilename)
         name, ext = os.path.splitext(filename)
-        if fotonummer is name.lower():
+
+        # Ok, sometimes, only the number is provided, without the camera-prefix.
+        # e.g. 9252 instead of DSCN9252
+        if name.lower().endswith(fotonummer):
             # Nice, found! Continue the proces by returning this filename
+            logging.debug(f"Found photo {name}")
             return fullfilename
 
+    # If not returned, then the photo in the excelsheet wasn't found in the directory.
     common_path = os.path.commonpath(imgs)
     raise FileNotFoundError(
-        f"Image with fotonummer [{fotonummer}] not found in [{common_path}]."
+        f"Image with photonummer [{fotonummer}] not found in [{common_path}]."
     )
 
 
@@ -325,7 +330,7 @@ def process_aandachtspunten_beheerder(
         path_foto2 = find_foto_path(foto2, path_imgs) if foto2 else None
 
         logging.info(
-            "Aandachtspunt: %s, Foto1: %s, Foto2: %s", aandachtspunt, foto1, foto2
+            f"Aandachtspunt: {aandachtspunt}, Foto1: {foto1}, Foto2: {foto2}"
         )
 
         word_document.tables[i].cell(0, 0).text = str("Aandachtspunt " + aandachtspunt)
