@@ -985,8 +985,19 @@ def print_excel_to_pdf(path_of_pi_report: str) -> None:
     Parameters:
         path_of_pi_report (str): Path to the PI report.
     """
-    run_macro_on_workbook(path_of_pi_report, "InspectieRapportage", "ExportToPDF")
-    logging.info("PI report processing completed successfully.")
+    try:
+        run_macro_on_workbook(path_of_pi_report, "InspectieRapportage", "ExportToPDF")
+        logging.info("PI report exported to PDF successfully.")
+    except ConnectionRefusedError as e:
+        logging.error(f"Excel COM connection failed: {e}")
+        logging.error("PDF export skipped. Possible solutions:")
+        logging.error("1. Make sure Microsoft Excel is installed")
+        logging.error("2. Run: regsvr32 /i:user excel.exe")
+        logging.error("3. Run as Administrator: regsvr32 excel.exe")
+        logging.error("4. Restart Windows and try again")
+    except Exception as e:
+        logging.error(f"Failed to export PI report to PDF: {e}")
+        logging.error("PDF export skipped. Excel file is still available.")
 
 
 def main() -> None:
@@ -1014,9 +1025,13 @@ def main() -> None:
                 raise FileNotFoundError(f"Could not find inspectierapport for [{object_code}]")
             process_pi_report_for_object(object_path, pi_report_path, config)
             
-            # Start the printing to PDF
-            #logger.info(f"Printing PI report to PDF for [{object_code}]")
-            #print_excel_to_pdf(object_path, f"PI rapport {object_code}.xlsx")
+            # Start the printing to PDF (separate try-catch to not fail the whole object)
+            try:
+                logger.info(f"Printing PI report to PDF for [{object_code}]")
+                print_excel_to_pdf(os.path.join(object_path, f"PI rapport {object_code}.xlsx"))
+            except Exception as pdf_error:
+                logger.warning(f"PDF export failed for [{object_code}]: {pdf_error}")
+                logger.info(f"Excel report for [{object_code}] is still available.")
         except Exception as e:
             logger.error(f"Error processing [{object_code}]: {e}")
             failed_objects.append(object_code)

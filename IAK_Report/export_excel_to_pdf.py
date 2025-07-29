@@ -159,10 +159,8 @@ def run_macro_on_workbook(excel_path: str, module_name: str, macro_name: str) ->
 
         # Step 2: Execute the macro
         logging.info(
-            "Executing macro '%s.%s' on workbook '%s'.",
-            module_name,
-            macro_name,
-            excel_path,
+            f"Executing macro [{module_name}.{macro_name}] "
+            f"on workbook [{os.path.basename(excel_path)}]."
         )
         execute_macro(
             excel_app, module_name, macro_name, local_path=os.path.dirname(excel_path)
