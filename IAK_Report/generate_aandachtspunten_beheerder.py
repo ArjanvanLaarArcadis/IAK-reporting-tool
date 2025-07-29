@@ -181,6 +181,9 @@ def list_of_fotonummers(fotonummers: str) -> list:
     if "," in fotonummers:
         # Split the string into a list of substrings and strip each element
         fotonummers_list = [item.strip() for item in fotonummers.split(",")]
+    elif ";" in fotonummers:
+        # Split the string into a list of substrings and strip each element
+        fotonummers_list = [item.strip() for item in fotonummers.split(";")]
     elif fotonummers.strip() == "nan":
         logging.debug("Input is 'nan', returning an empty list.")
         return []
