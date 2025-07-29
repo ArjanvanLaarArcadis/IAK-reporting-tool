@@ -25,9 +25,9 @@ def load_workbook(path: str) -> openpyxl.Workbook:
         openpyxl.Workbook: Loaded workbook object.
     """
     try:
-        logging.info(f"Loading Excel workbook from [{path}]...")
+        logging.debug(f"Loading Excel workbook from [{path}]...")
         wb = openpyxl.load_workbook(path)
-        logging.info("Workbook loaded successfully.")
+        logging.debug("Workbook loaded successfully.")
         return wb
     except FileNotFoundError:
         logging.error(f"Error: The file at [{path}] was not found.")
