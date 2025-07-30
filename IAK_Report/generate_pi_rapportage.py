@@ -886,7 +886,7 @@ def update_config_variables(
     Returns:
         dict: Updated dictionary of variables.
     """
-    logging.info("Updating variables with config variables...")
+    logging.debug("Updating variables with config variables...")
     # Find the input list workbook
     config_variables = variables.copy()
 
@@ -894,7 +894,7 @@ def update_config_variables(
     config_variables["object_naam"] = sheet["H9"].value
     config_variables["object_beheer"] = sheet["H10"].value
 
-    logging.info("Config variables updated successfully.")
+    logging.debug("Config variables updated successfully.")
     return config_variables
 
 
@@ -916,14 +916,14 @@ def process_pi_report_for_object(
     wb_report = utilsxls.load_workbook(report_path)
     sheet_names = wb_report.sheetnames
 
-    # Delete mpo images
+    # Find the mpo images in the report
     mpo_images = utilsxls.find_mpo_references(wb_report)
-    logging.info(f"Found `.mpo` images: {mpo_images}")
-
-    # Step 2: Replace `.mpo` images with `.png`
     if mpo_images:
+        logging.info(f"Found `.mpo` images: {mpo_images}")
+
+        # Delete mpo images
         utilsxls.delete_images(wb_report, mpo_images)
-        logging.info(f"Deleted `.mpo` images: {mpo_images} for object {object_path}")
+        logging.info(f"Deleted all `.mpo` images for object {object_path}")
 
     # update variables
     config_variables = update_config_variables(wb_report["Sheet2"], config)

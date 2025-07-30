@@ -123,24 +123,24 @@ def get_voortgang_params(df_voortgang: pd.DataFrame, bh_code: str):
         - Logs information about the fetching process and any errors encountered.
         - Logs debug information for each column value retrieved.
     """
-    logging.info("Fetching parameters for BH_code: %s", bh_code)
-    
+    logging.debug(f"Fetching parameters for BH_code: [{bh_code}]")
+
     # From the DataFrame, filter rows where 'BH_code' matches the provided bh_code.
     my_rows = df_voortgang[df_voortgang['BH_code'] == bh_code]
 
     if my_rows.empty:
-        logging.error("No records found for BH_code: %s", bh_code)
-        raise ValueError(f"No records found for BH_code: {bh_code}")
+        logging.error(f"No records found for BH_code: [{bh_code}]")
+        raise ValueError(f"No records found for BH_code: [{bh_code}]")
     elif len(my_rows) > 1:
-        logging.error("Multiple records found for BH_code: %s", bh_code)
-        raise ValueError(f"Multiple records found for BH_code: {bh_code}")
+        logging.error(f"Multiple records found for BH_code: [{bh_code}]")
+        raise ValueError(f"Multiple records found for BH_code: [{bh_code}]")
 
     row = my_rows.squeeze()  # Convert the single-row DataFrame to a Series
-    logging.info("Record found for BH_code: %s", bh_code)
+    logging.info(f"Record in voortgangs-sheet found for BH_code: [{bh_code}]")
 
     def get_value(column):
         value = row[column] if column in row and pd.notna(row[column]) else ""
-        logging.debug("Value for column '%s': %s", column, value)
+        logging.debug(f"Value for column '{column}': {value}")
         return value
 
     result = {
@@ -164,7 +164,7 @@ def get_voortgang_params(df_voortgang: pd.DataFrame, bh_code: str):
         "constructieve_beoordeling": get_value("Constructieve beoordeling"),
         "inspectietekeningen": get_value("Inspectietekeningen"),
     }
-    logging.info("Parameters successfully fetched for BH_code: %s", bh_code)
+    logging.debug(f"Parameters successfully fetched for BH_code: [{bh_code}]")
     return result
 
 

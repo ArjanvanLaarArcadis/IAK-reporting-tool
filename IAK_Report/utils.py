@@ -101,16 +101,17 @@ def get_object_paths_codes(config_file=CONFIG_FILE):
         return object_paths_codes
     
     # If no specific object codes, return all matching codes
-    logging.info("No specific object codes provided, returning all matching codes")
+    logging.info("No specific object codes provided, returning all matching sub-paths:")
     
     # Return all matching codes with their paths and stripped codes
-    for code_name in get_matching_codes(werkpakket_path):
+    for object_subpath in get_matching_codes(werkpakket_path):
         # Extract the object code, allowing for an optional "ORA " prefix
-        match = re.match(r"^(?:ORA\s*)?(\d{2}[A-Z]-\d{3}-\d{2})", code_name)
+        match = re.match(r"^(?:ORA\s*)?(\d{2}[A-Z]-\d{3}-\d{2})", object_subpath)
         if match:
-            object_paths_codes.append(
-            (os.path.join(werkpakket_path, code_name), match.group(1))
-            )
+            # Add the tuple with full path and code to the list
+            object_fullpath = os.path.join(werkpakket_path, object_subpath)
+            object_paths_codes.append((object_fullpath, match.group(1)))
+            logging.info(f"   |-> {object_subpath}")
 
     return object_paths_codes  # List of tuples (path with code_name, code)
 
