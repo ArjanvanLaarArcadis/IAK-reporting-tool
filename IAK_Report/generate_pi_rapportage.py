@@ -122,7 +122,7 @@ def set_footer(
     # object_beheer = variables.get("object_beheer", "UNKNOWN")  # te lang, zorgd voor problemen in de output
 
     FOOTER_LEFT = f"Complex: {complex}\nBeheerobject: {objectcode}\nVertrouwelijkheid: RWS Bedrijfsvertrouwelijk"
-    FOOTER_RIGHT = f"Revisie: {versie}\nDatum: {datum}\nPagina &P van &N"
+    FOOTER_RIGHT = f"Revisie: {versie:.1f}\nDatum: {datum}\nPagina &P van &N"
     for i in range(2, sheets_count):
         sheet = wb[sheet_names[i]]
         
@@ -161,18 +161,18 @@ def populate_title_page(
     omschrijving = variables.get('omschrijving', 'UNKNOWN')
     opdrachtnemer = variables.get('opdrachtnemer', 'UNKNOWN')
     opsteller = variables.get('opsteller', 'UNKNOWN')
-    kwaliteitsbeheerder = variables.get("kwaliteitsbeheerser", "UNKNOWN")
+    kwaliteitsbeheerser = variables.get("kwaliteitsbeheerser", "UNKNOWN")
     projectleider = variables.get('projectleider', 'UNKNOWN')
 
     sheet['H14'] = opdrachtgever
     sheet['H15'] = contactpersoon_rws
-    sheet['H16'] = str(zaaknr)
-    sheet['F23'] = str(versie)
+    sheet['H16'] = f'{zaaknr}'
+    sheet['F23'] = f'{versie:.1f}'
     sheet['J23'] = datum
     sheet['L23'] = omschrijving
     sheet['D25'] = opdrachtnemer
     sheet['C27'] = opsteller
-    sheet['I27'] = kwaliteitsbeheerder
+    sheet['I27'] = kwaliteitsbeheerser
     sheet['O27'] = projectleider
 
     # Adjust row heights
@@ -182,11 +182,11 @@ def populate_title_page(
 
     # Adjust column widths to get the names to fit in the signatures box
     sheet.column_dimensions["C"].width += 1  # Opsteller
-    sheet.column_dimensions["L"].width += 2  # Kwaliteitsbeheerder
+    sheet.column_dimensions["L"].width += 2  # kwaliteitsbeheerser
     sheet.column_dimensions["S"].width += 3  # Projectleider
 
     sheet.column_dimensions["H"].width -= 2  # Opsteller
-    sheet.column_dimensions["N"].width -= 2  # Kwaliteitsbeheerder
+    sheet.column_dimensions["N"].width -= 2  # kwaliteitsbeheerser
     sheet.column_dimensions["V"].width -= 2  # Projectleider
 
     logging.debug("Title Page populated and formatted successfully.")
