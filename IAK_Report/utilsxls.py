@@ -81,7 +81,7 @@ def delete_images(workbook, image_references):
                 logging.info(f"Deleted image: {img.path} from sheet: {sheet_name}")
 
 
-def save_and_finalize_workbook(wb: openpyxl.Workbook, variables: dict, save_dir: str) -> None:
+def save_and_finalize_workbook(wb: openpyxl.Workbook, variables: dict, save_dir: str) -> str:
     """
     Save and finalize the workbook.
 
@@ -114,3 +114,27 @@ def save_and_finalize_workbook(wb: openpyxl.Workbook, variables: dict, save_dir:
     logging.debug(f"Saving workbook to {filepath_excel}...")
     wb.save(filepath_excel)
     logging.info(f"Workbook saved: {filename_excel}")
+
+    return filepath_excel
+
+def export_to_pdf(excel_path: str, pdf_path: str) -> None:
+    """
+    Export an Excel file to PDF using Excel's built-in functionality via COM automation (Windows only).
+
+    Parameters:
+        excel_path (str): Path to the Excel file.
+        pdf_path (str): Path where the PDF should be saved.
+
+    Raises:
+        RuntimeError: If export fails.
+    """
+    try:
+        import win32com.client
+        excel = win32com.client.Dispatch("Excel.Application")
+        excel.Visible = False
+        wb = excel.Workbooks.Open(excel_path)
+        wb.ExportAsFixedFormat(0, pdf_path)  # 0 = PDF
+        wb.Close(False)
+        excel.Quit()
+    except Exception as e:
+        raise RuntimeError(f"Failed to export Excel to PDF: {e}")

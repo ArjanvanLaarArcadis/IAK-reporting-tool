@@ -23,6 +23,28 @@ import logging
 import pythoncom
 
 
+def check_macro_exists(excel_app: win32com.client.Dispatch, module_name: str, macro_name: str) -> bool:
+    """
+    Check if a specific macro exists in PERSONAL.XLSB.
+    
+    Parameters:
+        excel_app: Excel application object
+        module_name: Name of the module containing the macro
+        macro_name: Name of the macro to check
+        
+    Returns:
+        bool: True if macro exists, False otherwise
+    """
+    try:
+        # Try to get the macro reference
+        full_macro_name = f"PERSONAL.XLSB!{module_name}.{macro_name}"
+        # This will raise an exception if the macro doesn't exist
+        excel_app.Application.Run(full_macro_name + "?")  # Adding "?" shows macro info without running
+        return True
+    except:
+        return False
+
+
 def is_personal_xlsb_open(excel: win32com.client.Dispatch) -> win32com.client.Dispatch:
     """
     Checks if the "PERSONAL.XLSB" workbook is open in the given Excel application instance.
@@ -75,12 +97,47 @@ def open_excel(
         personal_workbook = is_personal_xlsb_open(excel_app)
         if personal_workbook is None:
             logging.info("Opening PERSONAL.XLSB workbook.")
-            personal_workbook = excel_app.Workbooks.Open(
-                r"C:\Users\knoppers1634\AppData\Roaming\Microsoft\Excel\XLSTART\PERSONAL.XLSB"
+            # Use dynamic path for PERSONAL.XLSB
+            personal_xlsb_path = os.path.expanduser(
+                r"~\AppData\Roaming\Microsoft\Excel\XLSTART\PERSONAL.XLSB"
             )
+            if os.path.exists(personal_xlsb_path):
+                personal_workbook = excel_app.Workbooks.Open(personal_xlsb_path)
+                logging.info(f"Opened PERSONAL.XLSB from: {personal_xlsb_path}")
+            else:
+                logging.error(f"PERSONAL.XLSB not found at: {personal_xlsb_path}")
+                raise FileNotFoundError(f"PERSONAL.XLSB not found. Required for macro execution.")
         return excel_app, workbook
     except Exception as e:
         logging.error("An error occurred while opening the workbook: %s", e)
+        raise
+
+
+def export_workbook_to_pdf_builtin(workbook: win32com.client.Dispatch, output_path: str) -> None:
+    """
+    Export workbook to PDF using Excel's built-in ExportAsFixedFormat method.
+    This doesn't require PERSONAL.XLSB macros.
+    
+    Parameters:
+        workbook: Excel workbook object
+        output_path: Path where PDF should be saved
+    """
+    try:
+        # Excel constants for PDF export
+        xlTypePDF = 0
+        xlQualityStandard = 0
+        
+        workbook.ExportAsFixedFormat(
+            Type=xlTypePDF,
+            Filename=output_path,
+            Quality=xlQualityStandard,
+            IncludeDocProps=True,
+            IgnorePrintAreas=False,
+            OpenAfterPublish=False
+        )
+        logging.info(f"Workbook exported to PDF: {output_path}")
+    except Exception as e:
+        logging.error(f"Failed to export workbook to PDF: {e}")
         raise
 
 
@@ -140,6 +197,7 @@ def close_excel(
 def run_macro_on_workbook(excel_path: str, module_name: str, macro_name: str) -> None:
     """
     Combines the steps to open an Excel workbook, execute a macro, and close Excel.
+    If PERSONAL.XLSB macro fails, falls back to built-in PDF export.
 
     Parameters:
         excel_path (str): Path to the Excel file.
@@ -157,16 +215,28 @@ def run_macro_on_workbook(excel_path: str, module_name: str, macro_name: str) ->
         pythoncom.CoInitialize()
         excel_app, workbook = open_excel(excel_path)
 
-        # Step 2: Execute the macro
-        logging.info(
-            f"Executing macro [{module_name}.{macro_name}] "
-            f"on workbook [{os.path.basename(excel_path)}]."
-        )
-        execute_macro(
-            excel_app, module_name, macro_name, local_path=os.path.dirname(excel_path)
-        )
+        # Step 2: Try to execute the macro from PERSONAL.XLSB
+        try:
+            logging.info(
+                f"Attempting to execute macro [{module_name}.{macro_name}] "
+                f"on workbook [{os.path.basename(excel_path)}]."
+            )
+            execute_macro(
+                excel_app, module_name, macro_name, local_path=os.path.dirname(excel_path)
+            )
+            logging.info("Macro execution successful.")
+        except Exception as macro_error:
+            logging.warning(f"Macro execution failed: {macro_error}")
+            logging.info("Falling back to built-in PDF export...")
+            
+            # Fallback: Use built-in PDF export
+            pdf_path = excel_path.replace('.xlsx', '.pdf').replace('.xls', '.pdf')
+            export_workbook_to_pdf_builtin(workbook, pdf_path)
+            logging.info(f"Fallback PDF export successful: {pdf_path}")
+            
     except Exception as e:
         logging.error("An error occurred during the process: %s", e)
+        raise
     finally:
         # Step 3: Close Excel without saving changes
         if excel_app and workbook:

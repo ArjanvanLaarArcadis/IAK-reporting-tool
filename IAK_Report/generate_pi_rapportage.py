@@ -901,7 +901,7 @@ def update_config_variables(
 
 def process_pi_report_for_object(
     object_path: str, report_path: str, config: dict
-) -> None:
+) -> str:
     """
     Process the PI report for a specific object.
 
@@ -973,10 +973,10 @@ def process_pi_report_for_object(
     logging.info("Finished populating the PI report.")
 
     # Save the workbook
-    utilsxls.save_and_finalize_workbook(wb_report, config_variables, save_dir=object_path)
+    xls_path = utilsxls.save_and_finalize_workbook(wb_report, config_variables, save_dir=object_path)
 
     logging.info(f"Done for {config_variables['object_code']}")
-
+    return xls_path
 
 def print_excel_to_pdf(path_of_pi_report: str) -> None:
     """
@@ -1023,15 +1023,13 @@ def main() -> None:
             if not pi_report_path:
                 logger.error(f"Could not find inspectierapport for [{object_code}]")
                 raise FileNotFoundError(f"Could not find inspectierapport for [{object_code}]")
-            process_pi_report_for_object(object_path, pi_report_path, config)
+            new_pi_report_xlsx = process_pi_report_for_object(object_path, pi_report_path, config)
             
             # Start the printing to PDF (separate try-catch to not fail the whole object)
-            try:
-                logger.info(f"Printing PI report to PDF for [{object_code}]")
-                print_excel_to_pdf(os.path.join(object_path, f"PI rapport {object_code}.xlsx"))
-            except Exception as pdf_error:
-                logger.warning(f"PDF export failed for [{object_code}]: {pdf_error}")
-                logger.info(f"Excel report for [{object_code}] is still available.")
+            logger.info(f"Printing PI report to PDF for [{object_code}]")
+            new_pi_report_pdf = new_pi_report_xlsx.replace(".xlsx", ".pdf")
+            utilsxls.export_to_pdf(new_pi_report_xlsx, new_pi_report_pdf)
+
         except Exception as e:
             logger.error(f"Error processing [{object_code}]: {e}")
             failed_objects.append(object_code)
