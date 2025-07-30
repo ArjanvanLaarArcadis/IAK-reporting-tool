@@ -152,17 +152,17 @@ def populate_title_page(
     """
     logging.debug("Populating Title Page (Sheet2)...")
 
-    opdrachtgever = variables.get('opdrachtgever', 'UNKNOWN')
-    contactpersoon_rws = variables.get('contactpersoon_rws', 'UNKNOWN')
+    opdrachtgever = variables.get('opdrachtgever', 'UNKNOWN').strip()
+    contactpersoon_rws = variables.get('contactpersoon_rws', 'UNKNOWN').strip()
     zaaknr = variables.get("zaaknummer", "UNKNOWN")
     versie = variables.get('versie', 'UNKNOWN')
     # Use today's date as the default value for datum
     datum = dt.date.today().strftime("%d-%m-%Y")
     omschrijving = variables.get('omschrijving', 'UNKNOWN')
-    opdrachtnemer = variables.get('opdrachtnemer', 'UNKNOWN')
-    opsteller = variables.get('opsteller', 'UNKNOWN')
-    kwaliteitsbeheerser = variables.get("kwaliteitsbeheerser", "UNKNOWN")
-    projectleider = variables.get('projectleider', 'UNKNOWN')
+    opdrachtnemer = variables.get('opdrachtnemer', 'UNKNOWN').strip()
+    opsteller = variables.get('opsteller', 'UNKNOWN').strip()
+    kwaliteitsbeheerser = variables.get("kwaliteitsbeheerser", "UNKNOWN").strip()
+    projectleider = variables.get('projectleider', 'UNKNOWN').strip()
 
     sheet['H14'] = opdrachtgever
     sheet['H15'] = contactpersoon_rws
