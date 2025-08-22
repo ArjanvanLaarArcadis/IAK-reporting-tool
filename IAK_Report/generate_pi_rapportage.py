@@ -46,6 +46,8 @@ import utils
 import utilsxls
 from get_voortgang import get_voortgang, get_voortgang_params
 from export_excel_to_pdf import run_macro_on_workbook
+from openpyxl.cell.text import InlineFont
+from openpyxl.cell.rich_text import TextBlock, CellRichText    
 
 # Workaround for PIL bug with JpegImagePlugin
 JpegImagePlugin._getmp = lambda: None
@@ -610,6 +612,7 @@ def _populate_bijlage5_sheet(sheet: openpyxl.worksheet.worksheet.Worksheet) -> N
     logging.debug("Populating Bijlage 5 (Sheet17)...")
     sheet['B4'].font = FONT_ARIAL_16
     if sheet["C6"].value:
+        # Some heading
         sheet["C6"] = "Omgevingsfoto schade"
         sheet["C6"].font = FONT_ARIAL_10_BOLD
         sheet["D6"] = "Schadefoto"
@@ -632,10 +635,12 @@ def _populate_bijlage5_sheet(sheet: openpyxl.worksheet.worksheet.Worksheet) -> N
 def populate_bijlage5_plus_return_next_idx(wb: openpyxl.Workbook) -> int:
     """
     Populate and format additional Bijlage 5 sheets.
+    Since if there are more damages, more sheets are added after Sheet17, while these sheet names are not known beforehand,
+    but are needed for the further "Bijlages".
 
     Parameters:
         wb (openpyxl.Workbook): The workbook object.
-        sheets_count (int): Total number of sheets.
+        sheets_count (int): Total number of sheets of the excel-file.
     """
     logging.debug("Populating additional Bijlage 5 sheets...")
     _populate_bijlage5_sheet(wb["Sheet17"])
@@ -651,21 +656,41 @@ def populate_bijlage5_plus_return_next_idx(wb: openpyxl.Workbook) -> int:
     for i in range(start_index, sheets_count):
         sheet = wb[sheet_names[i]]
 
-        # Check if cell B4 contains "Omgevingsfoto schade"
+        # Check if cell B4 contains "Omgevingsfoto schade". In that case, the Sheet18 (and beyond) is 
+        # populated with additional schadefoto. These should be processed until a sheet is found
+        # that does not contain "Omgevingsfoto schade" in cell B4. 
         if sheet["C4"].value == "Omgevingsfoto schade":
             # Perform the required operations
             if sheet.row_dimensions[8].height >= 5:
-                text_2 = sheet["C6"].value
-                sheet["C8"].value = text_2
-                sheet["C6"].value = ""
-                sheet["C8"].font = FONT_ARIAL_10
+                # Move the text from C6 to C8. The workbook is NOT loaded with rich text, so the value is plain text. 
+                cell_text = sheet["C6"].value
+                
+                # Convert it to a CellRichText object, and put it into the new cell (generating bold parts)
+                rich_text = CellRichText()
+                if cell_text:
+                    lines = cell_text.split('\n')
+                    for line in lines:
+                        if ':' in line:
+                            before_colon, after_colon = line.split(':', 1)  # Space is preserved in the after_colon
+                            rich_text.append(TextBlock(text=before_colon + ':', font=InlineFont(FONT_ARIAL_10_BOLD)))
+                            rich_text.append(TextBlock(text=after_colon + '\n', font=InlineFont(FONT_ARIAL_10)))
+                        else:
+                            rich_text.append(TextBlock(text=line, font=InlineFont(FONT_ARIAL_10)))
+
+                # Assign this piece of art to the new cell
+                sheet["C8"].value = rich_text
+                # (font settings already done in the rich text creation)
                 sheet["C8"].alignment = ALIGNMENT_LEFT
+                
+                # Wipe the original cell
+                sheet["C6"].value = ""
+                
                 sheet.row_dimensions[8].height = 300
                 sheet.row_dimensions[8].hidden = False
                 sheet.row_dimensions[7].height = 2
             else:
                 sheet.row_dimensions[6].height = 300
-                sheet["C6"].font = FONT_ARIAL_10
+                #sheet["C6"].font = FONT_ARIAL_10
             # Update the last processed sheet index
             last_processed_index = i
         else:
@@ -922,7 +947,7 @@ def process_pi_report_for_object(
 
         # Delete mpo images
         utilsxls.delete_images(wb_report, mpo_images)
-        logging.info(f"Deleted all `.mpo` images for object {object_path}")
+        logging.info(f"Deleted all `.mpo` images for object [{object_path}]")
 
     # update variables
     config_variables = update_config_variables(wb_report["Sheet2"], config)
@@ -1002,27 +1027,22 @@ def main() -> None:
     voortgangs_data = get_voortgang(excelfile, abbrev=False)
     
     for object_path, object_code in utils.get_object_paths_codes():
-        try:
-            logging.info(f"Processing object [{object_code}]")
-            logging.info(f"Updating the configuration variables with voortgang...")
-            voortgang = get_voortgang_params(voortgangs_data, object_code)
-            config = utils.update_config_with_voortgang(config, voortgang)
-            pi_report_path = find_inspectierapport(object_path)
-            if not pi_report_path:
-                logging.error(f"Could not find inspectierapport for [{object_code}]")
-                raise FileNotFoundError(f"Could not find inspectierapport for [{object_code}]")
-            process_pi_report_for_object(object_path, pi_report_path, config)
-            
-            # Start the printing to PDF
-            #logger.info(f"Printing PI report to PDF for [{object_code}]")
-            #print_excel_to_pdf(object_path, f"PI rapport {object_code}.xlsx")
-        except Exception as e:
-            logging.error(f"Error processing [{object_code}]: {e}")
-            failed_objects.append(object_code)
-    if failed_objects:
-        logging.error(f"Failed to process the following objects: {failed_objects}")
-    else:
-        logging.info("All objects processed successfully.")
+        logging.info(f"Processing object [{object_code}]")
+        logging.info(f"Updating the configuration variables with voortgang...")
+        voortgang = get_voortgang_params(voortgangs_data, object_code)
+        config = utils.update_config_with_voortgang(config, voortgang)
+        pi_report_path = find_inspectierapport(object_path)
+        if not pi_report_path:
+            logging.error(f"Could not find inspectierapport for [{object_code}]")
+            raise FileNotFoundError(f"Could not find inspectierapport for [{object_code}]")
+        
+        process_pi_report_for_object(object_path, pi_report_path, config)
+        
+        # Start the printing to PDF
+        #logger.info(f"Printing PI report to PDF for [{object_code}]")
+        #print_excel_to_pdf(object_path, f"PI rapport {object_code}.xlsx")
+        
+    logging.info("All objects processed successfully.")
 
 
 if __name__ == "__main__":

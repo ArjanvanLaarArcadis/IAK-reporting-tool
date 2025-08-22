@@ -13,6 +13,9 @@ import logging
 
 # External imports
 import openpyxl
+from openpyxl.cell.rich_text import CellRichText, TextBlock
+from openpyxl.cell.text import InlineFont
+
 
 def load_workbook(path: str) -> openpyxl.Workbook:
     """
@@ -26,7 +29,7 @@ def load_workbook(path: str) -> openpyxl.Workbook:
     """
     try:
         logging.debug(f"Loading Excel workbook from [{path}]...")
-        wb = openpyxl.load_workbook(path)
+        wb = openpyxl.load_workbook(path)  #, rich_text=True)
         logging.debug("Workbook loaded successfully.")
         return wb
     except FileNotFoundError:
@@ -35,6 +38,32 @@ def load_workbook(path: str) -> openpyxl.Workbook:
     except Exception as e:
         logging.error(f"An unexpected error occurred while loading the workbook: {e}")
         raise
+
+
+
+def styling_cell_with_colons(plain_text: str) -> openpyxl.cell.rich_text.CellRichText:
+    """
+    Convert plain text with colons into rich text blocks for Excel cells.
+
+    Parameters:
+        plain_text (str): Text to be converted, where colons indicate bold text.
+
+    Returns:
+        openpyxl.cell.rich_text.CellRichText: Rich text object ready for Excel cell.
+    """
+    
+
+    rich_text = CellRichText()
+    for line in plain_text.splitlines():
+        if ':' in line:
+            before_colon, after_colon = line.split(':', 1)
+            rich_text.append(TextBlock(text=before_colon + ':', font=InlineFont(b=True)))
+            rich_text.append(TextBlock(text=after_colon + '\n', font=InlineFont(b=False)))
+        else:
+            rich_text.append(TextBlock(text=line, font=InlineFont(b=False)))
+    
+    return rich_text
+
 
 
 
