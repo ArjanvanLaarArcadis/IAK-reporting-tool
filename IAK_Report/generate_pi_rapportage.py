@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 This script processes Excel PI Reports that follow from DISK using OpenPyXL and other utilities.
 It uses a 'voortgangslijst' to update the configuration variables and populate the PI reports with relevant data.
@@ -995,7 +994,7 @@ def main() -> None:
     """
     logger = utils.setup_logger("generate_pi_report.log", log_level="INFO")
     config = utils.load_config('./config.json')
-    logger.info(f"Starting PI report processing for werkpakket [{config['werkpakket']}]")
+    logging.info(f"Starting PI report processing for werkpakket [{config['werkpakket']}]")
     failed_objects = []
 
     # Get the voortgangs data, based on the excel file (as set in config.json)
@@ -1004,13 +1003,13 @@ def main() -> None:
     
     for object_path, object_code in utils.get_object_paths_codes():
         try:
-            logger.info(f"Processing object [{object_code}]")
-            logger.info(f"Updating the configuration variables with voortgang...")
+            logging.info(f"Processing object [{object_code}]")
+            logging.info(f"Updating the configuration variables with voortgang...")
             voortgang = get_voortgang_params(voortgangs_data, object_code)
             config = utils.update_config_with_voortgang(config, voortgang)
             pi_report_path = find_inspectierapport(object_path)
             if not pi_report_path:
-                logger.error(f"Could not find inspectierapport for [{object_code}]")
+                logging.error(f"Could not find inspectierapport for [{object_code}]")
                 raise FileNotFoundError(f"Could not find inspectierapport for [{object_code}]")
             process_pi_report_for_object(object_path, pi_report_path, config)
             
@@ -1018,12 +1017,12 @@ def main() -> None:
             #logger.info(f"Printing PI report to PDF for [{object_code}]")
             #print_excel_to_pdf(object_path, f"PI rapport {object_code}.xlsx")
         except Exception as e:
-            logger.error(f"Error processing [{object_code}]: {e}")
+            logging.error(f"Error processing [{object_code}]: {e}")
             failed_objects.append(object_code)
     if failed_objects:
-        logger.error(f"Failed to process the following objects: {failed_objects}")
+        logging.error(f"Failed to process the following objects: {failed_objects}")
     else:
-        logger.info("All objects processed successfully.")
+        logging.info("All objects processed successfully.")
 
 
 if __name__ == "__main__":
