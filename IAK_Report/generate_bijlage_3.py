@@ -65,30 +65,29 @@ if __name__ == "__main__":
     
     # Set up logging and load configuration
     logger = utils.setup_logger(log_filename, logging.INFO)
-    logger.info("Starting the script to generate Bijlage 3...")
-    config = utils.load_config()
+    logging.info("Starting the script to generate Bijlage 3...")
+    config = utils.load_config(config_path="./config.json")
 
-    path_batch = os.path.join(config["path_batch"], config["batch"])
-    for object_path, object_code in utils.get_object_paths_codes(path_batch):
+    for object_path, object_code in utils.get_object_paths_codes():
+        logging.info(f"Processing object path: {object_path}, object code: {object_code}")
         try:
             bijlage_3 = file_starts_with_bijlage3(object_path)
             if not bijlage_3:
-                logger.info(f"Generating ORA for object [{object_code}]...")
-                logger.info("Checking if ORA exists...")
+                logging.info(f"Generating ORA for object [{object_code}]...")
+                logging.info("Checking if ORA exists...")
                 ora_path = utils.return_most_recent_ora(object_path)
-                logger.info("ORA found.")
+                logging.info("ORA found.")
                 save_loc = os.path.join(object_path, config["save_dir"])
                 if not os.path.exists(save_loc):
                     os.makedirs(save_loc)
-                logger.info("Generating the PDF...")
+                logging.info("Generating the PDF...")
                 run_macro_on_workbook(ora_path, "ORA", "ExportActiveSheetToPDF")
-                logger.info(f"Successfully generated ORA for object [{object_code}].")
+                logging.info(f"Successfully generated ORA for object [{object_code}].")
             else:
-                logger.info(f"ORA for object [{object_code}] already exists with name [{bijlage_3}].")
+                logging.info(f"ORA for object [{object_code}] already exists with name [{bijlage_3}].")
         except Exception as e:
-            logger.error(f"An error occurred: {e}")
-            logger.error("Failed to generate ORA for object [{object_code}].")
+            logging.error(f"An error occurred: {e}")
+            logging.error("Failed to generate ORA for object [{object_code}].")
             continue  # Continue to the next object in case of an error
-            
 
 # TODO: Gaat nog niet
