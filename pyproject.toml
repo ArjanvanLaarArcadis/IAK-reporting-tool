@@ -1,23 +1,46 @@
 [tool.poetry]
 name = "iak-reporting-tool"
 version = "0.1.0"
-description = ""
-authors = ["Your Name <you@example.com>"]
-license = "LICENSE"
+description = "Automated reporting tools for IAK (Instandhouding Advisering Kunstwerken) project - generates PI reports, attention points, and risk assessments from DISK exports"
+authors = ["Arcadis IAK Team <iak-team@arcadis.com>"]
+license = "GPL-3.0-or-later"
 readme = "README.md"
-package-mode = false
+homepage = "https://github.com/ArjanvanLaarArcadis/IAK-reporting-tool"
+repository = "https://github.com/ArjanvanLaarArcadis/IAK-reporting-tool"
+documentation = "https://github.com/ArjanvanLaarArcadis/IAK-reporting-tool/blob/main/README.md"
+keywords = ["reporting", "excel", "automation", "infrastructure", "IAK", "DISK"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: End Users/Desktop",
+    "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
+    "Operating System :: Microsoft :: Windows",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Engineering",
+]
+packages = [{include = "iak_report"}]
 
 [tool.poetry.dependencies]
 python = "^3.12"
-docx2pdf = ">=0.1.8"
-ipykernel = ">=6.29.5"
-openpyxl = ">=3.1.5"
-pandas = ">=2.2.3"
-pillow = ">=11.1.0"
-python-docx = ">=1.1.2"
-pywin32 = ">=309"
-pyxlsb = ">=1.0.10"
-setuptools = ">=76.0.0"
+docx2pdf = "^0.1.8"
+openpyxl = "^3.1.5"
+pandas = "^2.2.3"
+pillow = "^11.1.0"
+python-docx = "^1.1.2"
+pywin32 = {version = "^309", markers = "sys_platform == 'win32'"}
+pyxlsb = "^1.0.10"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.0.0"
+black = "^24.0.0"
+flake8 = "^7.0.0"
+mypy = "^1.8.0"
+
+[tool.poetry.scripts]
+iak-generate-pi = "iak_report.generate_pi_rapportage:main"
+iak-generate-attention = "iak_report.generate_aandachtspunten_beheerder:main"
+iak-generate-risks = "iak_report.generate_hoogste_risicos:main"
+
 
 [build-system]
 requires = ["poetry-core"]
