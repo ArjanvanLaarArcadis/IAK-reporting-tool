@@ -26,10 +26,11 @@ Run this script directly to generate "Bijlage 3" documents for all objects in th
 # Built-in modules
 import os
 import logging
+import datetime as dt
 
 # Local imports
-import utils
-from export_excel_to_pdf import run_macro_on_workbook
+from . import utils
+from .export_excel_to_pdf import run_macro_on_workbook
 
 
 def file_starts_with_bijlage3(directory: str) -> str | None:
@@ -58,8 +59,12 @@ def file_starts_with_bijlage3(directory: str) -> str | None:
 
 
 if __name__ == "__main__":
+    # Generate timestamped log filename
+    timestamp = dt.datetime.now().strftime("%Y%m%d-%H%M%S")
+    log_filename = f"generate_bijlage_3_{timestamp}.log"
+    
     # Set up logging and load configuration
-    logger = utils.setup_logger("generate_bijlage_3.log", logging.INFO)
+    logger = utils.setup_logger(log_filename, logging.INFO)
     logger.info("Starting the script to generate Bijlage 3...")
     config = utils.load_config()
 

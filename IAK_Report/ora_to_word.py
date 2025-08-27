@@ -15,7 +15,7 @@ import pandas as pd
 import docx
 from docx.shared import Pt, RGBColor
 from docx.enum.style import WD_STYLE_TYPE
-from utils import (
+from .utils import (
     load_config)
 import logging
 import time
@@ -69,12 +69,21 @@ def load_ora(path_ora: str) -> pd.DataFrame:
         )
  
         if ora_sheet is None:
-            raise ValueError("No sheet starting with 'ORA' found in the Excel file")
- 
-        ora = pd.read_excel(path_ora, sheet_name=ora_sheet, skiprows=9, dtype=str)
-        ora.drop(index=ora.index[0], inplace=True)
+            raise ValueError(f"No sheet starting with 'ORA' found in the Excel file [{path_ora}]")
+
+        # The first 9 rows are skipped as they contain metadata. Further, the 11th row is dropped, it is a empty row below the header.
+        ora = pd.read_excel(path_ora, sheet_name=ora_sheet, skiprows=list(range(9)) + [10], dtype=str)
+        
+        # Many cells (grayed) are left empty to indicate that the value is the same as the cell above. These are filled with the value from above.
         ora["Element"] = ora["Element"].ffill()
-        logging.info(f"ORA data successfully processed from sheet: {ora_sheet}")
+        ora["Bouwdeel"] = ora["Bouwdeel"].ffill()
+        # Remark that the (blue) row of an "Element" is empty in all other columns, also the "Bouwdeel" column. Hence, the "Bouwdeel" column is 
+        # filled with the value from above as well, which is incorrect. However, this has no influence on the final output, and is therefore not handled.
+
+        # Additions are marked with a "(Ontbost)" or "(+)" or "+" in the "Bouwdeel" column.
+        # These are removed to keep the "Bouwdeel" column clean.
+        ora["Bouwdeel"] = ora["Bouwdeel"].str.replace(r"\(Ontbost\)|\(\+\)|\+", "", regex=True).str.strip()
+
         return ora
     except Exception as e:
         logging.error(f"Error loading ORA data: {e}")
