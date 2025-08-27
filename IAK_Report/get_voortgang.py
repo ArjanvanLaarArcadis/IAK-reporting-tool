@@ -17,11 +17,11 @@ COLS = [
     "Inspecteur 2",
     "door",
     "door.1",
-    "V&R-indicatie",
-    "Nader onderzoek",
-    "Directe maatregelen",
-    r"Niet schade gerelateerde / gebruiksspecifieke risico’s",
-    "Constructieve beoordeling"
+    # "V&R-indicatie",
+    # "Nader onderzoek",
+    # "Directe maatregelen",
+    # r"Niet schade gerelateerde / gebruiksspecifieke risico’s",
+    # "Constructieve beoordeling"
 ]
 
 # List of names to expand abbreviations
@@ -57,7 +57,7 @@ def expand_abbreviations(df):
     return df
 
 
-def get_voortgang(config, columns=COLS) -> pd.DataFrame:
+def get_voortgang(excelfile, columns=COLS, abbrev=True) -> pd.DataFrame:
     """
     Retrieves and processes the 'voortgang' data.
 
@@ -68,9 +68,6 @@ def get_voortgang(config, columns=COLS) -> pd.DataFrame:
         pd.DataFrame: A DataFrame containing the cleaned and processed 'voortgang' data.
     """
     # Check if the provided file exists
-    if not config.get("voortgangs_sheet"):
-        raise KeyError("Voortgangs sheet file not found in config.")
-    excelfile = config["voortgangs_sheet"]
     if not os.path.exists(excelfile):
         raise FileNotFoundError(f"Voortgangs sheet file does not exist: {excelfile}")
     
@@ -86,8 +83,10 @@ def get_voortgang(config, columns=COLS) -> pd.DataFrame:
         dtype=str,
     )
     
-    # Columns with personal names are cleaned to replace initials with full names.
-    data = expand_abbreviations(data)
+    # Optional, make use of abbreviations
+    if abbrev:
+        # Columns with personal names are cleaned to replace initials with full names.
+        data = expand_abbreviations(data)
     logging.info("Data loaded and cleaned successfully.")
     return data
 
@@ -124,24 +123,24 @@ def get_voortgang_params(df_voortgang: pd.DataFrame, bh_code: str):
         - Logs information about the fetching process and any errors encountered.
         - Logs debug information for each column value retrieved.
     """
-    logging.info("Fetching parameters for BH_code: %s", bh_code)
-    
+    logging.debug(f"Fetching parameters for BH_code: [{bh_code}]")
+
     # From the DataFrame, filter rows where 'BH_code' matches the provided bh_code.
     my_rows = df_voortgang[df_voortgang['BH_code'] == bh_code]
 
     if my_rows.empty:
-        logging.error("No records found for BH_code: %s", bh_code)
-        raise ValueError(f"No records found for BH_code: {bh_code}")
+        logging.error(f"No records found for BH_code: [{bh_code}]")
+        raise ValueError(f"No records found for BH_code: [{bh_code}]")
     elif len(my_rows) > 1:
-        logging.error("Multiple records found for BH_code: %s", bh_code)
-        raise ValueError(f"Multiple records found for BH_code: {bh_code}")
+        logging.error(f"Multiple records found for BH_code: [{bh_code}]")
+        raise ValueError(f"Multiple records found for BH_code: [{bh_code}]")
 
-    row = my_rows.iloc[0]
-    logging.info("Record found for BH_code: %s", bh_code)
+    row = my_rows.squeeze()  # Convert the single-row DataFrame to a Series
+    logging.info(f"Record in voortgangs-sheet found for BH_code: [{bh_code}]")
 
     def get_value(column):
         value = row[column] if column in row and pd.notna(row[column]) else ""
-        logging.debug("Value for column '%s': %s", column, value)
+        logging.debug(f"Value for column '{column}': {value}")
         return value
 
     result = {
@@ -149,7 +148,7 @@ def get_voortgang_params(df_voortgang: pd.DataFrame, bh_code: str):
         "inspecteurs": ", ".join(
             [get_value("Inspecteur 1"), get_value("Inspecteur 2")]
         ),
-        "besteknummer": get_value("zaakrn"),
+        "besteknummer": get_value("zaaknr"),
         "hulpmiddelen": get_value("VKM / HM"),
         "batch": get_value("Batch"),
         "object_naam": get_value("Objectnaam"),
@@ -165,7 +164,7 @@ def get_voortgang_params(df_voortgang: pd.DataFrame, bh_code: str):
         "constructieve_beoordeling": get_value("Constructieve beoordeling"),
         "inspectietekeningen": get_value("Inspectietekeningen"),
     }
-    logging.info("Parameters successfully fetched for BH_code: %s", bh_code)
+    logging.debug(f"Parameters successfully fetched for BH_code: [{bh_code}]")
     return result
 
 

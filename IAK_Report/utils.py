@@ -16,10 +16,10 @@ import docx
 from docx2pdf import convert
 
 # Default path to the configuration file
-CONFIG_FILE = os.getenv("CONFIG_FILE", "config.json")
+CONFIG_FILE = os.getenv("CONFIG_FILE", "./config.json")
 
 
-def load_config(config_path="./config.json"):
+def load_config(config_path=CONFIG_FILE):
     """
     Load configuration parameters from a JSON file.
 
@@ -43,10 +43,12 @@ def get_matching_codes(folder_path):
     # Define the regex pattern for the object code
     # Starting with Two digits, a letter, a hyphen, three digits, a hyphen, and two digits. 
     # Optional trailing characters.
-    pattern = r"^\d{2}[A-Z]-\d{3}-\d{2}"
+    # Optional the prefix "ORA " can be present, but not required.
+    # Example: "31A-001-32", "51B-002-03", "ORA 31A-001-32", "ORA 51B-002-03"
+    pattern = r"^(ORA\s*)?\d{2}[A-Z]-\d{3}-\d{2}"
 
     # List all content in the folder
-    logging.debug("scanning folder: %s", folder_path)
+    logging.debug(f"scanning folder: {folder_path}")
     all_content = os.listdir(folder_path)
     
     # Filter content matching the pattern
@@ -55,7 +57,7 @@ def get_matching_codes(folder_path):
     return matching_content
 
 
-def get_object_paths_codes(batch_path=None, config_file=CONFIG_FILE):
+def get_object_paths_codes(config_file=CONFIG_FILE):
     """
     Get the paths and codes of all objects in the given batch path.
 
@@ -65,25 +67,23 @@ def get_object_paths_codes(batch_path=None, config_file=CONFIG_FILE):
     Returns:
         list: List of tuples containing the path and code of each directory.
     """
-    if not batch_path:
-        config = load_config(config_file)
-        batch_path = os.path.join(config["path_batch"], config["batch"])
-    else:
-        config = load_config(config_file)
-
+    
+    config = load_config(config_file)
+    werkpakket_path = os.path.join(config["path_batch"], config["werkpakket"])
+    
     # Validate that the batch directory exists
-    if not os.path.isdir(batch_path):
-        logging.error("Batch directory not found: %s", batch_path)
-        raise FileNotFoundError(f"Batch directory not found: {batch_path}")
+    if not os.path.isdir(werkpakket_path):
+        logging.error(f"Werkpakket directory not found: {werkpakket_path}")
+        raise FileNotFoundError(f"Werkpakket directory not found: {werkpakket_path}")
+    logging.info(f"Werkpakket directory exists: {werkpakket_path}")
 
-    logging.info("Batch directory validated: %s", batch_path)
     object_paths_codes = []
-
     # Check if specific object codes are provided
-    if config["object_code"]:
-        logging.info("Specific object codes provided: %s", config["object_code"])
-        
-        # Handle both single string and list of object codes
+    # These could be a single string ('31W-443-43') a list of strings (['31A-001-32', '51B-002-03']), or nothing at all.
+    object_code = config["object_code"]
+    if object_code:
+        logging.info(f"Specific object codes provided: [{object_code}]")
+        # Ensure a list of codes, even if a single code is provided (list of one)
         object_codes = (
             config["object_code"]
             if isinstance(config["object_code"], list)
@@ -91,35 +91,39 @@ def get_object_paths_codes(batch_path=None, config_file=CONFIG_FILE):
         )
 
         for object_code in object_codes:
-            object_path = os.path.join(batch_path, object_code)
+            object_path = os.path.join(werkpakket_path, object_code)
             if os.path.isdir(object_path):
                 object_paths_codes.append((object_path, object_code))
-                logging.info("Found object directory: %s", object_path)
+                logging.info(f"Found object directory: {object_path}")
             else:
-                logging.error("Object directory not found: %s", object_path)
-                raise FileNotFoundError(f"Object directory not found: {object_path}")
-
+                logging.error(f"Object directory not found: {object_path}. Skipping." )
+                continue
         return object_paths_codes
-    else:
-        # If no specific object codes, return all matching codes
-        logging.info("No specific object codes provided, returning all matching codes")
-        
-        # Return all matching codes with their paths and stripped codes
-        for code_name in get_matching_codes(batch_path):
-            object_paths_codes.append(
-                (os.path.join(batch_path, code_name), re.match(r"^\d{2}[A-Z]-\d{3}-\d{2}", code_name).group())
-            )
+    
+    # If no specific object codes, return all matching codes
+    logging.info("No specific object codes provided, returning all matching sub-paths:")
+    
+    # Return all matching codes with their paths and stripped codes
+    for object_subpath in get_matching_codes(werkpakket_path):
+        # Extract the object code, allowing for an optional "ORA " prefix
+        match = re.match(r"^(?:ORA\s*)?(\d{2}[A-Z]-\d{3}-\d{2})", object_subpath)
+        if match:
+            # Add the tuple with full path and code to the list
+            object_fullpath = os.path.join(werkpakket_path, object_subpath)
+            object_paths_codes.append((object_fullpath, match.group(1)))
+            logging.info(f"   |-> {object_subpath}")
 
     return object_paths_codes  # List of tuples (path with code_name, code)
 
 
-def convert_docx_to_pdf(input_path: str, output_path: str) -> None:
+def convert_docx_to_pdf(input_path: str, output_path=None) -> None:
     """
     Converts a .docx file to PDF using docx2pdf.
 
     Parameters:
         input_path (str): Path to the input .docx file.
         output_path (str): Path to save the output PDF file.
+        If None, the PDF will be saved in the same directory as the input file with the same name.
 
     Returns:
         None
@@ -128,14 +132,32 @@ def convert_docx_to_pdf(input_path: str, output_path: str) -> None:
         INFO: When the conversion is successful.
         ERROR: If an error occurs during the conversion.
     """
+    if output_path is None:
+        output_path = os.path.splitext(input_path)[0] + ".pdf"
+
     try:
         logging.info("Starting conversion of '%s' to '%s'.", input_path, output_path)
         # Convert the .docx file to PDF
         convert(input_path, output_path)
         logging.info("Successfully converted '%s' to '%s'.", input_path, output_path)
+        return output_path
     except Exception as e:
         logging.error("An error occurred during conversion: %s", e)
         raise
+
+
+def list_pictures_for_object(object_path):
+    """
+    Search in the object_path, and list ALL *.png and *.jpg files which are residing 
+    in the object_paths or in each subdirectory. 
+    It returns the full filenames of the pictures
+    """
+    picture_files = []
+    for root, dirs, files in os.walk(object_path):
+        for filename in files:
+            if filename.lower().endswith((".png", ".jpg", ".jpeg")):
+                picture_files.append(os.path.join(root, filename))
+    return picture_files  # List of all fullfilenames of pictures
 
 
 def find_pictures_for_object_path(object_path):
@@ -143,7 +165,7 @@ def find_pictures_for_object_path(object_path):
     Finds the directory containing pictures that start with "Inspectiefotos"
     (case-insensitive and ignoring punctuation) and end with "verkleind"
     (case-insensitive and ignoring punctuation).
-
+    
     Parameters:
         object_path (str): The path to the object directory to search in.
 
@@ -181,10 +203,6 @@ def find_pictures_for_object_path(object_path):
             return full_path
 
     # If no matching directory is found, raise an exception
-    logging.error(
-        "No directory found in '%s' that starts with 'Inspectiefotos' and ends with 'verkleind'.",
-        object_path,
-    )
     raise FileNotFoundError(
         f"No directory found in '{object_path}' that starts with 'Inspectiefotos' and ends with 'verkleind'."
     )
@@ -194,12 +212,6 @@ def update_config_with_voortgang(config, voortgang):
     variables = config
     for key, value in voortgang.items():
         variables[key] = value
-    variables["save_loc"] = os.path.join(
-        variables["path_batch"],
-        variables["batch"],
-        variables["object_code"],
-        variables["save_dir"],
-    )
     return variables
 
 
@@ -260,32 +272,28 @@ def return_most_recent_ora(directory: str) -> str:
     """
     logging.info("Searching for ORA files in directory: %s", directory)
 
-    # List all files in the directory
-    files = os.listdir(directory)
-    logging.debug("Files in directory: %s", files)
-
-    # Filter files that start with "ORA" and have the correct extensions
-    ora_files = [
-        file
-        for file in files
-        if file.startswith("ORA") and file.endswith((".xlsm", ".xlsb", ".xlsx"))
-    ]
-    logging.debug("Filtered ORA files: %s", ora_files)
+    # Walk through the directory and all subdirectories to find matching files
+    ora_files = []
+    for root, dirs, files in os.walk(directory):
+        for file in files:
+            if file.startswith("ORA") and file.endswith((".xlsm", ".xlsb", ".xlsx")):
+                ora_files.append(os.path.join(root, file))
+    logging.debug(f"Filtered ORA files (with full paths): {ora_files}")
 
     if not ora_files:
         # Raise FileNotFoundError if no files with "ORA" are found
-        logging.error("No files starting with 'ORA' found in directory: %s", directory)
+        logging.error(f"No files starting with 'ORA' found in directory: {directory}")
         raise FileNotFoundError(
             f"No files starting with 'ORA' found in directory: {directory}"
         )
 
     # Get the full paths of the filtered files
     full_paths = [os.path.join(directory, file) for file in ora_files]
-    logging.debug("Full paths of ORA files: %s", full_paths)
+    logging.debug(f"Full paths of ORA files: {full_paths}")
 
     # Find the most recently modified file
     most_recent_file = max(full_paths, key=os.path.getmtime)
-    logging.info("Most recent ORA file found: %s", most_recent_file)
+    logging.info(f"Most recent ORA file found: {most_recent_file}")
 
     return most_recent_file
 

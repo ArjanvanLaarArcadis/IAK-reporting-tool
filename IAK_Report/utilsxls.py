@@ -13,6 +13,9 @@ import logging
 
 # External imports
 import openpyxl
+from openpyxl.cell.rich_text import CellRichText, TextBlock
+from openpyxl.cell.text import InlineFont
+
 
 def load_workbook(path: str) -> openpyxl.Workbook:
     """
@@ -25,9 +28,9 @@ def load_workbook(path: str) -> openpyxl.Workbook:
         openpyxl.Workbook: Loaded workbook object.
     """
     try:
-        logging.info(f"Loading Excel workbook from [{path}]...")
-        wb = openpyxl.load_workbook(path)
-        logging.info("Workbook loaded successfully.")
+        logging.debug(f"Loading Excel workbook from [{path}]...")
+        wb = openpyxl.load_workbook(path)  #, rich_text=True)
+        logging.debug("Workbook loaded successfully.")
         return wb
     except FileNotFoundError:
         logging.error(f"Error: The file at [{path}] was not found.")
@@ -35,6 +38,32 @@ def load_workbook(path: str) -> openpyxl.Workbook:
     except Exception as e:
         logging.error(f"An unexpected error occurred while loading the workbook: {e}")
         raise
+
+
+
+def styling_cell_with_colons(plain_text: str) -> openpyxl.cell.rich_text.CellRichText:
+    """
+    Convert plain text with colons into rich text blocks for Excel cells.
+
+    Parameters:
+        plain_text (str): Text to be converted, where colons indicate bold text.
+
+    Returns:
+        openpyxl.cell.rich_text.CellRichText: Rich text object ready for Excel cell.
+    """
+    
+
+    rich_text = CellRichText()
+    for line in plain_text.splitlines():
+        if ':' in line:
+            before_colon, after_colon = line.split(':', 1)
+            rich_text.append(TextBlock(text=before_colon + ':', font=InlineFont(b=True)))
+            rich_text.append(TextBlock(text=after_colon + '\n', font=InlineFont(b=False)))
+        else:
+            rich_text.append(TextBlock(text=line, font=InlineFont(b=False)))
+    
+    return rich_text
+
 
 
 
@@ -81,7 +110,7 @@ def delete_images(workbook, image_references):
                 logging.info(f"Deleted image: {img.path} from sheet: {sheet_name}")
 
 
-def save_and_finalize_workbook(wb: openpyxl.Workbook, variables: dict, target_dir: str) -> None:
+def save_and_finalize_workbook(wb: openpyxl.Workbook, variables: dict, save_dir: str) -> None:
     """
     Save and finalize the workbook.
 
@@ -92,12 +121,12 @@ def save_and_finalize_workbook(wb: openpyxl.Workbook, variables: dict, target_di
     """
     object_code = variables.get("object_code", "UNKNOWN")
     filename_excel = f"PI rapport {object_code}.xlsx"
-    filepath_excel = os.path.join(target_dir, filename_excel)
+    filepath_excel = os.path.join(save_dir, filename_excel)
 
-    # Create target directory if it doesn't exist
-    if not os.path.exists(target_dir):
-        os.makedirs(target_dir)
-        logging.info("Created directory: %s", target_dir)
+    # Create save directory if it doesn't exist
+    if not os.path.exists(save_dir):
+        os.makedirs(save_dir)
+        logging.info(f"Created directory: {save_dir}")
 
     # Remove 'Document map' sheet if it exists
     if "Document map" in wb.sheetnames:
@@ -111,6 +140,6 @@ def save_and_finalize_workbook(wb: openpyxl.Workbook, variables: dict, target_di
         sheet.views.sheetView[0].tabSelected = True
 
     # Save the workbook
-    logging.info("Saving workbook to %s...", filepath_excel)
+    logging.debug(f"Saving workbook to {filepath_excel}...")
     wb.save(filepath_excel)
-    logging.info("Workbook saved: %s", filepath_excel)
+    logging.info(f"Workbook saved: {filename_excel}")

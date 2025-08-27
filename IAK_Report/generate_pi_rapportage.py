@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 This script processes Excel PI Reports that follow from DISK using OpenPyXL and other utilities.
 It uses a 'voortgangslijst' to update the configuration variables and populate the PI reports with relevant data.
@@ -47,6 +46,8 @@ import utils
 import utilsxls
 from get_voortgang import get_voortgang, get_voortgang_params
 from export_excel_to_pdf import run_macro_on_workbook
+from openpyxl.cell.text import InlineFont
+from openpyxl.cell.rich_text import TextBlock, CellRichText    
 
 # Workaround for PIL bug with JpegImagePlugin
 JpegImagePlugin._getmp = lambda: None
@@ -76,28 +77,29 @@ def find_inspectierapport(directory: str) -> str:
         str: fullfilename of the most recent matching file if found.
         None: If no matching file is found.
     """
-    logging.info(f"Searching for .xlsx-files in [{directory}], starting with 'inspectieRapport' (case insensitive)")
+    logging.debug(f"Searching for .xlsx-files in [{directory}], starting with 'inspectieRapport' (case insensitive)")
 
+    # List to hold all file paths
     matching_files = []
 
-    # List all files in the given directory
-    for file in os.listdir(directory):
-        if file.lower().startswith("inspectierapport") and \
-            file.lower().endswith(".xlsx"):
-            # Get the full path and modification time of the inspectie
-            file_path = os.path.join(directory, file)
-            file_mtime = os.path.getmtime(file_path)
-            matching_files.append((file_path, file_mtime))
-            logging.debug(f"Found matching file: [{file_path}]")
+    # Walk through the directory and its subdirectories
+    for root, dirs, files in os.walk(directory):
+        for file in files:
+            if file.lower().startswith("inspectierapport") and \
+                file.lower().endswith(".xlsx"):
+                # Get the full path and modification time of the inspectie
+                file_path = os.path.join(root, file)
+                matching_files.append(file_path)
+                logging.debug(f"Found matching file: [{file_path}]")
 
     if not matching_files:
         logging.info("No matching file found.")
         return None
 
-    # Sort by modification time (most recent first) and return the most recent
-    most_recent_file = max(matching_files, key=lambda x: x[1])[0]
-    logging.info(f"Most recent file found: {most_recent_file}")
-    return most_recent_file
+    # Select the file name, based on the most recent time
+    most_recent_file = max(matching_files, key=os.path.getmtime)
+    logging.info(f"Most recent file found: [{most_recent_file}]")
+    return most_recent_file  # Full path of the most recent file
 
 
 def set_footer(
@@ -116,30 +118,26 @@ def set_footer(
     complex = variables.get("complex_code", "UNKNOWN")
     objectcode = variables.get("object_code", "UNKNOWN")
     versie = variables.get("versie", "UNKNOWN")
-    datum = variables.get("datum", "UNKNOWN")
+    # Use today's date as the default value for datum
+    datum = dt.date.today().strftime("%d-%m-%Y")
     # object_beheer = variables.get("object_beheer", "UNKNOWN")  # te lang, zorgd voor problemen in de output
 
     FOOTER_LEFT = f"Complex: {complex}\nBeheerobject: {objectcode}\nVertrouwelijkheid: RWS Bedrijfsvertrouwelijk"
-    FOOTER_RIGHT = f"Revisie: {versie}\nDatum: {datum}\nPagina &P van &N"
+    FOOTER_RIGHT = f"Revisie: {versie:.1f}\nDatum: {datum}\nPagina &P van &N"
     for i in range(2, sheets_count):
         sheet = wb[sheet_names[i]]
-        list_of_footers = [
-            sheet.evenFooter.left,
-            sheet.evenFooter.center,
-            sheet.evenFooter.right,
-            sheet.oddFooter.left,
-            sheet.oddFooter.center,
-            sheet.oddFooter.right,
-        ]
-        sheet.evenFooter.left.text = FOOTER_LEFT
-        sheet.evenFooter.right.text = FOOTER_RIGHT
-        sheet.evenFooter.center.text = ""
-        sheet.oddFooter.left.text = FOOTER_LEFT
-        sheet.oddFooter.center.text = ""
-        sheet.oddFooter.right.text = FOOTER_RIGHT
-        for footer in list_of_footers:
-            footer.font = "Arial"
-            footer.size = 7
+        
+        # Define footer content mapping
+        footer_content = {'left': FOOTER_LEFT, 'center': "", 'right': FOOTER_RIGHT}
+        
+        # Set footer content for both even and odd footers
+        for footer_type in ['evenFooter', 'oddFooter']:
+            footer = getattr(sheet, footer_type)
+            for position, content in footer_content.items():
+                getattr(footer, position).text = content
+                getattr(footer, position).font = "Arial"
+                getattr(footer, position).size = 7
+
     logging.debug("Footers set successfully.")
 
 
@@ -155,26 +153,27 @@ def populate_title_page(
     """
     logging.debug("Populating Title Page (Sheet2)...")
 
-    opdrachtgever = variables.get('opdrachtgever', 'UNKNOWN')
-    contactpersoon_rws = variables.get('contactpersoon_rws', 'UNKNOWN')
+    opdrachtgever = variables.get('opdrachtgever', 'UNKNOWN').strip()
+    contactpersoon_rws = variables.get('contactpersoon_rws', 'UNKNOWN').strip()
     zaaknr = variables.get("zaaknummer", "UNKNOWN")
     versie = variables.get('versie', 'UNKNOWN')
-    datum = variables.get('datum', 'UNKNOWN')
+    # Use today's date as the default value for datum
+    datum = dt.date.today().strftime("%d-%m-%Y")
     omschrijving = variables.get('omschrijving', 'UNKNOWN')
-    opdrachtnemer = variables.get('opdrachtnemer', 'UNKNOWN')
-    opsteller = variables.get('opsteller', 'UNKNOWN')
-    kwaliteitsbeheerder = variables.get("kwaliteitsbeheerser", "UNKNOWN")
-    projectleider = variables.get('projectleider', 'UNKNOWN')
+    opdrachtnemer = variables.get('opdrachtnemer', 'UNKNOWN').strip()
+    opsteller = variables.get('opsteller', 'UNKNOWN').strip()
+    kwaliteitsbeheerser = variables.get("kwaliteitsbeheerser", "UNKNOWN").strip()
+    projectleider = variables.get('projectleider', 'UNKNOWN').strip()
 
     sheet['H14'] = opdrachtgever
     sheet['H15'] = contactpersoon_rws
-    sheet['H16'] = str(zaaknr)
-    sheet['F23'] = versie
+    sheet['H16'] = f'{zaaknr}'
+    sheet['F23'] = f'{versie:.1f}'
     sheet['J23'] = datum
     sheet['L23'] = omschrijving
     sheet['D25'] = opdrachtnemer
     sheet['C27'] = opsteller
-    sheet['I27'] = kwaliteitsbeheerder
+    sheet['I27'] = kwaliteitsbeheerser
     sheet['O27'] = projectleider
 
     # Adjust row heights
@@ -184,11 +183,11 @@ def populate_title_page(
 
     # Adjust column widths to get the names to fit in the signatures box
     sheet.column_dimensions["C"].width += 1  # Opsteller
-    sheet.column_dimensions["L"].width += 2  # Kwaliteitsbeheerder
+    sheet.column_dimensions["L"].width += 2  # kwaliteitsbeheerser
     sheet.column_dimensions["S"].width += 3  # Projectleider
 
     sheet.column_dimensions["H"].width -= 2  # Opsteller
-    sheet.column_dimensions["N"].width -= 2  # Kwaliteitsbeheerder
+    sheet.column_dimensions["N"].width -= 2  # kwaliteitsbeheerser
     sheet.column_dimensions["V"].width -= 2  # Projectleider
 
     logging.debug("Title Page populated and formatted successfully.")
@@ -613,6 +612,7 @@ def _populate_bijlage5_sheet(sheet: openpyxl.worksheet.worksheet.Worksheet) -> N
     logging.debug("Populating Bijlage 5 (Sheet17)...")
     sheet['B4'].font = FONT_ARIAL_16
     if sheet["C6"].value:
+        # Some heading
         sheet["C6"] = "Omgevingsfoto schade"
         sheet["C6"].font = FONT_ARIAL_10_BOLD
         sheet["D6"] = "Schadefoto"
@@ -635,10 +635,12 @@ def _populate_bijlage5_sheet(sheet: openpyxl.worksheet.worksheet.Worksheet) -> N
 def populate_bijlage5_plus_return_next_idx(wb: openpyxl.Workbook) -> int:
     """
     Populate and format additional Bijlage 5 sheets.
+    Since if there are more damages, more sheets are added after Sheet17, while these sheet names are not known beforehand,
+    but are needed for the further "Bijlages".
 
     Parameters:
         wb (openpyxl.Workbook): The workbook object.
-        sheets_count (int): Total number of sheets.
+        sheets_count (int): Total number of sheets of the excel-file.
     """
     logging.debug("Populating additional Bijlage 5 sheets...")
     _populate_bijlage5_sheet(wb["Sheet17"])
@@ -654,21 +656,43 @@ def populate_bijlage5_plus_return_next_idx(wb: openpyxl.Workbook) -> int:
     for i in range(start_index, sheets_count):
         sheet = wb[sheet_names[i]]
 
-        # Check if cell B4 contains "Omgevingsfoto schade"
+        # Check if cell B4 contains "Omgevingsfoto schade". In that case, the Sheet18 (and beyond) is 
+        # populated with additional schadefoto. These should be processed until a sheet is found
+        # that does not contain "Omgevingsfoto schade" in cell B4. 
         if sheet["C4"].value == "Omgevingsfoto schade":
             # Perform the required operations
             if sheet.row_dimensions[8].height >= 5:
-                text_2 = sheet["C6"].value
-                sheet["C8"].value = text_2
-                sheet["C6"].value = ""
-                sheet["C8"].font = FONT_ARIAL_10
+                # Move the text from C6 to C8. The workbook is NOT loaded with rich text, so the value is plain text. 
+                cell_text = sheet["C6"].value
+                
+                # WIP, not working yet...
+                # # Convert it to a CellRichText object, and put it into the new cell (generating bold parts)
+                # rich_text = CellRichText()
+                # if cell_text:
+                #     lines = cell_text.split('\n')
+                #     for line in lines:
+                #         if ':' in line:
+                #             before_colon, after_colon = line.split(':', 1)  # Space is preserved in the after_colon
+                #             rich_text.append(TextBlock(text=before_colon + ':', font=InlineFont(FONT_ARIAL_10_BOLD)))
+                #             rich_text.append(TextBlock(text=after_colon + '\n', font=InlineFont(FONT_ARIAL_10)))
+                #         else:
+                #             rich_text.append(TextBlock(text=line, font=InlineFont(FONT_ARIAL_10)))
+
+                # Assign this piece of art to the new cell
+                #sheet["C8"].value = rich_text
+                sheet["C8"].value = cell_text
+                # (font settings already done in the rich text creation)
                 sheet["C8"].alignment = ALIGNMENT_LEFT
+                
+                # Wipe the original cell
+                sheet["C6"].value = ""
+                
                 sheet.row_dimensions[8].height = 300
                 sheet.row_dimensions[8].hidden = False
                 sheet.row_dimensions[7].height = 2
             else:
                 sheet.row_dimensions[6].height = 300
-                sheet["C6"].font = FONT_ARIAL_10
+                #sheet["C6"].font = FONT_ARIAL_10
             # Update the last processed sheet index
             last_processed_index = i
         else:
@@ -879,7 +903,7 @@ def update_config_variables(
     sheet: openpyxl.worksheet.worksheet.Worksheet, variables: dict
 ) -> dict:
     """
-    Update the config variables.
+    Update the config variables with values FROM the original worksheet.
 
     Parameters:
         sheet (openpyxl.worksheet.worksheet.Worksheet): The worksheet object.
@@ -888,20 +912,15 @@ def update_config_variables(
     Returns:
         dict: Updated dictionary of variables.
     """
-    logging.info("Updating variables with config variables...")
+    logging.debug("Updating variables with config variables...")
     # Find the input list workbook
     config_variables = variables.copy()
 
     config_variables["object_omschrijving"] = sheet["H8"].value
     config_variables["object_naam"] = sheet["H9"].value
     config_variables["object_beheer"] = sheet["H10"].value
-    current_date = dt.datetime.now().strftime("%d-%m-%Y")
-    config_variables["datum"] = (
-        current_date
-        if pd.isna(config_variables["datum"])
-        else config_variables["datum"]
-    )
-    logging.info("Config variables updated successfully.")
+
+    logging.debug("Config variables updated successfully.")
     return config_variables
 
 
@@ -914,26 +933,23 @@ def process_pi_report_for_object(
 
     Parameters:
         object_path (str): Path to the object.
-        report_path (str): Path to the report.
+        report_path (str): Path to the (original) report.
         config (dict): Configuration dictionary.
     """
-    TARGET_DIR = os.path.join(object_path, config["save_dir"])
-
-    logging.info("Processing PI report for %s", report_path)
-    logging.info("Target Directory: %s", TARGET_DIR)
+    logging.info(f"Processing PI report for [{report_path}]")
 
     # Load workbooks
     wb_report = utilsxls.load_workbook(report_path)
     sheet_names = wb_report.sheetnames
 
-    # Delete mpo images
+    # Find the mpo images in the report
     mpo_images = utilsxls.find_mpo_references(wb_report)
-    logging.info("Found `.mpo` images: %s", mpo_images)
-
-    # Step 2: Replace `.mpo` images with `.png`
     if mpo_images:
+        logging.info(f"Found `.mpo` images: {mpo_images}")
+
+        # Delete mpo images
         utilsxls.delete_images(wb_report, mpo_images)
-        logging.info("Deleted `.mpo` images: %s for object %s", mpo_images, object_path)
+        logging.info(f"Deleted all `.mpo` images for object [{object_path}]")
 
     # update variables
     config_variables = update_config_variables(wb_report["Sheet2"], config)
@@ -983,9 +999,9 @@ def process_pi_report_for_object(
     logging.info("Finished populating the PI report.")
 
     # Save the workbook
-    utilsxls.save_and_finalize_workbook(wb_report, config_variables, TARGET_DIR)
+    utilsxls.save_and_finalize_workbook(wb_report, config_variables, save_dir=object_path)
 
-    logging.info("Done for %s", config_variables["object_code"])
+    logging.info(f"Done for {config_variables['object_code']}")
 
 
 def print_excel_to_pdf(path_of_pi_report: str) -> None:
@@ -1004,33 +1020,36 @@ def main() -> None:
     Main function to orchestrate the processing of the PI report.
     """
     logger = utils.setup_logger("generate_pi_report.log", log_level="INFO")
-    config = utils.load_config('IAK_Report/config.json')
-    logger.info("Starting PI report processing for batch %s", config["batch"])
+    config = utils.load_config('./config.json')
+    logging.info(f"Starting PI report processing for werkpakket [{config['werkpakket']}]")
     failed_objects = []
 
     # Get the voortgangs data, based on the excel file (as set in config.json)
-    voortgangs_data = get_voortgang(config)
-      
-
+    excelfile = config.get("voortgangs_sheet", "")
+    voortgangs_data = get_voortgang(excelfile, abbrev=False)
+    
     for object_path, object_code in utils.get_object_paths_codes():
-        try:
-            logger.info("Processing object %s", object_code)
-            logger.info("Updating the configuration variables with voortgang...")
+        logging.info(f"Processing object [{object_code}]")
+        try: 
+            logging.info(f"Updating the configuration variables with voortgang...")
             voortgang = get_voortgang_params(voortgangs_data, object_code)
-            variables = utils.update_config_with_voortgang(config, voortgang)
+            config = utils.update_config_with_voortgang(config, voortgang)
             pi_report_path = find_inspectierapport(object_path)
             if not pi_report_path:
-                logger.error("Could not find inspectierapport for %s", object_code)
+                logging.error(f"Could not find inspectierapport for [{object_code}]")
                 continue
-            process_pi_report_for_object(object_path, pi_report_path, variables)
-            save_loc = os.path.join(object_path, config["save_dir"])
-            if not os.path.exists(save_loc):
-                os.makedirs(save_loc)
-            # print_excel_to_pdf(os.path.join(save_loc, f"PI rapport {object_code}.xlsx"))
+            
+            # All needed data found and set, so start processing the pi report
+            process_pi_report_for_object(object_path, pi_report_path, config)
+
+            # Start the printing to PDF (not working)
+            #logger.info(f"Printing PI report to PDF for [{object_code}]")
+            #print_excel_to_pdf(object_path, f"PI rapport {object_code}.xlsx")
+    
         except Exception as e:
-            logger.error("Error processing %s: %s", object_code, e)
+            logging.error(f"Failed to process object [{object_code}]: {e}")
             failed_objects.append(object_code)
-    logger.info("Processing completed for all objects.")
+        
     if failed_objects:
         logger.error("Failed to process the following objects: %s", failed_objects)
     else:
