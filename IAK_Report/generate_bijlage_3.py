@@ -89,5 +89,3 @@ if __name__ == "__main__":
             logging.error(f"An error occurred: {e}")
             logging.error("Failed to generate ORA for object [{object_code}].")
             continue  # Continue to the next object in case of an error
-
-# TODO: Gaat nog niet

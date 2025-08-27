@@ -113,34 +113,6 @@ def open_excel(
         raise
 
 
-def export_workbook_to_pdf_builtin(workbook: win32com.client.Dispatch, output_path: str) -> None:
-    """
-    Export workbook to PDF using Excel's built-in ExportAsFixedFormat method.
-    This doesn't require PERSONAL.XLSB macros.
-    
-    Parameters:
-        workbook: Excel workbook object
-        output_path: Path where PDF should be saved
-    """
-    try:
-        # Excel constants for PDF export
-        xlTypePDF = 0
-        xlQualityStandard = 0
-        
-        workbook.ExportAsFixedFormat(
-            Type=xlTypePDF,
-            Filename=output_path,
-            Quality=xlQualityStandard,
-            IncludeDocProps=True,
-            IgnorePrintAreas=False,
-            OpenAfterPublish=False
-        )
-        logging.info(f"Workbook exported to PDF: {output_path}")
-    except Exception as e:
-        logging.error(f"Failed to export workbook to PDF: {e}")
-        raise
-
-
 def execute_macro(
     excel_app: win32com.client.Dispatch,
     module_name: str,
