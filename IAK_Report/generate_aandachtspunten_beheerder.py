@@ -34,18 +34,21 @@ Usage:
 Run this script directly to generate "Bijlage 9 - Aandachtspunten Beheerder" documents
 for all objects in the batch listed in config.
 """
-
-import docx
-import pandas as pd
+# Built-in modules
 import os
+import time
+import logging
 import copy
 import datetime as dt
-from docx.shared import Pt
-from docx.shared import RGBColor
+
+# External modules
+import pandas as pd
+import docx
+from docx.shared import Pt, RGBColor
 from docx.enum.style import WD_STYLE_TYPE
 from docx.enum.table import WD_CELL_VERTICAL_ALIGNMENT
-import time
 
+# Local imports
 from .utils import (
     load_config,
     get_object_paths_codes,
@@ -58,7 +61,6 @@ from .utils import (
 )
 from .get_voortgang import get_voortgang, get_voortgang_params
 from .ora_to_word import load_ora
-import logging
 
 
 def create_word_document(template_path: str, variables: dict) -> docx.Document:
