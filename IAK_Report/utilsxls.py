@@ -12,6 +12,7 @@ import os
 import logging
 
 # External imports
+import pandas as pd
 import openpyxl
 from openpyxl.cell.rich_text import CellRichText, TextBlock
 from openpyxl.cell.text import InlineFont
@@ -65,6 +66,29 @@ def styling_cell_with_colons(plain_text: str) -> openpyxl.cell.rich_text.CellRic
     return rich_text
 
 
+def find_ora_sheet_name(workbook) -> str | None:
+    """
+    Find the sheet in the workbook that corresponds to the ORA report.
+
+    Args:
+        workbook: The openpyxl workbook object.
+        or
+        str: The path to the Excel workbook. (could be an xlsb, which openpyxl can't read)
+
+    Returns:
+        The sheet name if found, otherwise None.
+    """
+    
+    # If a string is given, open this path, and get the workbook object
+    if isinstance(workbook, str):
+        list_sheets = pd.ExcelFile(workbook).sheet_names
+    else:
+        list_sheets = workbook.sheetnames
+
+    for sheet in list_sheets:
+        if sheet.startswith("ORA"):
+            return sheet
+    return None
 
 
 def find_mpo_references(workbook):
@@ -146,7 +170,7 @@ def save_and_finalize_workbook(wb: openpyxl.Workbook, variables: dict, save_dir:
 
     return filepath_excel
 
-def export_to_pdf(excel_path: str, pdf_path: str) -> None:
+def export_to_pdf(excel_path: str, pdf_path: str, sheet_name: str = None) -> None:
     """
     Export an Excel file to PDF using Excel's built-in functionality via COM automation (Windows only).
     This emulates the steps "File" > "Export" > "Create PDF/XPS Document".
@@ -154,6 +178,7 @@ def export_to_pdf(excel_path: str, pdf_path: str) -> None:
     Parameters:
         excel_path (str): Path to the Excel file.
         pdf_path (str): Path where the PDF should be saved.
+        sheet_name (str, optional): Name of the sheet to export. If None, all sheets are exported.
 
     Raises:
         RuntimeError: If export fails.
@@ -163,7 +188,13 @@ def export_to_pdf(excel_path: str, pdf_path: str) -> None:
         excel = win32com.client.Dispatch("Excel.Application")
         excel.Visible = False
         wb = excel.Workbooks.Open(excel_path)
-        wb.ExportAsFixedFormat(0, pdf_path)  # 0 = PDF
+        if sheet_name:
+            # Export the specified sheet
+            ws = wb.Worksheets(sheet_name)
+            ws.ExportAsFixedFormat(0, pdf_path)  # 0 = PDF
+        else:
+            # Export all sheets
+            wb.ExportAsFixedFormat(0, pdf_path)  # 0 = PDF
         wb.Close(False)
         excel.Quit()
     except Exception as e:

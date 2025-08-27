@@ -30,7 +30,7 @@ import datetime as dt
 
 # Local imports
 from . import utils
-from .export_excel_to_pdf import run_macro_on_workbook
+from . import utilsxls
 
 
 def file_starts_with_bijlage3(directory: str) -> str | None:
@@ -76,12 +76,16 @@ if __name__ == "__main__":
                 logging.info(f"Generating ORA for object [{object_code}]...")
                 logging.info("Checking if ORA exists...")
                 ora_path = utils.return_most_recent_ora(object_path)
-                logging.info("ORA found.")
-                save_loc = os.path.join(object_path, config["save_dir"])
-                if not os.path.exists(save_loc):
-                    os.makedirs(save_loc)
+                logging.info(f"ORA found: {ora_path}")
+                # Find the relevant ora sheet name
+                ora_sheetname = utilsxls.find_ora_sheet_name(ora_path)
+
                 logging.info("Generating the PDF...")
-                run_macro_on_workbook(ora_path, "ORA", "ExportActiveSheetToPDF")
+                
+                # Defining the name (with "Bijlage 3" and ".pdf")
+                filename, ext = os.path.splitext(os.path.basename(ora_path))
+                pdf_filename = os.path.join(object_path, f"Bijlage 3 - {filename}.pdf")
+                utilsxls.export_to_pdf(ora_path, pdf_filename, sheet_name=ora_sheetname)
                 logging.info(f"Successfully generated ORA for object [{object_code}].")
             else:
                 logging.info(f"ORA for object [{object_code}] already exists with name [{bijlage_3}].")
