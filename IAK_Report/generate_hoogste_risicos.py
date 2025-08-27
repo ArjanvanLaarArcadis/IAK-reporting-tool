@@ -53,6 +53,8 @@ from openpyxl.utils.dataframe import dataframe_to_rows
 from openpyxl.styles import Font, PatternFill, Alignment
 from openpyxl.worksheet.table import Table, TableStyleInfo
 
+from IAK_Report import utils
+
 
 def extract_relevant_ora_data(ora: pd.DataFrame) -> pd.DataFrame:
     """
@@ -241,11 +243,11 @@ def main():
     log_filename = f"generate_hoogste_risicos_{timestamp}.log"
     
     # Constants and configurations
-    logger = setup_logger(log_filename, logging.INFO)
-    logger.info("Starting the script.")
+    config = utils.load_config(config_path="./config.json")
+    logger = utils.setup_logger(log_filename, config["logger_level"])
 
-    config = load_config("data\config.json")
-    logger.info("Configuration loaded successfully.")
+    logging.info("Starting the script.")
+
 
     ORA_TEMPLATE_PATH = os.path.join(
         config["path_data_hoogste-risico"], "FORMAT_hoogste-risico.docx"
@@ -253,58 +255,58 @@ def main():
 
     # Check if template file exists
     if not os.path.exists(ORA_TEMPLATE_PATH):
-        logger.error("Template file not found: %s", ORA_TEMPLATE_PATH)
+        logging.error("Template file not found: %s", ORA_TEMPLATE_PATH)
         raise FileNotFoundError(f"Template file not found: {ORA_TEMPLATE_PATH}")
 
-    logger.info("Template file validated successfully.")
+    logging.info("Template file validated successfully.")
 
     SAVE_LOCATION = os.path.join(config["path_batch"], config["batch"])
-    logger.info("Paths for template and save location configured.")
+    logging.info("Paths for template and save location configured.")
 
     # List all directories in BATCH_PATH
     object_paths_codes = get_object_paths_codes()
-    logger.info("Object paths and codes retrieved successfully.")
+    logging.info("Object paths and codes retrieved successfully.")
 
     df_hoogste_risicos = pd.DataFrame()
 
     for path_object, object_code in object_paths_codes:
-        logger.info("Processing object code: %s", object_code)
+        logging.info("Processing object code: %s", object_code)
         path_ora = return_most_recent_ora(path_object)
-        logger.info("Most recent ORA file located: %s", path_ora)
+        logging.info("Most recent ORA file located: %s", path_ora)
 
         # Load and process ORA data
         ora = load_ora(path_ora)
-        logger.info("ORA data loaded successfully for object code: %s", object_code)
+        logging.info("ORA data loaded successfully for object code: %s", object_code)
 
         ora_risico = extract_relevant_ora_data(ora)
-        logger.info("Relevant ORA data extracted for object code: %s", object_code)
+        logging.info("Relevant ORA data extracted for object code: %s", object_code)
 
         ora_risico["object_code"] = object_code
         df_hoogste_risicos = pd.concat([df_hoogste_risicos, ora_risico], ignore_index=True)
 
-    logger.info(
+    logging.info(
         "All object codes processed. Total risks identified: %d",
         len(df_hoogste_risicos),
     )
 
     # Create and configure Word document
     document = create_word_document(ORA_TEMPLATE_PATH, config["batch"])
-    logger.info("Word document created and configured.")
+    logging.info("Word document created and configured.")
 
     # Process each measure and add to document
     for counter, risico in df_hoogste_risicos.iterrows():
-        logger.debug("Adding risico to document: %s", risico.to_dict())
+        logging.debug("Adding risico to document: %s", risico.to_dict())
         process_hoogste_risico(
             document=document,
             measure=risico,
             counter=counter,
             cell_style='Cell'
         )
-    logger.info("All risks added to the Word document.")
+    logging.info("All risks added to the Word document.")
 
     # Save the document
     save_document(document, SAVE_LOCATION, f"{config['batch']} Hoogste Risicos.docx")
-    logger.info("Document saved successfully at: %s", SAVE_LOCATION)
+    logging.info("Document saved successfully at: %s", SAVE_LOCATION)
     time.sleep(1)
     convert_docx_to_pdf(
         os.path.join(SAVE_LOCATION, f"{config['batch']} Hoogste Risicos.docx"),

@@ -64,10 +64,10 @@ if __name__ == "__main__":
     log_filename = f"generate_bijlage_3_{timestamp}.log"
     
     # Set up logging and load configuration
-    logger = utils.setup_logger(log_filename, logging.INFO)
-    logging.info("Starting the script to generate Bijlage 3...")
     config = utils.load_config(config_path="./config.json")
-
+    logger = utils.setup_logger(log_filename, config["logger_level"])
+    logging.info("Starting the script to generate Bijlage 3...")
+    
     for object_path, object_code in utils.get_object_paths_codes():
         logging.info(f"Processing object path: {object_path}, object code: {object_code}")
         try:

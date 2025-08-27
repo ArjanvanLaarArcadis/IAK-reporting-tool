@@ -41,12 +41,15 @@ import logging
 import copy
 import datetime as dt
 
+
 # External modules
 import pandas as pd
 import docx
 from docx.shared import Pt, RGBColor
 from docx.enum.style import WD_STYLE_TYPE
 from docx.enum.table import WD_CELL_VERTICAL_ALIGNMENT
+
+
 
 # Local imports
 from .utils import (
@@ -407,10 +410,10 @@ def main():
     timestamp = dt.datetime.now().strftime("%Y%m%d-%H%M%S")
     log_filename = f"generate_aandachtspunten_beheerder_{timestamp}.log"
     
-    logger = setup_logger(log_filename, "INFO")
-    logger.info("Starting the generation process for aandachtspunten beheerder.")
     config_path = "./config.json"
     config = load_config(config_path=config_path)
+    logger = setup_logger(log_filename, config["logger_level"])
+    logging.info("Starting the generation process for aandachtspunten beheerder.")
 
     template_dir = "./templates"
     TEMPLATE_WORD = os.path.join(template_dir, "FORMAT_Bijlage9_AandachtspuntBeheerder.docx")
@@ -418,12 +421,12 @@ def main():
 
     # Check if both template files exist
     if not os.path.exists(TEMPLATE_WORD):
-        logger.error("Template file not found: %s", TEMPLATE_WORD)
+        logging.error("Template file not found: %s", TEMPLATE_WORD)
         raise FileNotFoundError(f"Template file not found: {TEMPLATE_WORD}")
     if not os.path.exists(TEMPLATE_WORD_GEEN):
-        logger.error("Template file not found: %s", TEMPLATE_WORD_GEEN)
+        logging.error("Template file not found: %s", TEMPLATE_WORD_GEEN)
         raise FileNotFoundError(f"Template file not found: {TEMPLATE_WORD_GEEN}")
-    logger.info("Template files set successfully.")
+    logging.info("Template files set successfully.")
     
     # Load the voortgang data
     if not config.get("voortgangs_sheet"):
@@ -435,7 +438,7 @@ def main():
     failed_objects = []
 
     for object_path, object_code in list_of_object_codes:
-        logger.info(f"Processing object path: {object_path}, object code: {object_code}")
+        logging.info(f"Processing object path: {object_path}, object code: {object_code}")
         
         voortgang = get_voortgang_params(df_voortgang=df_voortgang, bh_code=object_code)
         variables = update_config_with_voortgang(config, voortgang)
@@ -445,13 +448,13 @@ def main():
             path_imgs = list_pictures_for_object(object_path)
             ora = load_ora(path_ora)
             ora_filtered = extract_relevant_data(ora)
-            logger.info(f"The number of aandachtspunten voor beheerder is: {len(ora_filtered)}")
+            logging.info(f"The number of aandachtspunten voor beheerder is: {len(ora_filtered)}")
             
             if len(ora_filtered) == 0:
-                logger.info("Making the word document with no aandachtspunten...")
+                logging.info("Making the word document with no aandachtspunten...")
                 word_document = create_word_document(TEMPLATE_WORD_GEEN, variables)
             else:
-                logger.info("Making the word document with aandachtspunten...")
+                logging.info("Making the word document with aandachtspunten...")
                 word_document = create_word_document(TEMPLATE_WORD, variables)
                 word_document = process_aandachtspunten_beheerder(
                     word_document, ora_filtered, path_imgs
@@ -467,9 +470,9 @@ def main():
             logging.error(f"Failed to generate for object code: {object_code}. Error: {e}")
 
     if failed_objects:
-        logger.error(f"Failed to process the following objects: {failed_objects}")
+        logging.error(f"Failed to process the following objects: {failed_objects}")
     else:
-        logger.info("All objects processed successfully.")
+        logging.info("All objects processed successfully.")
 
 
 if __name__ == "__main__":
