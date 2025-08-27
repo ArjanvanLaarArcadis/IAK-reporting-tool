@@ -199,12 +199,6 @@ def run_macro_on_workbook(excel_path: str, module_name: str, macro_name: str) ->
             logging.info("Macro execution successful.")
         except Exception as macro_error:
             logging.warning(f"Macro execution failed: {macro_error}")
-            logging.info("Falling back to built-in PDF export...")
-            
-            # Fallback: Use built-in PDF export
-            pdf_path = excel_path.replace('.xlsx', '.pdf').replace('.xls', '.pdf')
-            export_workbook_to_pdf_builtin(workbook, pdf_path)
-            logging.info(f"Fallback PDF export successful: {pdf_path}")
             
     except Exception as e:
         logging.error("An error occurred during the process: %s", e)
