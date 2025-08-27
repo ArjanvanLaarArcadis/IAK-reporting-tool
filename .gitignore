@@ -20,6 +20,8 @@ build/
 
 # IDE settings
 .vscode/
+
+# PyCharm settings
 .idea/
 
 # Coverage reports
@@ -45,3 +47,6 @@ __pycache__/
 
 # Additional data files
 data_original/
+
+# Configuration files
+*config.json

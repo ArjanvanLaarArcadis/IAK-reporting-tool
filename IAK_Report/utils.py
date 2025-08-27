@@ -15,22 +15,24 @@ import logging
 import docx
 from docx2pdf import convert
 
-
 # Default path to the configuration file
-CONFIG_FILE = "data/config.json"
+CONFIG_FILE = os.getenv("CONFIG_FILE", "config.json")
 
 
-def load_config(config_path=CONFIG_FILE):
+def load_config(config_path="./config.json"):
     """
     Load configuration parameters from a JSON file.
 
     Parameters:
         config_path (str): Path to the configuration JSON file.
+        by default, it looks for 'config.json' in the current directory.
 
     Returns:
         dict: Dictionary containing configuration parameters.
     """
-    print(f"Loading configuration from {config_path}...")
+    print(f"Loading configuration from [{config_path}]...")
+    if not os.path.exists(config_path):
+        raise FileNotFoundError(f"Configuration file not found: {config_path}")
     with open(config_path, "r") as f:
         config = json.load(f)
     print("Configuration loaded successfully.")
@@ -43,16 +45,17 @@ def get_matching_codes(folder_path):
     # Optional trailing characters.
     pattern = r"^\d{2}[A-Z]-\d{3}-\d{2}"
 
-    # List all files in the folder
-    all_files = os.listdir(folder_path)
+    # List all content in the folder
+    logging.debug("scanning folder: %s", folder_path)
+    all_content = os.listdir(folder_path)
+    
+    # Filter content matching the pattern
+    matching_content = [file for file in all_content if re.match(pattern, file)]
 
-    # Filter files matching the pattern
-    matching_codes = [file for file in all_files if re.match(pattern, file)]
-
-    return matching_codes
+    return matching_content
 
 
-def get_object_paths_codes(batch_path=None):
+def get_object_paths_codes(batch_path=None, config_file=CONFIG_FILE):
     """
     Get the paths and codes of all objects in the given batch path.
 
@@ -63,10 +66,10 @@ def get_object_paths_codes(batch_path=None):
         list: List of tuples containing the path and code of each directory.
     """
     if not batch_path:
-        config = load_config(CONFIG_FILE)
+        config = load_config(config_file)
         batch_path = os.path.join(config["path_batch"], config["batch"])
     else:
-        config = load_config(CONFIG_FILE)
+        config = load_config(config_file)
 
     # Validate that the batch directory exists
     if not os.path.isdir(batch_path):
@@ -74,12 +77,12 @@ def get_object_paths_codes(batch_path=None):
         raise FileNotFoundError(f"Batch directory not found: {batch_path}")
 
     logging.info("Batch directory validated: %s", batch_path)
+    object_paths_codes = []
 
     # Check if specific object codes are provided
     if config["object_code"]:
         logging.info("Specific object codes provided: %s", config["object_code"])
-        object_paths_codes = []
-
+        
         # Handle both single string and list of object codes
         object_codes = (
             config["object_code"]
@@ -100,15 +103,14 @@ def get_object_paths_codes(batch_path=None):
     else:
         # If no specific object codes, return all matching codes
         logging.info("No specific object codes provided, returning all matching codes")
-        object_paths_codes = [
-            (os.path.join(batch_path, code), code)  # Tuple: (path, code)
-            for code in get_matching_codes(
-                batch_path
-            )  # Get all codes with an object code pattern
-            if os.path.isdir(os.path.join(batch_path, code))  # Only include directories
-        ]
+        
+        # Return all matching codes with their paths and stripped codes
+        for code_name in get_matching_codes(batch_path):
+            object_paths_codes.append(
+                (os.path.join(batch_path, code_name), re.match(r"^\d{2}[A-Z]-\d{3}-\d{2}", code_name).group())
+            )
 
-        return object_paths_codes  # List of tuples (path, code)
+    return object_paths_codes  # List of tuples (path with code_name, code)
 
 
 def convert_docx_to_pdf(input_path: str, output_path: str) -> None:
