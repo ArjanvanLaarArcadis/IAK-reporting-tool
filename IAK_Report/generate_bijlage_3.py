@@ -28,8 +28,8 @@ import os
 import logging
 
 # Local imports
-import utils
-from export_excel_to_pdf import run_macro_on_workbook
+from . import utils
+from .export_excel_to_pdf import run_macro_on_workbook
 
 
 def file_starts_with_bijlage3(directory: str) -> str | None:

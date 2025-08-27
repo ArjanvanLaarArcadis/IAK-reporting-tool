@@ -15,7 +15,7 @@ import pandas as pd
 import docx
 from docx.shared import Pt, RGBColor
 from docx.enum.style import WD_STYLE_TYPE
-from utils import (
+from .utils import (
     load_config)
 import logging
 import time

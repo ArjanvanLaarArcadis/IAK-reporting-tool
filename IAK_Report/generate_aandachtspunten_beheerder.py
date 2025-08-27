@@ -45,7 +45,7 @@ from docx.enum.style import WD_STYLE_TYPE
 from docx.enum.table import WD_CELL_VERTICAL_ALIGNMENT
 import time
 
-from utils import (
+from .utils import (
     load_config,
     get_object_paths_codes,
     convert_docx_to_pdf,
@@ -55,8 +55,8 @@ from utils import (
     setup_logger,
     save_document,
 )
-from get_voortgang import get_voortgang, get_voortgang_params
-from ora_to_word import load_ora
+from .get_voortgang import get_voortgang, get_voortgang_params
+from .ora_to_word import load_ora
 import logging
 
 

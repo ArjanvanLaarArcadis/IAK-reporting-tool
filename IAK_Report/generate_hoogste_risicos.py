@@ -33,11 +33,11 @@ Run the script as a standalone program to generate the Word document summarizing
 import os
 import pandas as pd
 import docx
-from ora_to_word import (
+from .ora_to_word import (
     load_ora,
     configure_document_styles,
 )
-from utils import (
+from .utils import (
     load_config,
     get_object_paths_codes,
     return_most_recent_ora,
