@@ -1055,16 +1055,23 @@ def main() -> None:
                 continue
             
             # All needed data found and set, so start processing the pi report
-            process_pi_report_for_object(object_path, pi_report_path, config)
-
-            # Start the printing to PDF (not working)
-            #logger.info(f"Printing PI report to PDF for [{object_code}]")
-            #print_excel_to_pdf(object_path, f"PI rapport {object_code}.xlsx")
+            new_xlsx_filename = process_pi_report_for_object(object_path, pi_report_path, config)
     
         except Exception as e:
             logging.error(f"Failed to process object [{object_code}]: {e}")
             failed_objects.append(object_code)
-        
+
+        try:
+            # Start the printing to PDF (in separate try-catch block)
+            logging.info(f"Printing PI report to PDF for [{object_code}]")
+            pdf_filename = new_xlsx_filename.replace('.xlsx', '.pdf')
+            utilsxls.export_to_pdf(new_xlsx_filename, pdf_filename)
+            logging.info(f"PI report printed to PDF for [{object_code}] successfully.")
+
+        except Exception as e:
+            logging.error(f"Failed to print PI report to PDF for [{object_code}]: {e}")
+            failed_objects.append(object_code)
+
     if failed_objects:
         logger.error("Failed to process the following objects: %s", failed_objects)
     else:

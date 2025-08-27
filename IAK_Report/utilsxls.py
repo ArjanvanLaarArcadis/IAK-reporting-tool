@@ -149,6 +149,7 @@ def save_and_finalize_workbook(wb: openpyxl.Workbook, variables: dict, save_dir:
 def export_to_pdf(excel_path: str, pdf_path: str) -> None:
     """
     Export an Excel file to PDF using Excel's built-in functionality via COM automation (Windows only).
+    This emulates the steps "File" > "Export" > "Create PDF/XPS Document".
 
     Parameters:
         excel_path (str): Path to the Excel file.
