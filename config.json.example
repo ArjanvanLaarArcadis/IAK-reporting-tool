@@ -1,8 +1,8 @@
 {
-  "path_batch": "..\\data",
+  "path_batch": "<C:\\full\path\\to\\the\\data\\directory>",
   "werkpakket": "WP-LC-WB-23-322",
   "object_code": "",
-  "voortgangs_sheet": <full-path-to-voortgangs-sheet.xlsx>
+  "voortgangs_sheet": "<C:\\full\\path\\to\\voortgangs-sheet.xlsx>"
 
   "opdrachtgever": "Rijkswaterstaat, Grote Projecten en Onderhoud (GPO)",
   "contactpersoon_rws": "<Contactpersoon RWS>",
