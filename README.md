@@ -2,32 +2,52 @@
 
 This project is licensed under the GNU General Public License v3.0 (see LICENSE).
 
-# Arcadis IAK Reporting Tools
+## Overview
 
-This repository contains tools to automate various reporting aspects within the IAK (Instandhouding Advisering Kunstwerken) project. The tools are designed to streamline the generation of reports, manage data, and ensure consistency across deliverables.
+This repository contains tools to automate various reporting aspects within the IAK (Instandhouding Advisering Kunstwerken) project. The tools are designed to streamline the generation of reports, manage data, and ensure consistency across deliverables from DISK exports.
 
 ## Features
 
 ### 1. DISK PI Report Automation
-- Automates the generation of PI reports from DISK exports.
-- Includes PDF attachments such as:
-  - Bijlage 3: ORA including inspection plan.
-  - Bijlage 6: Damage drawings.
-  - Bijlage 9: Attention points for the manager.
+- Automates the generation of PI reports from DISK exports
+- Includes PDF export functionality with fallback mechanisms
+- Supports batch processing of multiple objects
 
-### 2. Script Descriptions
+### 2. Report Generation Components
+- **Bijlage 3**: ORA including inspection plan
+- **Bijlage 6**: Damage drawings  
+- **Bijlage 9**: Attention points for the manager
 
-#### `generate_aandachtspunten_beheerder.py`
-Generates "Bijlage 9 - Aandachtspunten Beheerder" documents based on ORA (Onderhoudsrapportage) files. Processes relevant information, including attention points and associated images, and formats it into a predefined Word template. The final document is saved as both a Word file and a PDF.
 
-#### `generate_bijlage_3.py`
-Handles the generation of "Bijlage 3" documents based on ORA files. Identifies the most recent ORA file in a given directory, checks if a corresponding "Bijlage 3" file already exists, and generates a PDF if necessary.
+## Script Descriptions
 
-#### `generate_hoogste_risicos.py`
-Processes ORA data to identify the highest risks for a batch and generates a Word document summarizing these risks. This document is used in discussions with asset owners to address identified risks.
+### Core Processing Scripts
 
 #### `generate_pi_rapportage.py`
-Automates the processing of Excel PI Reports from DISK. Updates configuration variables and populates the PI reports with relevant data. Includes functionality to export the reports to PDF.
+**Main PI Report Generator**
+- Automates processing of Excel PI Reports from DISK exports
+- Updates configuration variables and populates reports with relevant data
+- Includes intelligent footer handling, image processing, and sheet formatting
+- Supports both macro-based and built-in PDF export with fallback mechanisms
+- Processes multiple objects in batch mode
+
+#### `generate_aandachtspunten_beheerder.py`
+- Generates "Bijlage 9 - Aandachtspunten Beheerder" documents based on ORA files
+- Processes relevant information including attention points and associated images
+- Formats content into predefined Word templates
+- Outputs both Word and PDF formats
+
+#### `generate_bijlage_3.py`
+- Handles generation of "Bijlage 3" documents from ORA files
+- Identifies most recent ORA files in directories
+- Checks for existing documents and generates PDFs when necessary
+
+#### `generate_hoogste_risicos.py`
+- Processes ORA data to identify highest risks for batches
+- Generates Word documents summarizing critical risks
+- Supports asset owner discussions and risk management workflows
+
+### Supporting Modules
 
 #### `get_voortgang.py`
 Retrieves and processes the 'voortgang' data from an Excel file. Provides functions to clean and transform the data, as well as fetch specific parameters for a given BH_code.
@@ -36,76 +56,245 @@ Retrieves and processes the 'voortgang' data from an Excel file. Provides functi
 Processes delivery lists, extracts relevant data from Excel files, formats the data into Word documents, and embeds associated photos. Includes functionality to configure document styles and handle specific formatting requirements.
 
 #### `export_excel_to_pdf.py`
-Provides utility functions to interact with Microsoft Excel using the COM interface. Includes functionalities to check if the "PERSONAL.XLSB" workbook is open, execute macros, and export Excel files to PDF.
+**PDF Export Utility**
+- Provides Microsoft Excel COM interface interactions
+- Supports both PERSONAL.XLSB macro execution and built-in PDF export
+- Includes fallback mechanisms for different environments
+- Handles Excel application lifecycle management
 
-#### `utils.py`
-Contains utility functions for configuration management, logging setup, and file handling. Includes functions to load configuration parameters, find matching codes, and manage document saving.
+#### `utils.py` & `utilsxls.py`
+**Utility Libraries**
+- Configuration management and logging setup
+- File handling and path resolution utilities
+- Excel workbook operations and image processing
+- Document saving and finalization functions
 
 ## Directory Structure
-- `build/` - Scripts related to the build process (e.g., PowerShell, shell, Docker compose).
-- `docs/` - Documentation folder.
-- `infra/` - Terraform-related scripts/modules.
-- `lib/` - Library files.
-- `src/` - Source code folder containing the main scripts.
-- `test/` - Unit tests and integration tests.
 
-## Usage
-1. Clone the repository.
-2. Install the required dependencies listed in `pyproject.toml`.
-3. Run the desired script from the `src/` directory.
+```
+IAK-reporting-tool/
+├── IAK_Report/              # Main source code directory
+│   ├── generate_*.py        # Report generation scripts
+│   ├── utils.py            # General utilities
+│   ├── utilsxls.py         # Excel-specific utilities
+│   └── __pycache__/        # Python cache files
+├── templates/               # Word document templates
+├── data/                   # Data directory (not in repo)
+├── config.json.example     # Configuration template
+├── pyproject.toml          # Poetry project configuration
+├── requirements.txt        # Pip requirements (fallback)
+├── uv.lock                 # UV package manager lock file
+├── poetry.lock            # Poetry lock file
+└── README.md              # This file
+```
 
 ## Installation
 
-To set up the project on your local machine, follow these steps:
-
 ### Prerequisites
-- Python 3.10 or higher
-- pip (Python package manager)
-- Microsoft Word and Excel (for document generation and export functionalities)
+- **Python 3.12 or higher** (recommended)
+- **Microsoft Office** (Word and Excel) for document generation and COM interface
+- **Windows OS** (required for Excel COM automation)
 
-### Steps
-1. Clone the repository:
+### Package Managers
+This project supports multiple package managers:
+- **Poetry** (recommended) - `poetry.lock`
+- **UV** (fast alternative) - `uv.lock` 
+- **Pip** (fallback) - `requirements.txt`
+
+### Setup Instructions
+
+1. **Clone the repository:**
    ```bash
-   git clone https://github.com/your-repo/anl-am-iak.git
-   cd anl-am-iak
+   git clone https://github.com/ArjanvanLaarArcadis/IAK-reporting-tool.git
+   cd IAK-reporting-tool
    ```
 
-2. Install dependencies:
+2. **Choose your package manager:**
+
+   **Option A: Poetry (Recommended)**
    ```bash
+   # Install Poetry if not already installed
+   pip install poetry
+   
+   # Install dependencies
+   poetry install
+   
+   # Activate virtual environment
+   poetry shell
+   ```
+
+   **Option B: UV (Fast)**
+   ```bash
+   # Install UV if not already installed
+   pip install uv
+   
+   # Install dependencies
+   uv pip install -r requirements.txt
+   ```
+
+   **Option C: Pip (Traditional)**
+   ```bash
+   # Create virtual environment
+   python -m venv .venv
+   .venv\Scripts\activate  # Windows
+   
+   # Install dependencies
    pip install -r requirements.txt
    ```
 
-3. Ensure that the required Microsoft Office applications (Word and Excel) are installed and accessible on your system.
-
-4. Verify the installation by running a test script:
+3. **Configure the application:**
    ```bash
-   python src/generate_pi_rapportage.py --help
+   # Copy and customize configuration
+   copy config.json.example config.json
+   # Edit config.json with your specific settings
    ```
+
+4. **Set up data directory:**
+   - Create a `data/` directory in your project root
+   - Organize your werkpakket data in subdirectories
+   - Example: `data/WP-LC-WB-24-102/object-folders/`
+
+5. **Verify installation:**
+   ```bash
+   # Test the main script
+   python IAK_Report/generate_pi_rapportage.py
+   
+   # Test Excel COM interface (if needed)
+   python test_excel_com.py
+   ```
+
+## Configuration
+
+### config.json Setup
+The application requires a `config.json` file with the following structure:
+
+```json
+{
+  "path_batch": "..\\data",
+  "werkpakket": "WP-LC-WB-24-102",
+  "object_code": "",
+  "voortgangs_sheet": "path/to/voortgang.xlsx",
+  "opdrachtgever": "Rijkswaterstaat, Grote Projecten en Onderhoud (GPO)",
+  "contactpersoon_rws": "Contact Person Name",
+  "zaaknummer": 12345678,
+  "versie": "1.0",
+  "opdrachtnemer": "Your Organization",
+  "opsteller": "Report Author",
+  "kwaliteitsbeheerser": "Quality Manager",
+  "projectleider": "Project Leader"
+}
+```
+
+### Data Structure
+Your data directory should follow this structure:
+```
+data/
+└── WP-LC-WB-24-102/           # Werkpakket folder
+    ├── 30F-310-01/            # Object folder
+    │   ├── inspectieRapport*.xlsx
+    │   ├── ORA*.xlsb
+    │   └── inspectiefotos/
+    └── 30G-001-05/            # Another object folder
+        ├── inspectieRapport*.xlsx
+        └── ...
+```
+
+## Usage
+
+### Basic Usage
+```bash
+# Generate PI reports for all objects in werkpakket
+python IAK_Report/generate_pi_rapportage.py
+
+# Generate bijlage 9 - aandachtspunten beheerder
+python IAK_Report/generate_aandachtspunten_beheerder.py
+
+# Generate highest risk reports
+python IAK_Report/generate_hoogste_risicos.py
+```
+
+### Advanced Usage
+```bash
+# Process specific object (modify config.json)
+python IAK_Report/generate_pi_rapportage.py
+
+# Generate with custom logging level
+python IAK_Report/generate_pi_rapportage.py --log-level DEBUG
+```
+
+## Troubleshooting
+
+### Excel COM Issues
+If you encounter `ConnectionRefusedError` when exporting to PDF:
+
+1. **Test Excel COM:**
+   ```bash
+   python test_excel_com.py
+   ```
+
+2. **Fix Excel registration:**
+   ```bash
+   # Run as Administrator
+   regsvr32 /i:user excel.exe
+   regsvr32 excel.exe
+   ```
+
+3. **Alternative**: The application includes fallback PDF export that doesn't require macros
+
+### Common Issues
+- **Missing config.json**: Copy from `config.json.example` and customize
+- **Path issues**: Use absolute paths in configuration
+- **Permission errors**: Run as Administrator if needed
+- **Missing data**: Ensure data directory structure matches expectations
 
 ## Contributing
 
 We welcome contributions to improve the tools and scripts in this repository. To contribute:
 
-1. Fork the repository.
-2. Create a new branch for your feature or bug fix:
+1. **Fork the repository**
+2. **Create a feature branch:**
    ```bash
-   git checkout -b feature-name
+   git checkout -b your-feature-name
    ```
-3. Make your changes and commit them:
+3. **Make your changes and test them:**
+   ```bash
+   # Run tests (as example)
+   python test_styling_excel.py
+   
+   # Test main functionality
+   python IAK_Report/generate_pi_rapportage.py
+   ```
+4. **Commit your changes:**
    ```bash
    git commit -m "Description of changes"
    ```
-4. Push your changes to your fork:
+5. **Push to your fork:**
    ```bash
    git push origin feature-name
    ```
-5. Open a pull request to the main repository.
+6. **Open a pull request** to the main repository
+
+
 
 ## License
 
-This project is licensed under the GNU GENERAL PUBLIC LICENSE V3. See the `LICENSE` file for details.
+This project is licensed under the **GNU General Public License v3.0**. See the `LICENSE` file for details.
 
 ## Support
 
-If you encounter any issues or have questions, please open an issue in the repository or contact the maintainers directly.
+If you encounter any issues or have questions:
+
+1. **Check the troubleshooting section** above
+2. **Review existing issues** in the repository
+3. **Open a new issue** with:
+   - Detailed error description
+   - Your environment (Python version, OS, Office version)
+   - Steps to reproduce the problem
+   - Log files if available
+
+## Acknowledgments
+
+- Built for Rijkswaterstaat IAK project
+- Developed by Arcadis team
+- Uses Microsoft Office COM automation for document processing
 

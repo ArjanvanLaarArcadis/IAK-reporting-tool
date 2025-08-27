@@ -42,10 +42,10 @@ from openpyxl.styles import Alignment, Font
 from PIL import JpegImagePlugin
 
 # Local imports
-import utils
-import utilsxls
-from get_voortgang import get_voortgang, get_voortgang_params
-from export_excel_to_pdf import run_macro_on_workbook
+from . import utils
+from . import utilsxls
+from .get_voortgang import get_voortgang, get_voortgang_params
+from .export_excel_to_pdf import run_macro_on_workbook
 from openpyxl.cell.text import InlineFont
 from openpyxl.cell.rich_text import TextBlock, CellRichText    
 
