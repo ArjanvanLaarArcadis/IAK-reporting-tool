@@ -45,7 +45,6 @@ from PIL import JpegImagePlugin
 from . import utils
 from . import utilsxls
 from .get_voortgang import get_voortgang, get_voortgang_params
-from .export_excel_to_pdf import run_macro_on_workbook
 from openpyxl.cell.text import InlineFont
 from openpyxl.cell.rich_text import TextBlock, CellRichText    
 
@@ -927,7 +926,7 @@ def update_config_variables(
 
 def process_pi_report_for_object(
     object_path: str, report_path: str, config: dict
-) -> None:
+) -> str:
     """
     Process the PI report for a specific object.
 
@@ -999,10 +998,10 @@ def process_pi_report_for_object(
     logging.info("Finished populating the PI report.")
 
     # Save the workbook
-    utilsxls.save_and_finalize_workbook(wb_report, config_variables, save_dir=object_path)
+    xls_path = utilsxls.save_and_finalize_workbook(wb_report, config_variables, save_dir=object_path)
 
     logging.info(f"Done for {config_variables['object_code']}")
-
+    return xls_path
 
 def print_excel_to_pdf(path_of_pi_report: str) -> None:
     """
@@ -1011,8 +1010,19 @@ def print_excel_to_pdf(path_of_pi_report: str) -> None:
     Parameters:
         path_of_pi_report (str): Path to the PI report.
     """
-    run_macro_on_workbook(path_of_pi_report, "InspectieRapportage", "ExportToPDF")
-    logging.info("PI report processing completed successfully.")
+    try:
+        run_macro_on_workbook(path_of_pi_report, "InspectieRapportage", "ExportToPDF")
+        logging.info("PI report exported to PDF successfully.")
+    except ConnectionRefusedError as e:
+        logging.error(f"Excel COM connection failed: {e}")
+        logging.error("PDF export skipped. Possible solutions:")
+        logging.error("1. Make sure Microsoft Excel is installed")
+        logging.error("2. Run: regsvr32 /i:user excel.exe")
+        logging.error("3. Run as Administrator: regsvr32 excel.exe")
+        logging.error("4. Restart Windows and try again")
+    except Exception as e:
+        logging.error(f"Failed to export PI report to PDF: {e}")
+        logging.error("PDF export skipped. Excel file is still available.")
 
 
 def main() -> None:
@@ -1044,16 +1054,23 @@ def main() -> None:
                 continue
             
             # All needed data found and set, so start processing the pi report
-            process_pi_report_for_object(object_path, pi_report_path, config)
-
-            # Start the printing to PDF (not working)
-            #logger.info(f"Printing PI report to PDF for [{object_code}]")
-            #print_excel_to_pdf(object_path, f"PI rapport {object_code}.xlsx")
+            new_xlsx_filename = process_pi_report_for_object(object_path, pi_report_path, config)
     
         except Exception as e:
             logging.error(f"Failed to process object [{object_code}]: {e}")
             failed_objects.append(object_code)
-        
+
+        try:
+            # Start the printing to PDF (in separate try-catch block)
+            logging.info(f"Printing PI report to PDF for [{object_code}]")
+            pdf_filename = new_xlsx_filename.replace('.xlsx', '.pdf')
+            utilsxls.export_to_pdf(new_xlsx_filename, pdf_filename)
+            logging.info(f"PI report printed to PDF for [{object_code}] successfully.")
+
+        except Exception as e:
+            logging.error(f"Failed to print PI report to PDF for [{object_code}]: {e}")
+            failed_objects.append(object_code)
+
     if failed_objects:
         logger.error("Failed to process the following objects: %s", failed_objects)
     else:

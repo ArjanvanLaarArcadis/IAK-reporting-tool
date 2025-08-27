@@ -9,16 +9,20 @@ Original Author for v0: tersteer0528
 Refactored: Sammie Knoppert (W. AGPT)
 """
 
+# Built-in modules
 import os
 import glob
+import logging
+
+# External modules
 import pandas as pd
 import docx
 from docx.shared import Pt, RGBColor
 from docx.enum.style import WD_STYLE_TYPE
-from .utils import (
-    load_config)
-import logging
-import time
+
+# Local modules
+from .utils import load_config
+from . import utilsxls
 
 
 def load_opleverlijst(filepath: str) -> pd.DataFrame:
@@ -63,11 +67,7 @@ def load_ora(path_ora: str) -> pd.DataFrame:
         logging.info(f"Loading ORA data from: {path_ora}")
  
         # Get all sheet names and find the one that starts with "ORA"
-        excel_file = pd.ExcelFile(path_ora)
-        ora_sheet = next(
-            (sheet for sheet in excel_file.sheet_names if sheet.startswith("ORA")), None
-        )
- 
+        ora_sheet = utilsxls.find_ora_sheet_name(path_ora)
         if ora_sheet is None:
             raise ValueError(f"No sheet starting with 'ORA' found in the Excel file [{path_ora}]")
 

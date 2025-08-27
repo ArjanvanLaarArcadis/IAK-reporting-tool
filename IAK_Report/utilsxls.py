@@ -12,9 +12,11 @@ import os
 import logging
 
 # External imports
+import pandas as pd
 import openpyxl
 from openpyxl.cell.rich_text import CellRichText, TextBlock
 from openpyxl.cell.text import InlineFont
+import win32com.client
 
 
 def load_workbook(path: str) -> openpyxl.Workbook:
@@ -65,6 +67,30 @@ def styling_cell_with_colons(plain_text: str) -> openpyxl.cell.rich_text.CellRic
     return rich_text
 
 
+def find_ora_sheet_name(workbook) -> str | None:
+    """
+    Find the sheet in the workbook that corresponds to the ORA report.
+
+    Args:
+        workbook: The openpyxl workbook object.
+        or
+        str: The path to the Excel workbook.
+          (could be an xlsb, which openpyxl can't read, but pandas does)
+
+    Returns:
+        The sheet name if found, otherwise None.
+    """
+    
+    # If a string is given, open this path, and get the workbook object
+    if isinstance(workbook, str):
+        list_sheets = pd.ExcelFile(workbook).sheet_names
+    else:
+        list_sheets = workbook.sheetnames
+
+    for sheet in list_sheets:
+        if sheet.startswith("ORA"):
+            return sheet
+    return None
 
 
 def find_mpo_references(workbook):
@@ -110,7 +136,7 @@ def delete_images(workbook, image_references):
                 logging.info(f"Deleted image: {img.path} from sheet: {sheet_name}")
 
 
-def save_and_finalize_workbook(wb: openpyxl.Workbook, variables: dict, save_dir: str) -> None:
+def save_and_finalize_workbook(wb: openpyxl.Workbook, variables: dict, save_dir: str) -> str:
     """
     Save and finalize the workbook.
 
@@ -143,3 +169,72 @@ def save_and_finalize_workbook(wb: openpyxl.Workbook, variables: dict, save_dir:
     logging.debug(f"Saving workbook to {filepath_excel}...")
     wb.save(filepath_excel)
     logging.info(f"Workbook saved: {filename_excel}")
+
+    return filepath_excel
+
+
+def styling_bijlage3_export(worksheet, excel: win32com.client.Dispatch) -> None:
+    """
+    Apply styling to the export of Bijlage 3.
+
+    Args:
+        worksheet (Worksheet): The worksheet to style.
+    """
+
+    # Hide some columns
+    worksheet.Range("K5").Value = "1.0 - Definitief"
+    worksheet.Columns("AJ:BI").Hidden = True
+    worksheet.Columns("CB:CG").Hidden = True
+
+    # Set margins
+    worksheet.PageSetup.TopMargin = excel.Application.CentimetersToPoints(1.91)
+    worksheet.PageSetup.BottomMargin = excel.Application.CentimetersToPoints(1.91)
+    worksheet.PageSetup.LeftMargin = excel.Application.CentimetersToPoints(0.64)
+    worksheet.PageSetup.RightMargin = excel.Application.CentimetersToPoints(0.64)
+    worksheet.PageSetup.HeaderMargin = excel.Application.CentimetersToPoints(0.76)
+    worksheet.PageSetup.FooterMargin = excel.Application.CentimetersToPoints(0.76)
+
+    # Set title rows and print area
+    worksheet.PageSetup.FitToPagesWide = 1
+    worksheet.PageSetup.FitToPagesTall = False
+    worksheet.PageSetup.PrintTitleRows = "$8:$11"
+    worksheet.PageSetup.PrintArea = "A:CZ"
+
+    return None  # Modified worksheet in place
+
+
+def export_to_pdf(excel_path: str, pdf_path: str, sheet_name: str = None) -> None:
+    """
+    Export an Excel file to PDF using Excel's built-in functionality via COM automation (Windows only).
+    This emulates the steps "File" > "Export" > "Create PDF/XPS Document".
+
+    Parameters:
+        excel_path (str): Path to the Excel file.
+        pdf_path (str): Path where the PDF should be saved.
+        sheet_name (str, optional): Name of the sheet to export. If None, all sheets are exported.
+
+    Raises:
+        RuntimeError: If export fails.
+    """
+    try:
+        import win32com.client
+        
+        excel = win32com.client.Dispatch("Excel.Application")
+        excel.Visible = False
+        excel.DisplayAlerts = False  # Suppress pop-up alerts
+        wb = excel.Workbooks.Open(excel_path)
+        if sheet_name:
+            # Export the specified sheet
+            ws = wb.Worksheets(sheet_name)
+            # Set the page styling before printing
+            # Not generic, but for Bijlage 3 it will do
+            styling_bijlage3_export(ws, excel)
+
+            ws.ExportAsFixedFormat(0, pdf_path)  # 0 = PDF
+        else:
+            # Export all sheets
+            wb.ExportAsFixedFormat(0, pdf_path)  # 0 = PDF
+        wb.Close(False)
+        excel.Quit()
+    except Exception as e:
+        raise RuntimeError(f"Failed to export Excel to PDF: {e}")
