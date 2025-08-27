@@ -16,6 +16,7 @@ import pandas as pd
 import openpyxl
 from openpyxl.cell.rich_text import CellRichText, TextBlock
 from openpyxl.cell.text import InlineFont
+import win32com.client
 
 
 def load_workbook(path: str) -> openpyxl.Workbook:
@@ -171,6 +172,37 @@ def save_and_finalize_workbook(wb: openpyxl.Workbook, variables: dict, save_dir:
 
     return filepath_excel
 
+
+def styling_bijlage3_export(worksheet, excel: win32com.client.Dispatch) -> None:
+    """
+    Apply styling to the export of Bijlage 3.
+
+    Args:
+        worksheet (Worksheet): The worksheet to style.
+    """
+
+    # Hide some columns
+    worksheet.Range("K5").Value = "1.0 - Definitief"
+    worksheet.Columns("AJ:BI").Hidden = True
+    worksheet.Columns("CB:CG").Hidden = True
+
+    # Set margins
+    worksheet.PageSetup.TopMargin = excel.Application.CentimetersToPoints(1.91)
+    worksheet.PageSetup.BottomMargin = excel.Application.CentimetersToPoints(1.91)
+    worksheet.PageSetup.LeftMargin = excel.Application.CentimetersToPoints(0.64)
+    worksheet.PageSetup.RightMargin = excel.Application.CentimetersToPoints(0.64)
+    worksheet.PageSetup.HeaderMargin = excel.Application.CentimetersToPoints(0.76)
+    worksheet.PageSetup.FooterMargin = excel.Application.CentimetersToPoints(0.76)
+
+    # Set title rows and print area
+    worksheet.PageSetup.FitToPagesWide = 1
+    worksheet.PageSetup.FitToPagesTall = False
+    worksheet.PageSetup.PrintTitleRows = "$8:$11"
+    worksheet.PageSetup.PrintArea = "A:CZ"
+
+    return None  # Modified worksheet in place
+
+
 def export_to_pdf(excel_path: str, pdf_path: str, sheet_name: str = None) -> None:
     """
     Export an Excel file to PDF using Excel's built-in functionality via COM automation (Windows only).
@@ -186,12 +218,18 @@ def export_to_pdf(excel_path: str, pdf_path: str, sheet_name: str = None) -> Non
     """
     try:
         import win32com.client
+        
         excel = win32com.client.Dispatch("Excel.Application")
         excel.Visible = False
+        excel.DisplayAlerts = False  # Suppress pop-up alerts
         wb = excel.Workbooks.Open(excel_path)
         if sheet_name:
             # Export the specified sheet
             ws = wb.Worksheets(sheet_name)
+            # Set the page styling before printing
+            # Not generic, but for Bijlage 3 it will do
+            styling_bijlage3_export(ws, excel)
+
             ws.ExportAsFixedFormat(0, pdf_path)  # 0 = PDF
         else:
             # Export all sheets
