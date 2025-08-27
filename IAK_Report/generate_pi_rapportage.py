@@ -665,20 +665,22 @@ def populate_bijlage5_plus_return_next_idx(wb: openpyxl.Workbook) -> int:
                 # Move the text from C6 to C8. The workbook is NOT loaded with rich text, so the value is plain text. 
                 cell_text = sheet["C6"].value
                 
-                # Convert it to a CellRichText object, and put it into the new cell (generating bold parts)
-                rich_text = CellRichText()
-                if cell_text:
-                    lines = cell_text.split('\n')
-                    for line in lines:
-                        if ':' in line:
-                            before_colon, after_colon = line.split(':', 1)  # Space is preserved in the after_colon
-                            rich_text.append(TextBlock(text=before_colon + ':', font=InlineFont(FONT_ARIAL_10_BOLD)))
-                            rich_text.append(TextBlock(text=after_colon + '\n', font=InlineFont(FONT_ARIAL_10)))
-                        else:
-                            rich_text.append(TextBlock(text=line, font=InlineFont(FONT_ARIAL_10)))
+                # WIP, not working yet...
+                # # Convert it to a CellRichText object, and put it into the new cell (generating bold parts)
+                # rich_text = CellRichText()
+                # if cell_text:
+                #     lines = cell_text.split('\n')
+                #     for line in lines:
+                #         if ':' in line:
+                #             before_colon, after_colon = line.split(':', 1)  # Space is preserved in the after_colon
+                #             rich_text.append(TextBlock(text=before_colon + ':', font=InlineFont(FONT_ARIAL_10_BOLD)))
+                #             rich_text.append(TextBlock(text=after_colon + '\n', font=InlineFont(FONT_ARIAL_10)))
+                #         else:
+                #             rich_text.append(TextBlock(text=line, font=InlineFont(FONT_ARIAL_10)))
 
                 # Assign this piece of art to the new cell
-                sheet["C8"].value = rich_text
+                #sheet["C8"].value = rich_text
+                sheet["C8"].value = cell_text
                 # (font settings already done in the rich text creation)
                 sheet["C8"].alignment = ALIGNMENT_LEFT
                 
