@@ -39,6 +39,7 @@ import docx
 import pandas as pd
 import os
 import copy
+import datetime as dt
 from docx.shared import Pt
 from docx.shared import RGBColor
 from docx.enum.style import WD_STYLE_TYPE
@@ -400,7 +401,11 @@ def main():
     """
     Main function to orchestrate the processing of the PI report.
     """
-    logger = setup_logger("generate_aandachtspunten_beheerder.log", "INFO")
+    # Generate timestamped log filename
+    timestamp = dt.datetime.now().strftime("%Y%m%d-%H%M%S")
+    log_filename = f"generate_aandachtspunten_beheerder_{timestamp}.log"
+    
+    logger = setup_logger(log_filename, "INFO")
     logger.info("Starting the generation process for aandachtspunten beheerder.")
     config_path = "./config.json"
     config = load_config(config_path=config_path)

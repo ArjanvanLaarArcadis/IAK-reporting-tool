@@ -33,6 +33,7 @@ Run the script as a standalone program to generate the Word document summarizing
 import os
 import pandas as pd
 import docx
+import datetime as dt
 from .ora_to_word import (
     load_ora,
     configure_document_styles,
@@ -235,8 +236,12 @@ def main():
     """
     Main function to execute the script.
     """
+    # Generate timestamped log filename
+    timestamp = dt.datetime.now().strftime("%Y%m%d-%H%M%S")
+    log_filename = f"generate_hoogste_risicos_{timestamp}.log"
+    
     # Constants and configurations
-    logger = setup_logger("generate_hoogste_risicos.log", logging.INFO)
+    logger = setup_logger(log_filename, logging.INFO)
     logger.info("Starting the script.")
 
     config = load_config("data\config.json")
