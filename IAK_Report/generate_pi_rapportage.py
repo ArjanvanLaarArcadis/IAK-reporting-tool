@@ -1028,21 +1028,30 @@ def main() -> None:
     
     for object_path, object_code in utils.get_object_paths_codes():
         logging.info(f"Processing object [{object_code}]")
-        logging.info(f"Updating the configuration variables with voortgang...")
-        voortgang = get_voortgang_params(voortgangs_data, object_code)
-        config = utils.update_config_with_voortgang(config, voortgang)
-        pi_report_path = find_inspectierapport(object_path)
-        if not pi_report_path:
-            logging.error(f"Could not find inspectierapport for [{object_code}]")
-            raise FileNotFoundError(f"Could not find inspectierapport for [{object_code}]")
+        try: 
+            logging.info(f"Updating the configuration variables with voortgang...")
+            voortgang = get_voortgang_params(voortgangs_data, object_code)
+            config = utils.update_config_with_voortgang(config, voortgang)
+            pi_report_path = find_inspectierapport(object_path)
+            if not pi_report_path:
+                logging.error(f"Could not find inspectierapport for [{object_code}]")
+                continue
+            
+            # All needed data found and set, so start processing the pi report
+            process_pi_report_for_object(object_path, pi_report_path, config)
+
+            # Start the printing to PDF (not working)
+            #logger.info(f"Printing PI report to PDF for [{object_code}]")
+            #print_excel_to_pdf(object_path, f"PI rapport {object_code}.xlsx")
+    
+        except Exception as e:
+            logging.error(f"Failed to process object [{object_code}]: {e}")
+            failed_objects.append(object_code)
         
-        process_pi_report_for_object(object_path, pi_report_path, config)
-        
-        # Start the printing to PDF
-        #logger.info(f"Printing PI report to PDF for [{object_code}]")
-        #print_excel_to_pdf(object_path, f"PI rapport {object_code}.xlsx")
-        
-    logging.info("All objects processed successfully.")
+    if failed_objects:
+        logger.error("Failed to process the following objects: %s", failed_objects)
+    else:
+        logger.info("All objects processed successfully.")
 
 
 if __name__ == "__main__":
