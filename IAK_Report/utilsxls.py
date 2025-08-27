@@ -73,7 +73,8 @@ def find_ora_sheet_name(workbook) -> str | None:
     Args:
         workbook: The openpyxl workbook object.
         or
-        str: The path to the Excel workbook. (could be an xlsb, which openpyxl can't read)
+        str: The path to the Excel workbook.
+          (could be an xlsb, which openpyxl can't read, but pandas does)
 
     Returns:
         The sheet name if found, otherwise None.
