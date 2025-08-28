@@ -36,17 +36,16 @@ import logging
 import datetime as dt
 
 # External imports
-import pandas as pd
 import openpyxl
 from openpyxl.styles import Alignment, Font
+from openpyxl.cell.text import InlineFont
+from openpyxl.cell.rich_text import TextBlock, CellRichText    
 from PIL import JpegImagePlugin
 
 # Local imports
 from . import utils
 from . import utilsxls
 from .get_voortgang import get_voortgang, get_voortgang_params
-from openpyxl.cell.text import InlineFont
-from openpyxl.cell.rich_text import TextBlock, CellRichText    
 
 # Workaround for PIL bug with JpegImagePlugin
 JpegImagePlugin._getmp = lambda: None
@@ -617,10 +616,8 @@ def _populate_bijlage5_sheet(sheet: openpyxl.worksheet.worksheet.Worksheet) -> N
         sheet["D6"] = "Schadefoto"
         sheet["D6"].font = FONT_ARIAL_10_BOLD
 
-        # sheet.unmerge_cells(start_row=7, start_column=4, end_row=8, end_column=7)
-        # sheet.merge_cells("D7:G7")
-        beschrijving = sheet["C8"].value
-        sheet["C10"].value = beschrijving
+        # Copy the content, and clear the original
+        sheet["C10"].value = sheet["C8"].value
         sheet["C8"].value = ""
         sheet["C10"].font = FONT_ARIAL_10
         sheet["C10"].alignment = ALIGNMENT_LEFT
@@ -681,6 +678,7 @@ def populate_bijlage5_plus_return_next_idx(wb: openpyxl.Workbook) -> int:
                 #sheet["C8"].value = rich_text
                 sheet["C8"].value = cell_text
                 # (font settings already done in the rich text creation)
+                sheet["C8"].font = FONT_ARIAL_10
                 sheet["C8"].alignment = ALIGNMENT_LEFT
                 
                 # Wipe the original cell
