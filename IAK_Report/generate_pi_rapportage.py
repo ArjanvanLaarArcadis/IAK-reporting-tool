@@ -1003,27 +1003,6 @@ def process_pi_report_for_object(
     logging.info(f"Done for {config_variables['object_code']}")
     return xls_path
 
-def print_excel_to_pdf(path_of_pi_report: str) -> None:
-    """
-    Print the Excel report to PDF.
-
-    Parameters:
-        path_of_pi_report (str): Path to the PI report.
-    """
-    try:
-        run_macro_on_workbook(path_of_pi_report, "InspectieRapportage", "ExportToPDF")
-        logging.info("PI report exported to PDF successfully.")
-    except ConnectionRefusedError as e:
-        logging.error(f"Excel COM connection failed: {e}")
-        logging.error("PDF export skipped. Possible solutions:")
-        logging.error("1. Make sure Microsoft Excel is installed")
-        logging.error("2. Run: regsvr32 /i:user excel.exe")
-        logging.error("3. Run as Administrator: regsvr32 excel.exe")
-        logging.error("4. Restart Windows and try again")
-    except Exception as e:
-        logging.error(f"Failed to export PI report to PDF: {e}")
-        logging.error("PDF export skipped. Excel file is still available.")
-
 
 def main() -> None:
     """
