@@ -17,6 +17,7 @@ This repository contains tools to automate various reporting aspects within the 
 - **Bijlage 3**: ORA including inspection plan
 - **Bijlage 6**: Damage drawings  
 - **Bijlage 9**: Attention points for the manager
+- **PI report**: PI report using DISK Excel format
 
 
 ## Script Descriptions
@@ -28,7 +29,6 @@ This repository contains tools to automate various reporting aspects within the 
 - Automates processing of Excel PI Reports from DISK exports
 - Updates configuration variables and populates reports with relevant data
 - Includes intelligent footer handling, image processing, and sheet formatting
-- Supports both macro-based and built-in PDF export with fallback mechanisms
 - Processes multiple objects in batch mode
 
 #### `generate_aandachtspunten_beheerder.py`
@@ -58,9 +58,7 @@ Processes delivery lists, extracts relevant data from Excel files, formats the d
 #### `export_excel_to_pdf.py`
 **PDF Export Utility**
 - Provides Microsoft Excel COM interface interactions
-- Supports both PERSONAL.XLSB macro execution and built-in PDF export
 - Includes fallback mechanisms for different environments
-- Handles Excel application lifecycle management
 
 #### `utils.py` & `utilsxls.py`
 **Utility Libraries**
@@ -89,6 +87,9 @@ IAK-reporting-tool/
 ```
 
 ## Installation
+
+### Test files
+
 
 ### Prerequisites
 - **Python 3.12 or higher** (recommended)
@@ -166,24 +167,7 @@ This project supports multiple package managers:
 ## Configuration
 
 ### config.json Setup
-The application requires a `config.json` file with the following structure:
-
-```json
-{
-  "path_batch": "..\\data",
-  "werkpakket": "WP-LC-WB-24-102",
-  "object_code": "",
-  "voortgangs_sheet": "path/to/voortgang.xlsx",
-  "opdrachtgever": "Rijkswaterstaat, Grote Projecten en Onderhoud (GPO)",
-  "contactpersoon_rws": "Contact Person Name",
-  "zaaknummer": 12345678,
-  "versie": "1.0",
-  "opdrachtnemer": "Your Organization",
-  "opsteller": "Report Author",
-  "kwaliteitsbeheerser": "Quality Manager",
-  "projectleider": "Project Leader"
-}
-```
+The application requires a `config.json` file with the structure following `config.json.example`.
 
 ### Data Structure
 Your data directory should follow this structure:
@@ -222,30 +206,13 @@ python IAK_Report/generate_pi_rapportage.py
 python IAK_Report/generate_pi_rapportage.py --log-level DEBUG
 ```
 
-## Troubleshooting
-
-### Excel COM Issues
-If you encounter `ConnectionRefusedError` when exporting to PDF:
-
-1. **Test Excel COM:**
-   ```bash
-   python test_excel_com.py
-   ```
-
-2. **Fix Excel registration:**
-   ```bash
-   # Run as Administrator
-   regsvr32 /i:user excel.exe
-   regsvr32 excel.exe
-   ```
-
-3. **Alternative**: The application includes fallback PDF export that doesn't require macros
-
 ### Common Issues
 - **Missing config.json**: Copy from `config.json.example` and customize
 - **Path issues**: Use absolute paths in configuration
 - **Permission errors**: Run as Administrator if needed
 - **Missing data**: Ensure data directory structure matches expectations
+
+If you are running into issues, please log them in the **issues tab on GitHub**. This way we can tackle the issues in a centralized manner.
 
 ## Contributing
 
@@ -274,11 +241,10 @@ We welcome contributions to improve the tools and scripts in this repository. To
    ```
 6. **Open a pull request** to the main repository
 
-
-
 ## License
 
 This project is licensed under the **GNU General Public License v3.0**. See the `LICENSE` file for details.
+
 
 ## Support
 
