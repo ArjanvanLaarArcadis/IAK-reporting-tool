@@ -222,6 +222,11 @@ def export_to_pdf(excel_path: str, pdf_path: str, sheet_name: str = None) -> Non
     Raises:
         RuntimeError: If export fails.
     """
+    # Create save directory if it doesn't exist
+    save_dir = os.path.dirname(pdf_path)
+    if not os.path.exists(save_dir):
+        os.makedirs(save_dir)
+        logging.info(f"Created directory: {save_dir}")
     try:
         import win32com.client
         
