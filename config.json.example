@@ -17,5 +17,5 @@
   "projectnummer": 1,
 
   "output_folder": "pythonScript",
-  "log_level": <one of: "DEBUG", "INFO", "WARNING", "ERROR" or "DEBUG">
+  "log_level": <one of: "DEBUG", "INFO", "WARNING", "ERROR" or "CRITICAL">
 }
