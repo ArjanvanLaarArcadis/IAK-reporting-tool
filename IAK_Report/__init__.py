@@ -21,6 +21,8 @@ __all__ = [
     "generate_pi_rapportage",
     "generate_aandachtspunten_beheerder",
     "generate_hoogste_risicos",
+    "generate_bijlage_3",
+    "combine_pi_with_appendices",
     "export_excel_to_pdf",
     "ora_to_word",
 ]
