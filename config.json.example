@@ -2,7 +2,7 @@
   "path_batch": "<C:\\full\path\\to\\the\\data\\directory>",
   "werkpakket": "WP-LC-AR-24-102",
   "object_code": "",
-  "voortgangs_sheet": "<C:\\full\\path\\to\\voortgangs-sheet.xlsx>"
+  "voortgangs_sheet": "<C:\\full\\path\\to\\voortgangs-sheet.xlsx>",
 
   "opdrachtgever": "Rijkswaterstaat, Grote Projecten en Onderhoud (GPO)",
   "contactpersoon_rws": "<Contactpersoon RWS>",
@@ -14,5 +14,7 @@
   
   "opdrachtnemer": "<bedrijf>",
   "projectleider": "<naam projectleider>",
-  "projectnummer": 1
+  "projectnummer": 1,
+
+  "output_folder": "pythonScript"
 }

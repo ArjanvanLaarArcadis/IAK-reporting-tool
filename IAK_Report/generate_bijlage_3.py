@@ -84,7 +84,7 @@ if __name__ == "__main__":
             
             # Defining the name (with "Bijlage 3" and ".pdf")
             filename, ext = os.path.splitext(os.path.basename(ora_path))
-            pdf_filename = os.path.join(object_path, f"Bijlage 3 - {filename}.pdf")
+            pdf_filename = os.path.join(object_path, config.get("output_folder", ""), f"Bijlage 3 - {filename}.pdf")
             utilsxls.export_to_pdf(ora_path, pdf_filename, sheet_name=ora_sheetname)
             logging.info(f"Successfully generated ORA for object [{object_code}].")
             #else:

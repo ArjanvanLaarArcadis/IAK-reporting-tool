@@ -378,25 +378,27 @@ def process_aandachtspunten_beheerder(
     return word_document
 
 
-def save_aandachtspunten_beheerder(document: docx.Document, object_path, object_code) -> str:
+def save_aandachtspunten_beheerder(document: docx.Document, save_dir:str, object_code:str) -> str:
     """
     Save the Word document (Bijlage 9 - Aandachtspunten Beheerder) to the specified location.
 
-    Parameters:
-        document (docx.Document): The Word document object.
-        variables (dict): Dictionary containing variables like 'save_loc' and 'object_code'.
+    Args:
+        document (docx.Document): The Word document object to save.
+        save_dir (str): Directory path where the document should be saved.
+        object_code (str): Code of the object used in the filename.
 
     Returns:
-        str: The path of the saved document.
+        str: The full path of the saved document.
     """
     # Extract the save location and construct the file name
     file_name = f"Bijlage 9 - Aandachtspunten Beheerder {object_code}.docx"
 
     # Delegate saving to the save_document function
-    save_document(document, object_path, file_name)
+    save_document(document, save_dir, file_name)
 
     # Construct and return the full save path for reference (optional)
-    return os.path.join(object_path, file_name)
+    return os.path.join(save_dir, file_name)
+
 
 
 def main():
@@ -439,6 +441,7 @@ def main():
         
         voortgang = get_voortgang_params(df_voortgang=df_voortgang, bh_code=object_code)
         variables = update_config_with_voortgang(config, voortgang)
+        save_dir = os.path.join(object_path, config.get("output_folder", ""))
         try:
             path_ora = return_most_recent_ora(object_path)
             print("Checking for images...")
@@ -457,7 +460,7 @@ def main():
                     word_document, ora_filtered, path_imgs
                 )
             
-            document_path = save_aandachtspunten_beheerder(word_document, object_path, object_code)
+            document_path = save_aandachtspunten_beheerder(word_document, save_dir, object_code)
             logging.info(f"Word document saved successfully at: {document_path}")
             time.sleep(1)
             pdf_document_path = convert_docx_to_pdf(document_path)

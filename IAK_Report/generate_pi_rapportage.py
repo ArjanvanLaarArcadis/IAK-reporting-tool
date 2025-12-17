@@ -1040,7 +1040,10 @@ def main() -> None:
         try:
             # Start the printing to PDF (in separate try-catch block)
             logging.info(f"Printing PI report to PDF for [{object_code}]")
-            pdf_filename = new_xlsx_filename.replace('.xlsx', '.pdf')
+            xlsx_dir = os.path.dirname(new_xlsx_filename)
+            xlsx_basename = os.path.basename(new_xlsx_filename)
+            pdf_basename = xlsx_basename.replace('.xlsx', '.pdf')
+            pdf_filename = os.path.join(xlsx_dir, config.get("output_folder", ""), pdf_basename)
             utilsxls.export_to_pdf(new_xlsx_filename, pdf_filename)
             logging.info(f"PI report printed to PDF for [{object_code}] successfully.")
 
