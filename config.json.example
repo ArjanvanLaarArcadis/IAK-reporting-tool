@@ -16,5 +16,6 @@
   "projectleider": "<naam projectleider>",
   "projectnummer": 1,
 
-  "output_folder": "pythonScript"
+  "output_folder": "pythonScript",
+  "log_level": <one of: "DEBUG", "INFO", "WARNING", "ERROR" or "DEBUG">
 }
