@@ -1,3 +1,9 @@
+# IAK Reporting Tool - Bijlage 3 Generator
+# Copyright (C) 2024-2025 Arcadis Nederland B.V.
+#
+# SPDX-License-Identifier: GPL-3.0-or-later
+# See LICENSE file for full license text.
+
 """
 This script handles the generation of "Bijlage 3" documents, which are based on ORA
 (Onderhoudsrapportage) files. It identifies the most recent ORA file in a given directory,

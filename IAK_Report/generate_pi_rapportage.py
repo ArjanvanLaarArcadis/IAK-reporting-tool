@@ -1,3 +1,9 @@
+# IAK Reporting Tool - PI Report Generator
+# Copyright (C) 2024-2025 Arcadis Nederland B.V.
+#
+# SPDX-License-Identifier: GPL-3.0-or-later
+# See LICENSE file for full license text.
+
 """
 This script processes Excel PI Reports that follow from DISK using OpenPyXL and other utilities.
 It uses a 'voortgangslijst' to update the configuration variables and populate the PI reports with relevant data.

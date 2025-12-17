@@ -1,3 +1,9 @@
+# IAK Reporting Tool - Excel utilities
+# Copyright (C) 2024-2025 Arcadis Nederland B.V.
+#
+# SPDX-License-Identifier: GPL-3.0-or-later
+# See LICENSE file for full license text.
+
 """
 This module contains utility functions for handling Excel files with openpyxl.
 

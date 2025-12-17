@@ -1,3 +1,9 @@
+# IAK Reporting Tool - Progress data retrieval
+# Copyright (C) 2024-2025 Arcadis Nederland B.V.
+#
+# SPDX-License-Identifier: GPL-3.0-or-later
+# See LICENSE file for full license text.
+
 """module to retrieve and process voortgang data from an Excel file."""
 
 # Built-in modules

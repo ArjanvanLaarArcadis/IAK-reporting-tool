@@ -1,3 +1,12 @@
+# IAK Reporting Tool - ORA to Word converter
+# Copyright (C) 2024-2025 Arcadis Nederland B.V.
+#
+# SPDX-License-Identifier: GPL-3.0-or-later
+# See LICENSE file for full license text.
+#
+# Original Author for v0: tersteer0528
+# Refactored: Sammie Knoppert (W. AGPT)
+
 # -*- coding: utf-8 -*-
 """
 Created on Fri Oct 11 13:54:24 2024
