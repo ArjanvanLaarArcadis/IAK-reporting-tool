@@ -218,16 +218,19 @@ def setup_logger(log_file="app.log"):
     """
     Sets up a logger with both file and console handlers.
     The log level is read from the 'log_level' key in config.json.
+    Log files are organized in subdirectories under 'logs/' based on the module name.
 
     Args:
-        log_file (str): The name of the log file.
+        log_file (str): The name of the log file (e.g., "generate_bijlage_3_20241217-143022.log").
 
     Returns:
         logging.Logger: Configured logger instance.
         
     Note:
-        Log level can be set in config.json using values: INFO, DEBUG, WARNING, ERROR, or CRITICAL.
-        Defaults to INFO if not specified or if an invalid value is provided.
+        - Log level can be set in config.json using values: INFO, DEBUG, WARNING, ERROR, or CRITICAL.
+        - Defaults to INFO if not specified or if an invalid value is provided.
+        - Logs are saved to: logs/<module_name>/<log_file>
+        - Example: logs/generate_bijlage_3/generate_bijlage_3_20241217-143022.log
     """
     log_options = ["INFO", "DEBUG", "WARNING", "ERROR", "CRITICAL"]
     config = load_config()
@@ -235,12 +238,32 @@ def setup_logger(log_file="app.log"):
     if log_level not in log_options:
         log_level = "INFO"
     
+    # Extract module name from log file name
+    # Example: "generate_bijlage_3_20241217-143022.log" -> "generate_bijlage_3"
+    base_name = os.path.splitext(log_file)[0]  # Remove .log extension
+    # Split by underscore and take parts before the timestamp pattern
+    parts = base_name.split('_')
+    # Find where the timestamp starts (pattern: YYYYMMDD-HHMMSS)
+    module_parts = []
+    for part in parts:
+        if re.match(r'^\d{8}-\d{6}$', part):  # Timestamp pattern
+            break
+        module_parts.append(part)
+    
+    module_name = '_'.join(module_parts) if module_parts else 'general'
+    
+    # Create logs directory structure: logs/module_name/
+    log_dir = os.path.join("logs", module_name)
+    os.makedirs(log_dir, exist_ok=True)
+    
+    # Full path to log file
+    full_log_path = os.path.join(log_dir, log_file)
     
     logger = logging.getLogger()
     logger.setLevel(getattr(logging, log_level))
 
     # FileHandler for logging to a file
-    file_handler = logging.FileHandler(log_file)
+    file_handler = logging.FileHandler(full_log_path)
     file_handler.setFormatter(
         logging.Formatter(
             "%(asctime)s - %(levelname)s - %(message)s",
