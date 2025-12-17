@@ -47,6 +47,13 @@ This repository contains tools to automate various reporting aspects within the 
 - Generates Word documents summarizing critical risks
 - Supports asset owner discussions and risk management workflows
 
+#### `combine_pi_with_appendices.py`
+**PI Report Combination Tool**
+- Combines PI reports with their appendices into a single PDF document
+- Automatically locates PI report, Bijlage 3, and Bijlage 9 PDFs
+- Creates complete reports saved as "[PI Report Name] - compleet.pdf"
+- Processes all objects in batch mode using the same loop structure as other generators
+
 ### Supporting Modules
 
 #### `get_voortgang.py`
@@ -190,11 +197,17 @@ data/
 # Generate PI reports for all objects in werkpakket
 python IAK_Report/generate_pi_rapportage.py
 
+# Generate bijlage 3 - ORA reports
+python IAK_Report/generate_bijlage_3.py
+
 # Generate bijlage 9 - aandachtspunten beheerder
 python IAK_Report/generate_aandachtspunten_beheerder.py
 
 # Generate highest risk reports
 python IAK_Report/generate_hoogste_risicos.py
+
+# Combine PI reports with appendices into complete PDFs
+python IAK_Report/combine_pi_with_appendices.py
 ```
 
 ### Advanced Usage
@@ -202,8 +215,14 @@ python IAK_Report/generate_hoogste_risicos.py
 # Process specific object (modify config.json)
 python IAK_Report/generate_pi_rapportage.py
 
-# Generate with custom logging level
-python IAK_Report/generate_pi_rapportage.py --log-level DEBUG
+# Combine reports using Poetry script
+poetry run iak-combine-reports
+
+# Full workflow: Generate all reports then combine them
+python IAK_Report/generate_pi_rapportage.py
+python IAK_Report/generate_bijlage_3.py
+python IAK_Report/generate_aandachtspunten_beheerder.py
+python IAK_Report/combine_pi_with_appendices.py
 ```
 
 ### Common Issues
