@@ -206,13 +206,17 @@ def find_foto_path(fotonummer: str, imgs: list) -> str:
     and returns the full path of the first image file that contains the given
     photo number in its name. Both the photo number and image filenames are
     transformed to lowercase and stripped of spaces for comparison.
+    
+    If multiple images match the photo number, the smallest file (compressed version)
+    is returned.
 
     Args:
         fotonummer (str): The photo number to search for in the image filenames.
         imgs (list): The list of fullfilenames of all available images.
 
     Returns:
-        str: The full file path of the matching image, or raises FileNotFoundError if no match is found.
+        str: The full file path of the matching image (smallest if multiple found),
+             or raises FileNotFoundError if no match is found.
     """
     fotonummer = fotonummer.lower().replace(" ", "")
     
@@ -223,6 +227,9 @@ def find_foto_path(fotonummer: str, imgs: list) -> str:
             raise ValueError(f"[{ext}], that's a weird extension! Try to repair the ORA sheets")
     # Continue with just the name
     
+    # Collect all matching images
+    matching_images = []
+    
     # The last part of the full filename contains the foto numbers
     for fullfilename in imgs:
         # Get only the name of the file, excluding the extension
@@ -232,15 +239,24 @@ def find_foto_path(fotonummer: str, imgs: list) -> str:
         # Ok, sometimes, only the number is provided, without the camera-prefix.
         # e.g. 9252 instead of DSCN9252
         if name.lower().endswith(fotonummer):
-            # Nice, found! Continue the proces by returning this filename
-            logging.debug(f"Found photo {name}")
-            return fullfilename
-
-    # If not returned, then the photo in the excelsheet wasn't found in the directory.
-    common_path = os.path.commonpath(imgs)
-    raise FileNotFoundError(
-        f"Image with photonummer [{fotonummer}] not found in [{common_path}]."
-    )
+            matching_images.append(fullfilename)
+    
+    # If no matches found, raise error
+    if not matching_images:
+        common_path = os.path.commonpath(imgs)
+        raise FileNotFoundError(
+            f"Image with photonummer [{fotonummer}] not found in [{common_path}]."
+        )
+    
+    # If multiple matches, return the smallest file (compressed version)
+    if len(matching_images) > 1:
+        smallest_image = min(matching_images, key=os.path.getsize)
+        logging.debug(f"Found {len(matching_images)} photos for {fotonummer}, using smallest: {os.path.basename(smallest_image)}")
+        return smallest_image
+    
+    # Single match found
+    logging.debug(f"Found photo {os.path.basename(matching_images[0])}")
+    return matching_images[0]
 
 
 def copy_last_table(word_document: docx.Document) -> None:
