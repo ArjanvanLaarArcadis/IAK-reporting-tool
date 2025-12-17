@@ -1,6 +1,25 @@
 # IAK Reporting Tool
 
-This project is licensed under the GNU General Public License v3.0 (see LICENSE).
+## License
+
+Copyright (C) 2024-2025 Arcadis Nederland B.V.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+**Contact:** sammie.knoppert@arcadis.com
+
+See the [LICENSE](LICENSE) file for the full license text.
 
 ## Overview
 
@@ -95,8 +114,44 @@ IAK-reporting-tool/
 
 ## Installation
 
-### Test files
+### Test Files and Templates
 
+#### Requesting Test Data
+Test files with mock data can be requested from:
+- sammie.knoppert@arcadis.com
+- arjan.vanlaar@arcadis.com
+
+These test files follow the same structure as production data and are useful for:
+- Learning how to use the tools
+- Testing configurations before production use
+- Validating installations and dependencies
+
+#### Files Setup
+Template files are provided separately and must be placed in the `templates/` directory:
+
+1. **Locate the template files** in the distributed package:
+   - `./aandachtspunten_beheerder/` - Templates for attention point documents
+   - `./hoogste-risico/` - Templates for highest risk reports
+   - `./ora-to-word/` - Templates for ORA-to-Word conversions
+
+2. **Copy all templates** to the root `templates/` folder (flatten the structure):
+   ```
+   templates/
+   ├── FORMAT1.docx
+   ├── FORMAT2.docx
+   └── [additional template files]
+   ```
+
+3. **Configure paths** in `config.json`:
+   ```json
+   {
+     "path_batch": "path_to_batch_data",
+     "werkpakket": "WP-LC-AR-24-102",
+     "voortgangs_sheet": "path_to_Voortgang_IAK_test.xlsx"
+   }
+   ```
+
+**Note:** Template files are required for document generation. Ensure they are properly placed before running the scripts.
 
 ### Prerequisites
 - **Python 3.12 or higher** (recommended)

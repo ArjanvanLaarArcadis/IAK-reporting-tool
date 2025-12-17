@@ -1,3 +1,9 @@
+# IAK Reporting Tool - Attention Points Generator
+# Copyright (C) 2024-2025 Arcadis Nederland B.V.
+#
+# SPDX-License-Identifier: GPL-3.0-or-later
+# See LICENSE file for full license text.
+
 """
 This script generates "Bijlage 9 - Aandachtspunten Beheerder" documents based on data
 from ORA (Onderhoudsrapportage) files. It processes relevant information, including
