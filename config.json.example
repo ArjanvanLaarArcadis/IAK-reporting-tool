@@ -14,5 +14,7 @@
   
   "opdrachtnemer": "<bedrijf>",
   "projectleider": "<naam projectleider>",
-  "projectnummer": 1
+  "projectnummer": 1,
+
+  "output_folder": "pythonScript"
 }
