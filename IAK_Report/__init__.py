@@ -1,3 +1,9 @@
+# IAK Reporting Tool - Main package initialization
+# Copyright (C) 2024-2025 Arcadis Nederland B.V.
+#
+# SPDX-License-Identifier: GPL-3.0-or-later
+# See LICENSE file for full license text.
+
 """
 IAK Reporting Tool
 

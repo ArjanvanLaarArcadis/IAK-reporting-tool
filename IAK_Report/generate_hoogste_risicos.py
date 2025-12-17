@@ -1,3 +1,9 @@
+# IAK Reporting Tool - Highest Risks Generator
+# Copyright (C) 2024-2025 Arcadis Nederland B.V.
+#
+# SPDX-License-Identifier: GPL-3.0-or-later
+# See LICENSE file for full license text.
+
 """
 This script processes ORA (Object Risk Analysis) data to identify the highest risks
 for one batch and generates a Word document summarizing these risks. The script also
