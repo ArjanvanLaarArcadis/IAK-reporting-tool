@@ -64,7 +64,7 @@ if __name__ == "__main__":
     log_filename = f"generate_bijlage_3_{timestamp}.log"
     
     # Set up logging and load configuration
-    logger = utils.setup_logger(log_filename, logging.INFO)
+    logger = utils.setup_logger(log_filename)
     logging.info("Starting the script to generate Bijlage 3...")
     config = utils.load_config(config_path="./config.json")
 

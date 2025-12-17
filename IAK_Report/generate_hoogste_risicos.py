@@ -241,7 +241,7 @@ def main():
     log_filename = f"generate_hoogste_risicos_{timestamp}.log"
     
     # Constants and configurations
-    logger = setup_logger(log_filename, logging.INFO)
+    logger = setup_logger(log_filename)
     logger.info("Starting the script.")
 
     config = load_config("data\config.json")
