@@ -39,6 +39,12 @@ from pypdf import PdfWriter, PdfReader
 # Local imports
 from . import utils
 
+# Constants for file patterns
+PI_RAPPORT_PATTERN = "pi rapport"
+BIJLAGE_3_PATTERN = "bijlage 3"
+BIJLAGE_9_PATTERN = "bijlage 9"
+EXCLUDE_COMPLEET = "compleet"
+
 
 def find_most_recent_file(directory: str, pattern: str, exclude_pattern: str = None) -> Optional[str]:
     """
@@ -118,6 +124,68 @@ def find_last_page_with_text(pdf_path: str, search_text: str) -> Optional[int]:
         return None
 
 
+def find_insertion_points(pi_report_path: str, appendices: List[Tuple[Optional[str], str, str]]) -> List[Tuple[Optional[int], str]]:
+    """
+    Find insertion points for appendices in the PI report.
+    
+    Parameters:
+        pi_report_path (str): Path to the PI report PDF.
+        appendices (list): List of tuples (pdf_path, search_pattern, name).
+    
+    Returns:
+        list: List of tuples (insert_page_index, appendix_name) with insertion points found.
+    """
+    insertion_points = []
+    
+    for pdf_path, search_pattern, name in appendices:
+        if pdf_path:
+            insert_page = find_last_page_with_text(pi_report_path, search_pattern)
+            if insert_page is None:
+                logging.warning(f"'{name}' reference not found in PI report, will append at end")
+            insertion_points.append((insert_page, pdf_path, name))
+    
+    return insertion_points
+
+
+def build_merged_pdf(pi_report_path: str, insertion_points: List[Tuple[Optional[int], str, str]]) -> PdfWriter:
+    """
+    Build a merged PDF with appendices inserted at specified positions.
+    
+    Parameters:
+        pi_report_path (str): Path to the main PI report PDF.
+        insertion_points (list): List of tuples (insert_page, pdf_path, name).
+    
+    Returns:
+        PdfWriter: Writer object with merged content.
+    """
+    writer = PdfWriter()
+    
+    # Add the main PI report
+    writer.append(pi_report_path)
+    logging.info(f"Added PI report: [{os.path.basename(pi_report_path)}]")
+    
+    # Separate insertions with page numbers from those without
+    insertions_with_pages = [(page, path, name) for page, path, name in insertion_points if page is not None]
+    insertions_without_pages = [(page, path, name) for page, path, name in insertion_points if page is None]
+    
+    # Sort by page number (insert from last to first to maintain correct indices)
+    insertions_with_pages.sort(key=lambda x: x[0], reverse=True)
+    
+    # Insert appendices at their designated positions (from last to first)
+    for insert_page, pdf_path, name in insertions_with_pages:
+        # insert_page is 0-indexed, add 1 to insert after that page
+        insert_position = insert_page + 1
+        writer.merge(insert_position, pdf_path)
+        logging.info(f"Inserted {name} after page {insert_page + 1}")
+    
+    # Append any appendices that don't have a reference in the document
+    for _, pdf_path, name in insertions_without_pages:
+        writer.append(pdf_path)
+        logging.info(f"Appended {name} at end of document")
+    
+    return writer
+
+
 def combine_pdfs(pi_report_path: str, bijlage_3_path: Optional[str], 
                  bijlage_9_path: Optional[str], output_path: str) -> bool:
     """
@@ -139,53 +207,17 @@ def combine_pdfs(pi_report_path: str, bijlage_3_path: Optional[str],
     logging.info("Starting PDF combination process")
     
     try:
-        # Find insertion points for appendices
-        bijlage_3_insert_page = None
-        bijlage_9_insert_page = None
+        # Define appendices to process
+        appendices = [
+            (bijlage_3_path, BIJLAGE_3_PATTERN, "Bijlage 3"),
+            (bijlage_9_path, BIJLAGE_9_PATTERN, "Bijlage 9")
+        ]
         
-        if bijlage_3_path and os.path.exists(bijlage_3_path):
-            bijlage_3_insert_page = find_last_page_with_text(pi_report_path, "bijlage 3")
-            if bijlage_3_insert_page is None:
-                logging.warning("'Bijlage 3' reference not found in PI report, will append at end")
+        # Find insertion points for all appendices
+        insertion_points = find_insertion_points(pi_report_path, appendices)
         
-        if bijlage_9_path and os.path.exists(bijlage_9_path):
-            bijlage_9_insert_page = find_last_page_with_text(pi_report_path, "bijlage 9")
-            if bijlage_9_insert_page is None:
-                logging.warning("'Bijlage 9' reference not found in PI report, will append at end")
-        
-        # Determine which appendix to insert first (the one appearing earlier in the document)
-        # This ensures we maintain correct page indices
-        insertions = []
-        if bijlage_3_insert_page is not None and bijlage_3_path:
-            insertions.append((bijlage_3_insert_page, bijlage_3_path, "Bijlage 3"))
-        if bijlage_9_insert_page is not None and bijlage_9_path:
-            insertions.append((bijlage_9_insert_page, bijlage_9_path, "Bijlage 9"))
-        
-        # Sort by page number (insert from last to first to maintain correct indices)
-        insertions.sort(key=lambda x: x[0], reverse=True)
-        
-        # Use PdfWriter with append/merge methods
-        writer = PdfWriter()
-        
-        # Add the main PI report
-        writer.append(pi_report_path)
-        logging.info(f"Added PI report: [{os.path.basename(pi_report_path)}]")
-        
-        # Insert appendices at their designated positions (from last to first)
-        for insert_page, pdf_path, name in insertions:
-            # insert_page is 0-indexed, add 1 to insert after that page
-            insert_position = insert_page + 1
-            writer.merge(insert_position, pdf_path)
-            logging.info(f"Inserted {name} after page {insert_page + 1}")
-        
-        # Append any appendices that don't have a reference in the document
-        if bijlage_3_path and bijlage_3_insert_page is None and os.path.exists(bijlage_3_path):
-            writer.append(bijlage_3_path)
-            logging.info(f"Appended Bijlage 3 at end of document")
-        
-        if bijlage_9_path and bijlage_9_insert_page is None and os.path.exists(bijlage_9_path):
-            writer.append(bijlage_9_path)
-            logging.info(f"Appended Bijlage 9 at end of document")
+        # Build the merged PDF
+        writer = build_merged_pdf(pi_report_path, insertion_points)
         
         # Write the combined PDF
         logging.debug(f"Writing combined PDF to: [{output_path}]")
@@ -223,22 +255,22 @@ def process_object(object_path: str, object_code: str, config: dict, logger) -> 
         logger.error(f"Output directory does not exist: [{output_dir}]")
         return False
     
-    # Find the PI report using find_most_recent_file with "inspectieRapport" pattern
+    # Find the PI report PDF (generated by this tooling)
     # Exclude files with "compleet" in the name
-    pi_report_path = find_most_recent_file(output_dir, "pi rapport", exclude_pattern="compleet")
+    pi_report_path = find_most_recent_file(output_dir, PI_RAPPORT_PATTERN, exclude_pattern=EXCLUDE_COMPLEET)
     if not pi_report_path:
         logger.warning(f"PI report not found for object [{object_code}], skipping")
         return False
     
     # Find Bijlage 3 (ORA report)
-    bijlage_3_path = find_most_recent_file(output_dir, "bijlage 3")
+    bijlage_3_path = find_most_recent_file(output_dir, BIJLAGE_3_PATTERN)
     
     # Find Bijlage 9 (Aandachtspunten beheerder)
-    bijlage_9_path = find_most_recent_file(output_dir, "bijlage 9")
+    bijlage_9_path = find_most_recent_file(output_dir, BIJLAGE_9_PATTERN)
     
-    # Check early if we have at least one appendix to combine
-    if not bijlage_3_path and not bijlage_9_path:
-        logger.warning(f"No appendices found for object [{object_code}], skipping")
+    # Skip if any appendix is missing
+    if not bijlage_3_path or not bijlage_9_path:
+        logger.warning(f"One or more appendices missing for object [{object_code}], skipping")
         return False
     
     # Create output filename
