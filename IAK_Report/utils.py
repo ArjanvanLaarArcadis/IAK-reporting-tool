@@ -38,7 +38,6 @@ def load_config(config_path=CONFIG_FILE):
     print("Configuration loaded successfully.")
     return config
 
-
 def get_matching_codes(folder_path):
     # Define the regex pattern for the object code
     # Starting with Two digits, a letter, a hyphen, three digits, a hyphen, and two digits. 
@@ -215,19 +214,30 @@ def update_config_with_voortgang(config, voortgang):
     return variables
 
 
-def setup_logger(log_file="app.log", log_level=logging.INFO):
+def setup_logger(log_file="app.log"):
     """
     Sets up a logger with both file and console handlers.
+    The log level is read from the 'log_level' key in config.json.
 
     Args:
         log_file (str): The name of the log file.
-        log_level (int): The logging level (e.g., logging.INFO, logging.DEBUG).
 
     Returns:
         logging.Logger: Configured logger instance.
+        
+    Note:
+        Log level can be set in config.json using values: INFO, DEBUG, WARNING, ERROR, or CRITICAL.
+        Defaults to INFO if not specified or if an invalid value is provided.
     """
+    log_options = ["INFO", "DEBUG", "WARNING", "ERROR", "CRITICAL"]
+    config = load_config()
+    log_level = str(config.get("log_level", "INFO")).upper()
+    if log_level not in log_options:
+        log_level = "INFO"
+    
+    
     logger = logging.getLogger()
-    logger.setLevel(log_level)
+    logger.setLevel(getattr(logging, log_level))
 
     # FileHandler for logging to a file
     file_handler = logging.FileHandler(log_file)
