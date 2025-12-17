@@ -378,7 +378,7 @@ def process_aandachtspunten_beheerder(
     return word_document
 
 
-def save_aandachtspunten_beheerder(document: docx.Document, save_dir:str, object_code:str) -> str:
+def save_aandachtspunten_beheerder(document: docx.Document, save_dir: str, object_code: str) -> str:
     """
     Save the Word document (Bijlage 9 - Aandachtspunten Beheerder) to the specified location.
 
@@ -409,7 +409,7 @@ def main():
     timestamp = dt.datetime.now().strftime("%Y%m%d-%H%M%S")
     log_filename = f"generate_aandachtspunten_beheerder_{timestamp}.log"
     
-    logger = setup_logger(log_filename, "INFO")
+    logger = setup_logger(log_filename)
     logger.info("Starting the generation process for aandachtspunten beheerder.")
     config_path = "./config.json"
     config = load_config(config_path=config_path)

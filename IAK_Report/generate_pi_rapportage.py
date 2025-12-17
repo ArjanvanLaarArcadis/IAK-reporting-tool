@@ -1010,7 +1010,7 @@ def main() -> None:
     timestamp = dt.datetime.now().strftime("%Y%m%d-%H%M%S")
     log_filename = f"generate_pi_report_{timestamp}.log"
     
-    logger = utils.setup_logger(log_filename, log_level="INFO")
+    logger = utils.setup_logger(log_filename)
     config = utils.load_config('./config.json')
     logging.info(f"Starting PI report processing for werkpakket [{config['werkpakket']}]")
     failed_objects = []
