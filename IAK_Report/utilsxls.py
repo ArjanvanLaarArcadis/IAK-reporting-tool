@@ -22,6 +22,7 @@ import pandas as pd
 import openpyxl
 from openpyxl.cell.rich_text import CellRichText, TextBlock
 from openpyxl.cell.text import InlineFont
+import re
 import win32com.client
 
 
@@ -187,10 +188,26 @@ def styling_bijlage3_export(worksheet, excel: win32com.client.Dispatch) -> None:
         worksheet (Worksheet): The worksheet to style.
     """
 
-    # Hide some columns
+    # Determine template version from cell A2
+    rws_template = worksheet.Range("A2")
+    # Extract all digits from template version (e.g., "2.1.2" -> "212")
+    digits = re.findall(r'\d+', str(rws_template.Value))
+    full_version = int(''.join(digits) if digits else 0)
+    # Check if version is 2
+    version_number = 2 if full_version == 2 else 1
+
+    # Hide columns and set print area based on template version
+    if version_number == 1:
+        worksheet.PageSetup.PrintArea = "A:CZ"
+        worksheet.Columns("AJ:BI").Hidden = True
+        worksheet.Columns("CB:CG").Hidden = True
+    else:
+        worksheet.PageSetup.PrintArea = "A:CB"
+        worksheet.Columns("H:AI").Hidden = True
+        worksheet.Columns("BB:BG").Hidden = True
+
+    # Set version label
     worksheet.Range("K5").Value = "1.0 - Definitief"
-    worksheet.Columns("AJ:BI").Hidden = True
-    worksheet.Columns("CB:CG").Hidden = True
 
     # Set margins
     worksheet.PageSetup.TopMargin = excel.Application.CentimetersToPoints(1.91)
@@ -199,12 +216,13 @@ def styling_bijlage3_export(worksheet, excel: win32com.client.Dispatch) -> None:
     worksheet.PageSetup.RightMargin = excel.Application.CentimetersToPoints(0.64)
     worksheet.PageSetup.HeaderMargin = excel.Application.CentimetersToPoints(0.76)
     worksheet.PageSetup.FooterMargin = excel.Application.CentimetersToPoints(0.76)
+    worksheet.PageSetup.PaperSize = 8  # A3 format
+    worksheet.PageSetup.Orientation = 2  # Landscape mode
 
     # Set title rows and print area
     worksheet.PageSetup.FitToPagesWide = 1
     worksheet.PageSetup.FitToPagesTall = False
     worksheet.PageSetup.PrintTitleRows = "$8:$11"
-    worksheet.PageSetup.PrintArea = "A:CZ"
 
     return None  # Modified worksheet in place
 
