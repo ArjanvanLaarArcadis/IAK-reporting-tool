@@ -37,7 +37,7 @@ NAMES = {
 }
 
 
-def expand_abbreviations(df):
+def expand_abbreviations(df, names=NAMES) -> pd.DataFrame:
     """
     Expands abbreviations in the DataFrame.
     """
@@ -54,16 +54,16 @@ def expand_abbreviations(df):
     for col in name_cols:
         df[col] = df[col].apply(
             lambda x: ", ".join(
-                NAMES.get(
+                names.get(
                     name.strip(), name.strip()
                 )  # Apply mapping or keep the original name
-                for name in re.split(r"[+\s]", str(x))  # Split on spaces or "+"
+                for name in re.split(r"[\W]+", str(x))  # Split on non-word characters
             )
         )
     return df
 
 
-def get_voortgang(excelfile, columns=COLS, abbrev=True) -> pd.DataFrame:
+def get_voortgang(excelfile, columns=COLS, abbrev=True, names={}) -> pd.DataFrame:
     """
     Retrieves and processes the 'voortgang' data.
 
@@ -92,7 +92,7 @@ def get_voortgang(excelfile, columns=COLS, abbrev=True) -> pd.DataFrame:
     # Optional, make use of abbreviations
     if abbrev:
         # Columns with personal names are cleaned to replace initials with full names.
-        data = expand_abbreviations(data)
+        data = expand_abbreviations(data, names=names)
     logging.info("Data loaded and cleaned successfully.")
     return data
 
