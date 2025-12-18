@@ -42,23 +42,24 @@ from . import utils
 # Constants for file patterns
 PI_RAPPORT_PATTERN = "pi rapport"
 BIJLAGE_3_PATTERN = "bijlage 3"
+BIJLAGE_6_PATTERN = "bijlage 6"
 BIJLAGE_9_PATTERN = "bijlage 9"
 EXCLUDE_COMPLEET = "compleet"
 
 
 def find_most_recent_file(directory: str, pattern: str, exclude_pattern: str = None) -> Optional[str]:
     """
-    Find the most recent file matching a pattern in the specified directory.
+    Find the most recent file matching a pattern in the specified directory and its subdirectories.
     
     Parameters:
-        directory (str): Directory to search in.
+        directory (str): Directory to search in (recursively).
         pattern (str): Case-insensitive substring that the filename must contain.
         exclude_pattern (str): Optional pattern to exclude from results.
     
     Returns:
         str: Full path to the most recent matching file, or None if not found.
     """
-    logging.debug(f"Searching for files matching pattern '{pattern}' in [{directory}]")
+    logging.debug(f"Searching recursively for files matching pattern '{pattern}' in [{directory}]")
     
     if not os.path.exists(directory):
         logging.warning(f"Directory does not exist: [{directory}]")
@@ -66,18 +67,19 @@ def find_most_recent_file(directory: str, pattern: str, exclude_pattern: str = N
     
     matching_files = []
     
-    # Search for files matching the pattern
-    for filename in os.listdir(directory):
-        if pattern.lower() in filename.lower() and filename.lower().endswith('.pdf'):
-            # Exclude files matching the exclude pattern
-            if exclude_pattern and exclude_pattern.lower() in filename.lower():
-                continue
-            file_path = os.path.join(directory, filename)
-            matching_files.append(file_path)
-            logging.debug(f"Found matching file: [{filename}]")
+    # Search recursively for files matching the pattern
+    for root, dirs, files in os.walk(directory):
+        for filename in files:
+            if pattern.lower() in filename.lower() and filename.lower().endswith('.pdf'):
+                # Exclude files matching the exclude pattern
+                if exclude_pattern and exclude_pattern.lower() in filename.lower():
+                    continue
+                file_path = os.path.join(root, filename)
+                matching_files.append(file_path)
+                logging.debug(f"Found matching file: [{filename}] in [{root}]")
     
     if not matching_files:
-        logging.info(f"No files found matching pattern '{pattern}' in [{directory}]")
+        logging.info(f"No files found matching pattern '{pattern}' in [{directory}] or its subdirectories")
         return None
     
     # Return the most recent file based on modification time
@@ -187,17 +189,20 @@ def build_merged_pdf(pi_report_path: str, insertion_points: List[Tuple[Optional[
 
 
 def combine_pdfs(pi_report_path: str, bijlage_3_path: Optional[str], 
-                 bijlage_9_path: Optional[str], output_path: str) -> bool:
+                 bijlage_6_path: Optional[str], bijlage_9_path: Optional[str], 
+                 output_path: str) -> bool:
     """
     Combine the PI report with appendices into a single PDF.
     
     The appendices are inserted at the location where they are referenced in the PI report:
     - Finds the last page mentioning "Bijlage 3" and inserts Bijlage 3 after that page
+    - Finds the last page mentioning "Bijlage 6" and inserts Bijlage 6 after that page
     - Finds the last page mentioning "Bijlage 9" and inserts Bijlage 9 after that page
     
     Parameters:
         pi_report_path (str): Path to the main PI report PDF.
         bijlage_3_path (str): Path to Bijlage 3 PDF (optional).
+        bijlage_6_path (str): Path to Bijlage 6 PDF (optional).
         bijlage_9_path (str): Path to Bijlage 9 PDF (optional).
         output_path (str): Path where the combined PDF will be saved.
     
@@ -210,6 +215,7 @@ def combine_pdfs(pi_report_path: str, bijlage_3_path: Optional[str],
         # Define appendices to process
         appendices = [
             (bijlage_3_path, BIJLAGE_3_PATTERN, "Bijlage 3"),
+            (bijlage_6_path, BIJLAGE_6_PATTERN, "Bijlage 6"),
             (bijlage_9_path, BIJLAGE_9_PATTERN, "Bijlage 9")
         ]
         
@@ -243,7 +249,9 @@ def process_object(object_path: str, object_code: str, config: dict, logger) -> 
         logger: Logger instance for logging.
     
     Returns:
-        bool: True if processing succeeded, False otherwise.
+        tuple: (success_status, missing_bijlage_6)
+            - success_status (bool): True if processing succeeded, False otherwise
+            - missing_bijlage_6 (bool): True if bijlage 6 was missing
     """
     logger.info(f"Processing object [{object_code}]")
     
@@ -252,47 +260,54 @@ def process_object(object_path: str, object_code: str, config: dict, logger) -> 
     output_dir = os.path.join(object_path, output_folder)
     
     if not os.path.exists(output_dir):
-        logger.error(f"Output directory does not exist: [{output_dir}]")
-        return False
+        logger.info(f"Creating output directory: [{output_dir}]")
+        os.makedirs(output_dir)
     
     # Find the PI report PDF (generated by this tooling)
     # Exclude files with "compleet" in the name
-    pi_report_path = find_most_recent_file(output_dir, PI_RAPPORT_PATTERN, exclude_pattern=EXCLUDE_COMPLEET)
+    pi_report_path = find_most_recent_file(object_path, PI_RAPPORT_PATTERN, exclude_pattern=EXCLUDE_COMPLEET)
     if not pi_report_path:
         logger.warning(f"PI report not found for object [{object_code}], skipping")
-        return False
+        return False, False
     
     # Find Bijlage 3 (ORA report)
-    bijlage_3_path = find_most_recent_file(output_dir, BIJLAGE_3_PATTERN)
-    
+    bijlage_3_path = find_most_recent_file(object_path, BIJLAGE_3_PATTERN)
+
+    # Find Bijlage 6 (Inspectietekeningen)
+    bijlage_6_path = find_most_recent_file(object_path, BIJLAGE_6_PATTERN)
+    missing_bijlage_6 = bijlage_6_path is None
+    if missing_bijlage_6:
+        logger.warning(f"Bijlage 6 not found for object [{object_code}], will proceed without it")
+
     # Find Bijlage 9 (Aandachtspunten beheerder)
-    bijlage_9_path = find_most_recent_file(output_dir, BIJLAGE_9_PATTERN)
+    bijlage_9_path = find_most_recent_file(object_path, BIJLAGE_9_PATTERN)
     
-    # Skip if any appendix is missing
+    # Skip if critical appendices are missing (3 and 9)
     if not bijlage_3_path or not bijlage_9_path:
-        logger.warning(f"One or more appendices missing for object [{object_code}], skipping")
-        return False
+        logger.warning(f"Critical appendices (3 or 9) missing for object [{object_code}], skipping")
+        return False, missing_bijlage_6
     
     # Create output filename
     pi_basename = os.path.basename(pi_report_path)
     pi_name, pi_ext = os.path.splitext(pi_basename)
     output_filename = f"{pi_name} - compleet{pi_ext}"
     output_path = os.path.join(output_dir, output_filename)
+
     
     # Check if combined PDF already exists
     if os.path.exists(output_path):
         logger.info(f"Combined PDF already exists: [{output_filename}], skipping")
-        return True
+        return True, missing_bijlage_6
     
     # Combine the PDFs
-    success = combine_pdfs(pi_report_path, bijlage_3_path, bijlage_9_path, output_path)
+    success = combine_pdfs(pi_report_path, bijlage_3_path, bijlage_6_path, bijlage_9_path, output_path)
     
     if success:
         logger.info(f"Successfully processed object [{object_code}]")
     else:
         logger.error(f"Failed to process object [{object_code}]")
     
-    return success
+    return success, missing_bijlage_6
 
 
 def main() -> None:
@@ -312,11 +327,15 @@ def main() -> None:
     failed_objects = []
     successful_objects = []
     skipped_objects = []
+    missing_bijlage_6_objects = []
     
     # Loop through all objects in the batch
     for object_path, object_code in utils.get_object_paths_codes():
         try:
-            success = process_object(object_path, object_code, config, logger)
+            success, missing_bijlage_6 = process_object(object_path, object_code, config, logger)
+            
+            if missing_bijlage_6:
+                missing_bijlage_6_objects.append(object_code)
             
             if success:
                 successful_objects.append(object_code)
@@ -334,12 +353,16 @@ def main() -> None:
     logger.info(f"Successfully combined: {len(successful_objects)} objects")
     logger.info(f"Skipped: {len(skipped_objects)} objects")
     logger.info(f"Failed: {len(failed_objects)} objects")
+    logger.info(f"Missing Bijlage 6: {len(missing_bijlage_6_objects)} objects")
     
     if successful_objects:
         logger.info(f"Successful objects: {', '.join(successful_objects)}")
     
     if skipped_objects:
         logger.warning(f"Skipped objects: {', '.join(skipped_objects)}")
+    
+    if missing_bijlage_6_objects:
+        logger.info(f"Objects missing Bijlage 6: {', '.join(missing_bijlage_6_objects)}")
     
     if failed_objects:
         logger.error(f"Failed objects: {', '.join(failed_objects)}")
