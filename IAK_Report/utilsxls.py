@@ -199,6 +199,8 @@ def styling_bijlage3_export(worksheet, excel: win32com.client.Dispatch) -> None:
     worksheet.PageSetup.RightMargin = excel.Application.CentimetersToPoints(0.64)
     worksheet.PageSetup.HeaderMargin = excel.Application.CentimetersToPoints(0.76)
     worksheet.PageSetup.FooterMargin = excel.Application.CentimetersToPoints(0.76)
+    worksheet.PageSetup.PaperSize = 8  # A3 format
+    worksheet.PageSetup.Orientation = 2  # Landscape mode
 
     # Set title rows and print area
     worksheet.PageSetup.FitToPagesWide = 1
