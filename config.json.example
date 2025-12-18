@@ -2,11 +2,18 @@
   "path_batch": "<C:\\full\path\\to\\the\\data\\directory>",
   "werkpakket": "WP-LC-AR-24-102",
   "object_code": "",
+
   "voortgangs_sheet": "<C:\\full\\path\\to\\voortgangs-sheet.xlsx>",
+  "expand_name": true,
+  "expand_name_abbreviations": {
+    "JD": "John Doe",
+    "TT": "Theo Test" 
+  },
 
   "opdrachtgever": "Rijkswaterstaat, Grote Projecten en Onderhoud (GPO)",
   "contactpersoon_rws": "<Contactpersoon RWS>",
   "zaaknummer": 12345678,
+
   
   "versie": 1,
   "datum": "",
