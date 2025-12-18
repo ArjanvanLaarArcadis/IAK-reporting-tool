@@ -190,7 +190,7 @@ def find_pictures_for_object_path(object_path):
 
     # Helper function to normalize strings by removing punctuation and converting to lowercase
     def normalize_string(s):
-        return re.sub(r"[\'\-]", "", s).lower()
+        return re.sub(r"[\'\- ]", "", s).lower()
 
     # Iterate through directories inside the object_path
     for dir_name in os.listdir(object_path):
