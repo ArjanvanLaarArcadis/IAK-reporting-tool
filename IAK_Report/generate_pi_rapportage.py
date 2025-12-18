@@ -1023,7 +1023,11 @@ def main() -> None:
 
     # Get the voortgangs data, based on the excel file (as set in config.json)
     excelfile = config.get("voortgangs_sheet", "")
-    voortgangs_data = get_voortgang(excelfile, abbrev=False)
+    voortgangs_data = get_voortgang(
+        excelfile, 
+        abbrev=config.get("expand_name", False), 
+        names=config.get("expand_name_abbreviations", {})
+        )
     
     for object_path, object_code in utils.get_object_paths_codes():
         logging.info(f"Processing object [{object_code}]")
