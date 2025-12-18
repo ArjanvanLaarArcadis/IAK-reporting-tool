@@ -204,6 +204,19 @@ def list_of_fotonummers(fotonummers: str) -> list:
     return fotonummers_list  # list of photo numbers as strings (filename)
 
 
+def _normalize_filename(filename: str) -> str:
+    """
+    Normalize a filename by converting to lowercase and removing all non-alphanumeric characters.
+    
+    Args:
+        filename (str): The filename to normalize.
+        
+    Returns:
+        str: Normalized filename containing only lowercase alphanumeric characters.
+    """
+    return ''.join(c for c in filename.lower() if c.isalnum())
+
+
 def find_foto_path(fotonummer: str, imgs: list) -> str:
     """
     Finds the file path of an image based on a given photo number.
@@ -211,7 +224,7 @@ def find_foto_path(fotonummer: str, imgs: list) -> str:
     This function searches through the list of files in the specified directory
     and returns the full path of the first image file that contains the given
     photo number in its name. Both the photo number and image filenames are
-    transformed to lowercase and stripped of spaces for comparison.
+    normalized (lowercase, alphanumeric only) for flexible matching.
     
     If multiple images match the photo number, the smallest file (compressed version)
     is returned.
@@ -223,45 +236,61 @@ def find_foto_path(fotonummer: str, imgs: list) -> str:
     Returns:
         str: The full file path of the matching image (smallest if multiple found),
              or raises FileNotFoundError if no match is found.
-    """
-    fotonummer = fotonummer.lower().replace(" ", "")
     
-    # Case with extension:
-    fotonummer, ext = os.path.splitext(fotonummer)
-    if ext: 
-        if not ext in ['.png', '.jpg', 'jpeg']:
-            raise ValueError(f"[{ext}], that's a weird extension! Try to repair the ORA sheets")
-    # Continue with just the name
+    Raises:
+        ValueError: If the photo number has an invalid file extension.
+        FileNotFoundError: If no matching image is found.
+    """
+    VALID_EXTENSIONS = {'.png', '.jpg', '.jpeg'}
+    
+    # Validate and strip extension if present
+    original_fotonummer = fotonummer
+    fotonummer_name, ext = os.path.splitext(fotonummer)
+    
+    if ext and ext.lower() not in VALID_EXTENSIONS:
+        raise ValueError(
+            f"Invalid extension [{ext}] in photo number [{original_fotonummer}]. "
+            f"Valid extensions: {', '.join(VALID_EXTENSIONS)}. Please repair the ORA sheets."
+        )
+    
+    # Normalize the photo number: lowercase, alphanumeric only
+    fotonummer_normalized = _normalize_filename(fotonummer_name)
+    
+    if not fotonummer_normalized:
+        raise ValueError(f"Photo number [{original_fotonummer}] is empty after normalization.")
     
     # Collect all matching images
     matching_images = []
     
-    # The last part of the full filename contains the foto numbers
     for fullfilename in imgs:
-        # Get only the name of the file, excluding the extension
+        # Extract filename without extension and normalize it
         filename = os.path.basename(fullfilename)
-        name, ext = os.path.splitext(filename)
+        name_without_ext = os.path.splitext(filename)[0]
+        name_normalized = _normalize_filename(name_without_ext)
 
-        # Ok, sometimes, only the number is provided, without the camera-prefix.
-        # e.g. 9252 instead of DSCN9252
-        if name.lower().endswith(fotonummer):
+        # Match if filename ends with photo number (handles cases like "9252" matching "DSCN9252")
+        if name_normalized.endswith(fotonummer_normalized):
             matching_images.append(fullfilename)
     
-    # If no matches found, raise error
+    # Handle no matches
     if not matching_images:
-        common_path = os.path.commonpath(imgs)
+        common_path = os.path.commonpath(imgs) if imgs else "unknown path"
         raise FileNotFoundError(
-            f"Image with photonummer [{fotonummer}] not found in [{common_path}]."
+            f"Image with photo number [{original_fotonummer}] (normalized: '{fotonummer_normalized}') "
+            f"not found in [{common_path}]."
         )
     
-    # If multiple matches, return the smallest file (compressed version)
+    # Return smallest file if multiple matches (compressed version)
     if len(matching_images) > 1:
         smallest_image = min(matching_images, key=os.path.getsize)
-        logging.debug(f"Found {len(matching_images)} photos for {fotonummer}, using smallest: {os.path.basename(smallest_image)}")
+        logging.debug(
+            f"Found {len(matching_images)} photos for '{original_fotonummer}', "
+            f"using smallest: {os.path.basename(smallest_image)}"
+        )
         return smallest_image
     
     # Single match found
-    logging.debug(f"Found photo {os.path.basename(matching_images[0])}")
+    logging.debug(f"Found photo for '{original_fotonummer}': {os.path.basename(matching_images[0])}")
     return matching_images[0]
 
 
@@ -318,7 +347,7 @@ def process_aandachtspunten_beheerder(
     Args:
         word_document (docx.Document): The Word document to populate.
         ora_filtered (pd.DataFrame): Filtered ORA data containing aandachtspunten.
-        path_imgs (str): Path to the directory containing images.
+        path_imgs (list): Filenames of all pictures for the object.
 
     Returns:
         docx.Document: The updated Word document.
