@@ -196,6 +196,9 @@ def styling_bijlage3_export(worksheet, excel: win32com.client.Dispatch) -> None:
     # Check if version is 2
     version_number = 2 if full_version == 2 else 1
 
+    # Unhide all columns first
+    worksheet.Columns.Hidden = False
+
     # Hide columns and set print area based on template version
     if version_number == 1:
         worksheet.PageSetup.PrintArea = "A:CZ"
