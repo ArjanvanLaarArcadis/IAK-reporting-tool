@@ -199,6 +199,11 @@ def styling_bijlage3_export(worksheet, excel: win32com.client.Dispatch) -> None:
     # Unhide all columns first
     worksheet.Columns.Hidden = False
 
+    # Clear any filters and unhide all rows
+    if worksheet.AutoFilterMode:
+        worksheet.AutoFilterMode = False
+    worksheet.Rows.Hidden = False
+
     # Hide columns and set print area based on template version
     if version_number == 1:
         worksheet.PageSetup.PrintArea = "A:CZ"
@@ -206,7 +211,6 @@ def styling_bijlage3_export(worksheet, excel: win32com.client.Dispatch) -> None:
         worksheet.Columns("CB:CG").Hidden = True
     else:
         worksheet.PageSetup.PrintArea = "A:CB"
-        worksheet.Columns("H:AI").Hidden = True
         worksheet.Columns("BB:BG").Hidden = True
 
     # Set version label
