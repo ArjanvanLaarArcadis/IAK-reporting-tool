@@ -1038,7 +1038,7 @@ def main() -> None:
             pi_report_path = find_inspectierapport(object_path)
             if not pi_report_path:
                 logging.error(f"Could not find inspectierapport for [{object_code}]")
-                continue
+                raise FileNotFoundError(f"Inspectierapport not found for object [{object_code}]")
             
             # All needed data found and set, so start processing the pi report
             new_xlsx_filename = process_pi_report_for_object(object_path, pi_report_path, config)
@@ -1046,6 +1046,7 @@ def main() -> None:
         except Exception as e:
             logging.error(f"Failed to process object [{object_code}]: {e}")
             failed_objects.append(object_code)
+            continue  # Skip to the next object
 
         try:
             # Start the printing to PDF (in separate try-catch block)
