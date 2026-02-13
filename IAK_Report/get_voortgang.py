@@ -31,10 +31,7 @@ COLS = [
 ]
 
 # List of names to expand abbreviations
-NAMES = {
-    "TT": "Theo Test",
-    "JD": "John Doe"
-}
+NAMES = {"TT": "Theo Test", "JD": "John Doe"}
 
 
 def expand_abbreviations(df, names=NAMES) -> pd.DataFrame:
@@ -76,7 +73,7 @@ def get_voortgang(excelfile, columns=COLS, abbrev=True, names={}) -> pd.DataFram
     # Check if the provided file exists
     if not os.path.exists(excelfile):
         raise FileNotFoundError(f"Voortgangs sheet file does not exist: {excelfile}")
-    
+
     logging.info("Loading and cleaning voortgang data.")
     # First, load data from an Excel file using pandas.
     # It reads the specified columns from the sheet "Blad1" and skips the first row.
@@ -88,7 +85,7 @@ def get_voortgang(excelfile, columns=COLS, abbrev=True, names={}) -> pd.DataFram
         usecols=columns,
         dtype=str,
     )
-    
+
     # Optional, make use of abbreviations
     if abbrev:
         # Columns with personal names are cleaned to replace initials with full names.
@@ -132,7 +129,7 @@ def get_voortgang_params(df_voortgang: pd.DataFrame, bh_code: str):
     logging.debug(f"Fetching parameters for BH_code: [{bh_code}]")
 
     # From the DataFrame, filter rows where 'BH_code' matches the provided bh_code.
-    my_rows = df_voortgang[df_voortgang['BH_code'] == bh_code]
+    my_rows = df_voortgang[df_voortgang["BH_code"] == bh_code]
 
     if my_rows.empty:
         logging.error(f"No records found for BH_code: [{bh_code}]")
@@ -149,11 +146,19 @@ def get_voortgang_params(df_voortgang: pd.DataFrame, bh_code: str):
         logging.debug(f"Value for column '{column}': {value}")
         return value
 
+    if get_value("Inspecteur 1", None) and get_value("Inspecteur 2", None):
+        inspecteurs = f"{get_value('Inspecteur 1')}, {get_value('Inspecteur 2')}"
+    elif get_value("Inspecteur 1"):
+        inspecteurs = get_value("Inspecteur 1")
+    elif get_value("Inspecteur 2"):
+        inspecteurs = get_value("Inspecteur 2")
+    else:
+        inspecteurs = ""
+    inspecteurs = [get_value("Inspecteur 1") or None, get_value("Inspecteur 2") or None]
+
     result = {
         "opsteller": get_value("door"),
-        "inspecteurs": ", ".join(
-            [get_value("Inspecteur 1"), get_value("Inspecteur 2")]
-        ),
+        "inspecteurs": inspecteurs,
         "besteknummer": get_value("zaaknr"),
         "hulpmiddelen": get_value("VKM / HM"),
         "batch": get_value("Batch"),
