@@ -146,14 +146,14 @@ def get_voortgang_params(df_voortgang: pd.DataFrame, bh_code: str):
         logging.debug(f"Value for column '{column}': {value}")
         return value
 
-    if get_value("Inspecteur 1", None) and get_value("Inspecteur 2", None):
-        inspecteurs = f"{get_value('Inspecteur 1')}, {get_value('Inspecteur 2')}"
-    elif get_value("Inspecteur 1"):
-        inspecteurs = get_value("Inspecteur 1")
-    elif get_value("Inspecteur 2"):
-        inspecteurs = get_value("Inspecteur 2")
-    else:
-        inspecteurs = ""
+    # if get_value("Inspecteur 1", None) and get_value("Inspecteur 2", None):
+    #     inspecteurs = f"{get_value('Inspecteur 1')}, {get_value('Inspecteur 2')}"
+    # elif get_value("Inspecteur 1"):
+    #     inspecteurs = get_value("Inspecteur 1")
+    # elif get_value("Inspecteur 2"):
+    #     inspecteurs = get_value("Inspecteur 2")
+    # else:
+    #     inspecteurs = ""
     inspecteurs = [get_value("Inspecteur 1") or None, get_value("Inspecteur 2") or None]
 
     result = {
