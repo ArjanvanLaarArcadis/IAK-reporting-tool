@@ -154,7 +154,7 @@ def get_voortgang_params(df_voortgang: pd.DataFrame, bh_code: str):
     #     inspecteurs = get_value("Inspecteur 2")
     # else:
     #     inspecteurs = ""
-    inspecteurs = [get_value("Inspecteur 1") or None, get_value("Inspecteur 2") or None]
+    inspecteurs = ", ".join([get_value("Inspecteur 1") or "", get_value("Inspecteur 2") or ""])
 
     result = {
         "opsteller": get_value("door"),
