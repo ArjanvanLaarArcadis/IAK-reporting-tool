@@ -272,7 +272,7 @@ def setup_logger(log_file="app.log"):
     file_handler = logging.FileHandler(full_log_path)
     file_handler.setFormatter(
         logging.Formatter(
-            "%(asctime)s - %(levelname)s - %(message)s",
+            "%(asctime)s - %(levelname)s - %(filename)s - %(message)s",
             datefmt="%Y-%m-%d %H:%M:%S",
         )
     )
@@ -281,7 +281,7 @@ def setup_logger(log_file="app.log"):
     console_handler = logging.StreamHandler()
     console_handler.setFormatter(
         logging.Formatter(
-            "%(asctime)s - %(levelname)s - %(message)s",
+            "%(asctime)s - %(levelname)s - %(filename)s - %(message)s",
             datefmt="%Y-%m-%d %H:%M:%S",
         )
     )
