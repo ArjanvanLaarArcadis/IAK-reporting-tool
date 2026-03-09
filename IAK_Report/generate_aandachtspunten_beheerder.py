@@ -66,7 +66,7 @@ from .utils import (
     save_document,
 )
 from .get_voortgang import get_voortgang, get_voortgang_params
-from .ora_to_word import load_ora
+from .ora_to_word import load_ora, load_inspectie_data
 
 
 def create_word_document(template_path: str, variables: dict) -> docx.Document:
@@ -501,8 +501,8 @@ def main():
             path_ora = return_most_recent_ora(object_path)
             print("Checking for images...")
             path_imgs = list_pictures_for_object(object_path)
-            ora = load_ora(path_ora)
-            ora_filtered = extract_relevant_data(ora)
+            inspectie_data = load_inspectie_data(path_ora)
+            ora_filtered = extract_relevant_data(inspectie_data)
             logger.info(f"The number of aandachtspunten voor beheerder is: {len(ora_filtered)}")
             
             if len(ora_filtered) == 0:
