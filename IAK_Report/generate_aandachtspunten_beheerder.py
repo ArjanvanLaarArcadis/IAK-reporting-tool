@@ -369,7 +369,7 @@ def process_aandachtspunten_beheerder(
     for i, (idx, row) in enumerate(ora_filtered.iterrows()):
         #logging.debug("Processing row %d: %s", idx, row.to_dict())
 
-        cell_content = row["Bevinding:\n- Inspectie\n- Onderhoud\n- Overig"]
+        cell_content = row['Bevinding']
         if not ":" in cell_content:
             raise ValueError(
                 f"Cell content does not contain ':': {cell_content}. "
