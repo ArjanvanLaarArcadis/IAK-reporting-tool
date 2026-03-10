@@ -365,9 +365,20 @@ def process_aandachtspunten_beheerder(
             copy_last_table(word_document)
         logging.info(f"Duplicated tables for {len(ora_filtered) - 1} aandachtspunten.")
 
+    # sort ora_filtered based on "Bevinding" column, only the code before the colon,
+    # which is the attention point number
+    ora_filtered["Aandachtspunt_nummer"] = ora_filtered["Bevinding"].apply(
+        lambda x: (
+            x.split(":")[0].strip()[-2:]
+            if isinstance(x, str) and ":" in x
+            else ""
+        )
+    )
+    ora_filtered.sort_values("Aandachtspunt_nummer", inplace=True)
+
     # Populate each table with data
     for i, (idx, row) in enumerate(ora_filtered.iterrows()):
-        #logging.debug("Processing row %d: %s", idx, row.to_dict())
+        # logging.debug("Processing row %d: %s", idx, row.to_dict())
 
         cell_content = row['Bevinding']
         if not ":" in cell_content:
@@ -385,7 +396,7 @@ def process_aandachtspunten_beheerder(
 
         # Everything after the colon is the observation
         bevinding_ora = cell_content.partition(":")[2].strip()
-        
+
         # Extract photo numbers and their paths
         foto_column = [column for column, value in row.items() if "Foto" in column][0]
         fotos = list_of_fotonummers(row[foto_column])
@@ -398,11 +409,24 @@ def process_aandachtspunten_beheerder(
             f"Aandachtspunt: {aandachtspunt}, Foto1: {foto1}, Foto2: {foto2}"
         )
 
+        # strip element and bouwdeel such that (+) and (Kopie) are removed,
+        # and only the first part of the element is taken (before the comma)
+        element = (
+            row["Element"]
+            .partition(",")[0]
+            .replace("(+)", "")
+            .replace("(Kopie)", "")
+            .strip()
+        )
+        bouwdeel = (
+            row["Bouwdeel"].replace("(+)", "").replace("(Kopie)", "").strip()
+        )
+
         word_document.tables[i].cell(0, 0).text = str("Aandachtspunt " + aandachtspunt)
         word_document.tables[i].cell(0, 0).paragraphs[0].style = cell_style
-        word_document.tables[i].cell(1, 1).text = str(row["Element"].partition(",")[0])
+        word_document.tables[i].cell(1, 1).text = str(element)
         word_document.tables[i].cell(1, 1).paragraphs[0].style = cell_style
-        word_document.tables[i].cell(2, 1).text = str(row["Bouwdeel"])
+        word_document.tables[i].cell(2, 1).text = str(bouwdeel)
         word_document.tables[i].cell(2, 1).paragraphs[0].style = cell_style
         word_document.tables[i].cell(4, 0).text = str(bevinding_ora)
         word_document.tables[i].cell(4, 0).paragraphs[0].style = cell_style
@@ -449,7 +473,6 @@ def save_aandachtspunten_beheerder(document: docx.Document, save_dir: str, objec
 
     # Construct and return the full save path for reference (optional)
     return os.path.join(save_dir, file_name)
-
 
 
 def main():
