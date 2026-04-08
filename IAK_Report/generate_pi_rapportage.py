@@ -35,23 +35,23 @@ TODO:
 - The sc
 """
 
+import datetime as dt
+import logging
+import math
+
 # Built-in modules
 import os
-import math
-import logging
-import datetime as dt
 
 # External imports
 import openpyxl
-from openpyxl.styles import Alignment, Font
+from openpyxl.cell.rich_text import CellRichText, TextBlock
 from openpyxl.cell.text import InlineFont
-from openpyxl.cell.rich_text import TextBlock, CellRichText    
+from openpyxl.styles import Alignment, Font
 from PIL import JpegImagePlugin
 
 # Local imports
-from . import utils
-from . import utilsxls
-from .get_voortgang import get_voortgang, get_voortgang_params
+from IAK_Report import utils, utilsxls
+from IAK_Report.get_voortgang import get_voortgang, get_voortgang_params
 
 # Workaround for PIL bug with JpegImagePlugin
 JpegImagePlugin._getmp = lambda: None
@@ -146,13 +146,16 @@ def set_footer(
 
 
 def populate_title_page(
-    sheet: openpyxl.worksheet.worksheet.Worksheet, variables: dict
+    sheet: openpyxl.worksheet.worksheet.Worksheet,
+    sheet7: openpyxl.worksheet.worksheet.Worksheet,
+    variables: dict,
 ) -> None:
     """
     Populate and format the Title Page (Sheet2).
 
     Parameters:
         sheet (openpyxl.worksheet.worksheet.Worksheet): The worksheet object.
+        sheet7 (openpyxl.worksheet.worksheet.Worksheet): The worksheet object for Sheet7, needed to extract the date of inspection.
         variables (dict): Dictionary of variables.
     """
     logging.debug("Populating Title Page (Sheet2)...")
@@ -169,6 +172,11 @@ def populate_title_page(
     kwaliteitsbeheerser = variables.get("kwaliteitsbeheerser", "UNKNOWN").strip()
     projectleider = variables.get('projectleider', 'UNKNOWN').strip()
 
+    moment_of_inspection = sheet7["E9"].value
+    year_of_inspection = int(moment_of_inspection.split(" ")[-1])
+    sheet["B5"] = (
+        f"Inspectierapport Instandhoudingsinspectie {year_of_inspection}"
+    )
     sheet['H14'] = opdrachtgever
     sheet['H15'] = contactpersoon_rws
     sheet['H16'] = f'{zaaknr}'
@@ -927,7 +935,6 @@ def update_config_variables(
     return config_variables
 
 
-
 def process_pi_report_for_object(
     object_path: str, report_path: str, config: dict
 ) -> str:
@@ -958,7 +965,9 @@ def process_pi_report_for_object(
     config_variables = update_config_variables(wb_report["Sheet2"], config)
 
     # Populate excel with variables
-    populate_title_page(wb_report["Sheet2"], config_variables)
+    populate_title_page(
+        wb_report["Sheet2"], wb_report["Sheet7"], config_variables
+    )
     populate_inhoud_sheet(wb_report["Sheet3"], config_variables)
     populate_aanbeveling_sheet(wb_report["Sheet4"], config_variables)
     populate_ihp_sheet(wb_report["Sheet5"], config_variables)

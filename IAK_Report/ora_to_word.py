@@ -98,6 +98,47 @@ def load_ora(path_ora: str) -> pd.DataFrame:
         logging.error(f"Error loading ORA data: {e}")
         raise
 
+def load_inspectie_data(path_ora: str) -> pd.DataFrame:
+    """
+    Load "Inspectie Data" sheet from an ORA Excel file.
+
+    Parameters:
+        path_ora (str): Path to the ORA Excel file.
+
+    Returns:
+        pd.DataFrame: Processed ORA DataFrame.
+    """
+    try:
+        logging.info(f"Loading Inspectie Data from: {path_ora}")
+
+        inspectie_data_sheet = "Inspectie Data"
+
+        # The first 9 rows are skipped as they contain metadata. Further, the 11th row is dropped, it is a empty row below the header.
+        inspectie_data = pd.read_excel(
+            path_ora,
+            sheet_name=inspectie_data_sheet,
+            skiprows=list(range(2)),
+            dtype=str,
+        )
+
+        # Many cells (grayed) are left empty to indicate that the value is the same as the cell above. These are filled with the value from above.
+        inspectie_data["Element"] = inspectie_data["Element"].ffill()
+        inspectie_data["Bouwdeel"] = inspectie_data["Bouwdeel"].ffill()
+        # Remark that the (blue) row of an "Element" is empty in all other columns, also the "Bouwdeel" column. Hence, the "Bouwdeel" column is
+        # filled with the value from above as well, which is incorrect. However, this has no influence on the final output, and is therefore not handled.
+
+        # Additions are marked with a "(Ontbost)" or "(+)" or "+" in the "Bouwdeel" column.
+        # These are removed to keep the "Bouwdeel" column clean.
+        inspectie_data["Bouwdeel"] = (
+            inspectie_data["Bouwdeel"]
+            .str.replace(r"\(Ontbost\)|\(\+\)|\+", "", regex=True)
+            .str.strip()
+        )
+
+        return inspectie_data
+    except Exception as e:
+        logging.error(f"Error loading Inspectie data: {e}")
+        raise
 
 def configure_document_styles(document: docx.Document, style_name: str, font_size: int) -> None:
     """

@@ -23,6 +23,8 @@ COLS = [
     "Inspecteur 2",
     "door",
     "door.1",
+    "Inspecteur 3",
+    "Inspecteur 4",
     # "V&R-indicatie",
     # "Nader onderzoek",
     # "Directe maatregelen",
@@ -154,7 +156,7 @@ def get_voortgang_params(df_voortgang: pd.DataFrame, bh_code: str):
     #     inspecteurs = get_value("Inspecteur 2")
     # else:
     #     inspecteurs = ""
-    inspecteurs = ", ".join([get_value("Inspecteur 1") or "", get_value("Inspecteur 2") or ""])
+    inspecteurs = ", ".join([get_value("Inspecteur 1") or "", get_value("Inspecteur 2") or "", get_value("Inspecteur 3") or "", get_value("Inspecteur 4") or ""]).strip(", ")
 
     result = {
         "opsteller": get_value("door"),
