@@ -70,6 +70,7 @@ from IAK_Report.utils import (
     update_config_with_voortgang,
 )
 
+
 def create_word_document(template_path: str, variables: dict) -> docx.Document:
     """
     Create and configure a Word document based on a template provided by Rijkswaterstaat.
@@ -432,6 +433,9 @@ def process_aandachtspunten_beheerder(
         word_document.tables[i].cell(4, 0).text = str(bevinding_ora)
         word_document.tables[i].cell(4, 0).paragraphs[0].style = cell_style
         word_document.tables[i].cell(4, 0).vertical_alignment = WD_CELL_VERTICAL_ALIGNMENT.TOP
+
+        # we want to get the aandachtspunt written in "MaatregelNaam" column instead of the "Categorie" column.
+        # sometimes, this column is empty, then the user needs to fill in the correct value in the Excel.
         relevant_columns = [
             column
             for column, value in row.items()

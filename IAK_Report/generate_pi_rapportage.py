@@ -123,6 +123,8 @@ def set_footer(
     objectcode = variables.get("object_code", "UNKNOWN")
     versie = variables.get("versie", "UNKNOWN")
     objectnaam = variables.get("object_naam", "UNKNOWN")
+
+    # if objectcode = "07C-002-01" and objectnaam = "Koningsdiep", we want to set beheerobject = "01 - Koningsdiep"
     beheerobject = f"{objectcode.split('-')[-1]} - {objectnaam}"
     # Use today's date as the default value for datum
     datum = dt.date.today().strftime("%d-%m-%Y")
