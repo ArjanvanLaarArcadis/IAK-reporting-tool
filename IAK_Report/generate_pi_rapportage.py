@@ -122,18 +122,20 @@ def set_footer(
     complex = variables.get("complex_code", "UNKNOWN")
     objectcode = variables.get("object_code", "UNKNOWN")
     versie = variables.get("versie", "UNKNOWN")
+    objectnaam = variables.get("object_naam", "UNKNOWN")
+    beheerobject = f"{objectcode.split('-')[-1]} - {objectnaam}"
     # Use today's date as the default value for datum
     datum = dt.date.today().strftime("%d-%m-%Y")
     # object_beheer = variables.get("object_beheer", "UNKNOWN")  # te lang, zorgd voor problemen in de output
 
-    FOOTER_LEFT = f"Complex: {complex}\nBeheerobject: {objectcode}\nVertrouwelijkheid: RWS Bedrijfsvertrouwelijk"
+    FOOTER_LEFT = f"Complex: {complex}\nBeheerobject: {beheerobject}\nVertrouwelijkheid: RWS Bedrijfsvertrouwelijk"
     FOOTER_RIGHT = f"Revisie: {versie:.1f}\nDatum: {datum}\nPagina &P van &N"
     for i in range(2, sheets_count):
         sheet = wb[sheet_names[i]]
-        
+
         # Define footer content mapping
         footer_content = {'left': FOOTER_LEFT, 'center': "", 'right': FOOTER_RIGHT}
-        
+
         # Set footer content for both even and odd footers
         for footer_type in ['evenFooter', 'oddFooter']:
             footer = getattr(sheet, footer_type)
