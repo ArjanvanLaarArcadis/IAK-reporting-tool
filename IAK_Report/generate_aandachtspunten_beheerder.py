@@ -40,34 +40,35 @@ Usage:
 Run this script directly to generate "Bijlage 9 - Aandachtspunten Beheerder" documents
 for all objects in the batch listed in config.
 """
+import copy
+import datetime as dt
+import logging
+
 # Built-in modules
 import os
 import time
-import logging
-import copy
-import datetime as dt
+
+import docx
 
 # External modules
 import pandas as pd
-import docx
-from docx.shared import Pt, RGBColor
 from docx.enum.style import WD_STYLE_TYPE
 from docx.enum.table import WD_CELL_VERTICAL_ALIGNMENT
+from docx.shared import Pt, RGBColor
 
 # Local imports
-from .utils import (
-    load_config,
-    get_object_paths_codes,
+from IAK_Report.get_voortgang import get_voortgang, get_voortgang_params
+from IAK_Report.ora_to_word import load_inspectie_data, load_ora
+from IAK_Report.utils import (
     convert_docx_to_pdf,
+    get_object_paths_codes,
     list_pictures_for_object,
-    update_config_with_voortgang,
+    load_config,
     return_most_recent_ora,
-    setup_logger,
     save_document,
+    setup_logger,
+    update_config_with_voortgang,
 )
-from .get_voortgang import get_voortgang, get_voortgang_params
-from .ora_to_word import load_ora, load_inspectie_data
-
 
 def create_word_document(template_path: str, variables: dict) -> docx.Document:
     """
@@ -431,9 +432,18 @@ def process_aandachtspunten_beheerder(
         word_document.tables[i].cell(4, 0).text = str(bevinding_ora)
         word_document.tables[i].cell(4, 0).paragraphs[0].style = cell_style
         word_document.tables[i].cell(4, 0).vertical_alignment = WD_CELL_VERTICAL_ALIGNMENT.TOP
-        relevant_columns = [column for column, value in row.items() if column.startswith('Categorie')]
+        relevant_columns = [
+            column
+            for column, value in row.items()
+            if column.startswith("MaatregelNaam")
+        ]
         select_column = relevant_columns[0] if relevant_columns else "Advies mutatie I-ORA & Onderhoud"
-        word_document.tables[i].cell(6, 0).text = str(row[select_column])
+        if str(row[select_column]) == "nan":
+            word_document.tables[i].cell(
+                6, 0
+            ).text = "Geen 'MaatregelNaam' ingevuld (kolom AJ in 'Inspectie Data' sheet)"
+        else:
+            word_document.tables[i].cell(6, 0).text = str(row[select_column])
         word_document.tables[i].cell(6, 0).paragraphs[0].style = cell_style
         word_document.tables[i].cell(6, 0).vertical_alignment = WD_CELL_VERTICAL_ALIGNMENT.TOP
 
