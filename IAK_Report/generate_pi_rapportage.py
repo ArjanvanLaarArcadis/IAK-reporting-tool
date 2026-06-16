@@ -57,13 +57,13 @@ from IAK_Report.get_voortgang import get_voortgang, get_voortgang_params
 JpegImagePlugin._getmp = lambda: None
 
 # Constants for font styles
-FONT_ARIAL_7 = Font(name='Arial', size=7, bold=False)
-FONT_ARIAL_8 = Font(name='Arial', size=8, bold=False)
-FONT_ARIAL_10 = Font(name='Arial', size=10, bold=False)
-FONT_ARIAL_10_BOLD = Font(name='Arial', size=10, bold=True)
-FONT_ARIAL_12 = Font(name='Arial', size=12, bold=False)
-FONT_ARIAL_16 = Font(name='Arial', size=16, bold=False)
-FONT_ARIAL_18 = Font(name='Arial', size=18, bold=False)
+FONT_ARIAL_7 = Font(name="Arial", size=7, bold=False)
+FONT_ARIAL_8 = Font(name="Arial", size=8, bold=False)
+FONT_ARIAL_10 = Font(name="Arial", size=10, bold=False)
+FONT_ARIAL_10_BOLD = Font(name="Arial", size=10, bold=True)
+FONT_ARIAL_12 = Font(name="Arial", size=12, bold=False)
+FONT_ARIAL_16 = Font(name="Arial", size=16, bold=False)
+FONT_ARIAL_18 = Font(name="Arial", size=18, bold=False)
 
 # Constants for the alignment style
 ALIGNMENT_LEFT = Alignment(horizontal="left", vertical="top", wrap_text=True)
@@ -81,7 +81,9 @@ def find_inspectierapport(directory: str) -> str:
         str: fullfilename of the most recent matching file if found.
         None: If no matching file is found.
     """
-    logging.debug(f"Searching for .xlsx-files in [{directory}], starting with 'inspectieRapport' (case insensitive)")
+    logging.debug(
+        f"Searching for .xlsx-files in [{directory}], starting with 'inspectieRapport' (case insensitive)"
+    )
 
     # List to hold all file paths
     matching_files = []
@@ -89,8 +91,9 @@ def find_inspectierapport(directory: str) -> str:
     # Walk through the directory and its subdirectories
     for root, dirs, files in os.walk(directory):
         for file in files:
-            if file.lower().startswith("inspectierapport") and \
-                file.lower().endswith(".xlsx"):
+            if file.lower().startswith("inspectierapport") and file.lower().endswith(
+                ".xlsx"
+            ):
                 # Get the full path and modification time of the inspectie
                 file_path = os.path.join(root, file)
                 matching_files.append(file_path)
@@ -136,10 +139,10 @@ def set_footer(
         sheet = wb[sheet_names[i]]
 
         # Define footer content mapping
-        footer_content = {'left': FOOTER_LEFT, 'center': "", 'right': FOOTER_RIGHT}
+        footer_content = {"left": FOOTER_LEFT, "center": "", "right": FOOTER_RIGHT}
 
         # Set footer content for both even and odd footers
-        for footer_type in ['evenFooter', 'oddFooter']:
+        for footer_type in ["evenFooter", "oddFooter"]:
             footer = getattr(sheet, footer_type)
             for position, content in footer_content.items():
                 getattr(footer, position).text = content
@@ -164,33 +167,31 @@ def populate_title_page(
     """
     logging.debug("Populating Title Page (Sheet2)...")
 
-    opdrachtgever = variables.get('opdrachtgever', 'UNKNOWN').strip()
-    contactpersoon_rws = variables.get('contactpersoon_rws', 'UNKNOWN').strip()
+    opdrachtgever = variables.get("opdrachtgever", "UNKNOWN").strip()
+    contactpersoon_rws = variables.get("contactpersoon_rws", "UNKNOWN").strip()
     zaaknr = variables.get("zaaknummer", "UNKNOWN")
-    versie = variables.get('versie', 'UNKNOWN')
+    versie = variables.get("versie", "UNKNOWN")
     # Use today's date as the default value for datum
     datum = dt.date.today().strftime("%d-%m-%Y")
-    omschrijving = variables.get('omschrijving', 'UNKNOWN')
-    opdrachtnemer = variables.get('opdrachtnemer', 'UNKNOWN').strip()
-    opsteller = variables.get('opsteller', 'UNKNOWN').strip()
+    omschrijving = variables.get("omschrijving", "UNKNOWN")
+    opdrachtnemer = variables.get("opdrachtnemer", "UNKNOWN").strip()
+    opsteller = variables.get("opsteller", "UNKNOWN").strip()
     kwaliteitsbeheerser = variables.get("kwaliteitsbeheerser", "UNKNOWN").strip()
-    projectleider = variables.get('projectleider', 'UNKNOWN').strip()
+    projectleider = variables.get("projectleider", "UNKNOWN").strip()
 
     moment_of_inspection = sheet7["E9"].value
     year_of_inspection = int(moment_of_inspection.split(" ")[-1])
-    sheet["B5"] = (
-        f"Inspectierapport Instandhoudingsinspectie {year_of_inspection}"
-    )
-    sheet['H14'] = opdrachtgever
-    sheet['H15'] = contactpersoon_rws
-    sheet['H16'] = f'{zaaknr}'
-    sheet['F23'] = f'{versie:.1f}'
-    sheet['J23'] = datum
-    sheet['L23'] = omschrijving
-    sheet['D25'] = opdrachtnemer
-    sheet['C27'] = opsteller
-    sheet['I27'] = kwaliteitsbeheerser
-    sheet['O27'] = projectleider
+    sheet["B5"] = f"Inspectierapport Instandhoudingsinspectie {year_of_inspection}"
+    sheet["H14"] = opdrachtgever
+    sheet["H15"] = contactpersoon_rws
+    sheet["H16"] = f"{zaaknr}"
+    sheet["F23"] = f"{versie:.1f}"
+    sheet["J23"] = datum
+    sheet["L23"] = omschrijving
+    sheet["D25"] = opdrachtnemer
+    sheet["C27"] = opsteller
+    sheet["I27"] = kwaliteitsbeheerser
+    sheet["O27"] = projectleider
 
     # Adjust row heights
     sheet.row_dimensions[10].height = 30
@@ -306,7 +307,7 @@ def populate_ihp_sheet(
         None
     """
     logging.debug("Populating IHP (Sheet5)...")
-    sheet['D4'].font = FONT_ARIAL_18
+    sheet["D4"].font = FONT_ARIAL_18
     logging.debug("IHP populated and formatted successfully.")
 
 
@@ -322,7 +323,7 @@ def populate_miok_sheet(
     """
     logging.debug("Populating MIOK (Sheet6)...")
     row_count = sheet.max_row
-    sheet.column_dimensions['AH'].width = 4
+    sheet.column_dimensions["AH"].width = 4
 
     for row in sheet.iter_rows(min_row=1, max_row=row_count):
         for cell in row:
@@ -345,18 +346,20 @@ def populate_inleiding_sheet(
         variables (dict): Dictionary of variables.
     """
     logging.debug("Populating Inleiding (Sheet7)...")
-    opdrachtnemer = variables.get('opdrachtnemer', 'UNKNOWN')
-    inspecteurs = variables.get('inspecteurs', 'UNKNOWN')
+    opdrachtnemer = variables.get("opdrachtnemer", "UNKNOWN")
+    inspecteurs = variables.get("inspecteurs", "UNKNOWN")
     # hulpmiddelen = variables.get('hulpmiddelen', 'UNKNOWN')  # Not used
 
-    sheet['C4'] = '3  Inleiding'
-    sheet['C4'].font = FONT_ARIAL_18
+    sheet["C4"] = "3  Inleiding"
+    sheet["C4"].font = FONT_ARIAL_18
 
     # standaard tekst 3.1
-    sheet['C6'].font = FONT_ARIAL_12
-    sheet['D6'].font = FONT_ARIAL_12
-    sheet['D7'] = f'In opdracht van Rijkswaterstaat is door {opdrachtnemer} een instandhoudingsinspectie uitgevoerd aan'
-    sheet['E12'].value = inspecteurs
+    sheet["C6"].font = FONT_ARIAL_12
+    sheet["D6"].font = FONT_ARIAL_12
+    sheet["D7"] = (
+        f"In opdracht van Rijkswaterstaat is door {opdrachtnemer} een instandhoudingsinspectie uitgevoerd aan"
+    )
+    sheet["E12"].value = inspecteurs
     sheet.row_dimensions[12].height = 70
     sheet.row_dimensions[13].height = 15
     # sheet['E13'] = hulpmiddelen
@@ -389,7 +392,7 @@ def populate_objectgegevens_sheet(
         variables (dict): Dictionary of variables.
     """
     logging.debug("Populating Objectgegevens (Sheet8)...")
-    objectcode = variables.get('object', 'UNKNOWN')
+    objectcode = variables.get("object", "UNKNOWN")
     sheet.merge_cells(start_row=21, end_row=21, start_column=4, end_column=16)
     sheet.merge_cells(start_row=24, end_row=24, start_column=4, end_column=16)
     sheet["D4"].value = "4  Objectgegevens"
@@ -408,8 +411,8 @@ def populate_risicoanalyse_sheet(
         sheet (openpyxl.worksheet.worksheet.Worksheet): The worksheet object.
         variables (dict): Dictionary of variables.
     """
-    sheet['C4'] = '5  Risicoanalyse'
-    sheet['C4'].font = FONT_ARIAL_18
+    sheet["C4"] = "5  Risicoanalyse"
+    sheet["C4"].font = FONT_ARIAL_18
 
     # standaard tekst 5.1
     sheet["C6"] = "5.1"
@@ -531,23 +534,23 @@ def populate_colofon_sheet(
     projectnummer = variables.get("projectnummer", "UNKNOWN")
     code_object = variables.get("object_code", "UNKNOWN")
 
-    sheet['C4'].font = FONT_ARIAL_18
+    sheet["C4"].font = FONT_ARIAL_18
     sheet["E7"] = f": {opdrachtgever}"
-    sheet['E7'].font = FONT_ARIAL_10
+    sheet["E7"].font = FONT_ARIAL_10
     sheet["E8"] = f": {contactpersoon_rws}"
-    sheet['E8'].font = FONT_ARIAL_10
+    sheet["E8"].font = FONT_ARIAL_10
     sheet["D9"] = "Zaaknummer"
     sheet["D9"].font = FONT_ARIAL_10
     sheet["E9"] = f": {zaaknummer}"
-    sheet['E9'].font = FONT_ARIAL_10
+    sheet["E9"].font = FONT_ARIAL_10
     sheet["E10"] = f": {opdrachtnemer}"
-    sheet['E10'].font = FONT_ARIAL_10
+    sheet["E10"].font = FONT_ARIAL_10
     sheet["E11"] = f": {contactpersoon}"
-    sheet['E11'].font = FONT_ARIAL_10
+    sheet["E11"].font = FONT_ARIAL_10
     sheet["E12"] = f": {projectnummer}"
-    sheet['E12'].font = FONT_ARIAL_10
+    sheet["E12"].font = FONT_ARIAL_10
     sheet["E13"] = f": PI rapport {code_object}.pdf"
-    sheet['E13'].font = FONT_ARIAL_10
+    sheet["E13"].font = FONT_ARIAL_10
     logging.debug("Colofon populated and formatted successfully.")
 
 
@@ -562,7 +565,7 @@ def populate_bijlage1_sheet(
         variables (dict): Dictionary of variables.
     """
     logging.debug("Populating Bijlage 1 (Sheet13)...")
-    sheet['B4'].font = FONT_ARIAL_16
+    sheet["B4"].font = FONT_ARIAL_16
     logging.debug("Bijlage 1 populated and formatted successfully.")
 
 
@@ -592,7 +595,7 @@ def populate_bijlage3_sheet(
         variables (dict): Dictionary of variables.
     """
     logging.debug("Populating Bijlage 3 (Sheet15)...")
-    sheet['B4'].font = FONT_ARIAL_16
+    sheet["B4"].font = FONT_ARIAL_16
     logging.debug("Bijlage 3 populated and formatted successfully.")
 
 
@@ -607,7 +610,7 @@ def populate_bijlage4_sheet(
         variables (dict): Dictionary of variables.
     """
     logging.debug("Populating Bijlage 4 (Sheet16)...")
-    sheet['B4'].font = FONT_ARIAL_16
+    sheet["B4"].font = FONT_ARIAL_16
     row_count = sheet.max_row
     for row in range(12, row_count):
         for cell in sheet[row]:
@@ -626,7 +629,7 @@ def _populate_bijlage5_sheet(sheet: openpyxl.worksheet.worksheet.Worksheet) -> N
         sheet (openpyxl.worksheet.worksheet.Worksheet): The worksheet object.
     """
     logging.debug("Populating Bijlage 5 (Sheet17)...")
-    sheet['B4'].font = FONT_ARIAL_16
+    sheet["B4"].font = FONT_ARIAL_16
     if sheet["C6"].value:
         # Some heading
         sheet["C6"] = "Omgevingsfoto schade"
@@ -670,15 +673,15 @@ def populate_bijlage5_plus_return_next_idx(wb: openpyxl.Workbook) -> int:
     for i in range(start_index, sheets_count):
         sheet = wb[sheet_names[i]]
 
-        # Check if cell B4 contains "Omgevingsfoto schade". In that case, the Sheet18 (and beyond) is 
+        # Check if cell B4 contains "Omgevingsfoto schade". In that case, the Sheet18 (and beyond) is
         # populated with additional schadefoto. These should be processed until a sheet is found
-        # that does not contain "Omgevingsfoto schade" in cell B4. 
+        # that does not contain "Omgevingsfoto schade" in cell B4.
         if sheet["C4"].value == "Omgevingsfoto schade":
             # Perform the required operations
             if sheet.row_dimensions[8].height >= 5:
-                # Move the text from C6 to C8. The workbook is NOT loaded with rich text, so the value is plain text. 
+                # Move the text from C6 to C8. The workbook is NOT loaded with rich text, so the value is plain text.
                 cell_text = sheet["C6"].value
-                
+
                 # WIP, not working yet...
                 # # Convert it to a CellRichText object, and put it into the new cell (generating bold parts)
                 # rich_text = CellRichText()
@@ -693,21 +696,21 @@ def populate_bijlage5_plus_return_next_idx(wb: openpyxl.Workbook) -> int:
                 #             rich_text.append(TextBlock(text=line, font=InlineFont(FONT_ARIAL_10)))
 
                 # Assign this piece of art to the new cell
-                #sheet["C8"].value = rich_text
+                # sheet["C8"].value = rich_text
                 sheet["C8"].value = cell_text
                 # (font settings already done in the rich text creation)
                 sheet["C8"].font = FONT_ARIAL_10
                 sheet["C8"].alignment = ALIGNMENT_LEFT
-                
+
                 # Wipe the original cell
                 sheet["C6"].value = ""
-                
+
                 sheet.row_dimensions[8].height = 300
                 sheet.row_dimensions[8].hidden = False
                 sheet.row_dimensions[7].height = 2
             else:
                 sheet.row_dimensions[6].height = 300
-                #sheet["C6"].font = FONT_ARIAL_10
+                # sheet["C6"].font = FONT_ARIAL_10
             # Update the last processed sheet index
             last_processed_index = i
         else:
@@ -753,7 +756,7 @@ def populate_bijlage7_sheet(
         variables (dict): Dictionary of variables.
     """
     logging.debug("Populating Bijlage 7 (Sheet)...")
-    sheet['C4'].font = FONT_ARIAL_16
+    sheet["C4"].font = FONT_ARIAL_16
     logging.debug("Bijlage 7 populated and formatted successfully.")
 
 
@@ -768,7 +771,7 @@ def populate_bijlage8_sheet(
         variables (dict): Dictionary of variables.
     """
     logging.debug("Populating Bijlage 8 (Sheet)...")
-    sheet['C5'].font = FONT_ARIAL_16
+    sheet["C5"].font = FONT_ARIAL_16
     logging.debug("Bijlage 8 populated and formatted successfully.")
 
 
@@ -892,7 +895,7 @@ def populate_bijlage9_sheet(
         variables (dict): Dictionary of variables.
     """
     logging.debug("Populating Bijlage 9 (Sheet)...")
-    sheet['C5'].font = FONT_ARIAL_16
+    sheet["C5"].font = FONT_ARIAL_16
     logging.debug("Bijlage 9 populated and formatted successfully.")
 
 
@@ -907,9 +910,9 @@ def populate_bijlage10_sheet(
         variables (dict): Dictionary of variables.
     """
     logging.debug("Populating Bijlage 10 (Sheet)...")
-    criam = variables.get('criam', 'UNKNOWN')
+    criam = variables.get("criam", "UNKNOWN")
 
-    sheet['C5'].font = FONT_ARIAL_16
+    sheet["C5"].font = FONT_ARIAL_16
     sheet["D7"].font = FONT_ARIAL_10
     logging.debug("Bijlage 10 populated and formatted successfully.")
 
@@ -969,9 +972,7 @@ def process_pi_report_for_object(
     config_variables = update_config_variables(wb_report["Sheet2"], config)
 
     # Populate excel with variables
-    populate_title_page(
-        wb_report["Sheet2"], wb_report["Sheet7"], config_variables
-    )
+    populate_title_page(wb_report["Sheet2"], wb_report["Sheet7"], config_variables)
     populate_inhoud_sheet(wb_report["Sheet3"], config_variables)
     populate_aanbeveling_sheet(wb_report["Sheet4"], config_variables)
     populate_ihp_sheet(wb_report["Sheet5"], config_variables)
@@ -1015,7 +1016,9 @@ def process_pi_report_for_object(
     logging.info("Finished populating the PI report.")
 
     # Save the workbook
-    xls_path = utilsxls.save_and_finalize_workbook(wb_report, config_variables, save_dir=object_path)
+    xls_path = utilsxls.save_and_finalize_workbook(
+        wb_report, config_variables, save_dir=object_path
+    )
 
     logging.info(f"Done for {config_variables['object_code']}")
     return xls_path
@@ -1028,34 +1031,40 @@ def main() -> None:
     # Generate timestamped log filename
     timestamp = dt.datetime.now().strftime("%Y%m%d-%H%M%S")
     log_filename = f"generate_pi_report_{timestamp}.log"
-    
+
     logger = utils.setup_logger(log_filename)
-    config = utils.load_config('./config.json')
-    logging.info(f"Starting PI report processing for werkpakket [{config['werkpakket']}]")
+    config = utils.load_config("./config.json")
+    logging.info(
+        f"Starting PI report processing for werkpakket [{config['werkpakket']}]"
+    )
     failed_objects = []
 
     # Get the voortgangs data, based on the excel file (as set in config.json)
     excelfile = config.get("voortgangs_sheet", "")
     voortgangs_data = get_voortgang(
-        excelfile, 
-        abbrev=config.get("expand_name", False), 
-        names=config.get("expand_name_abbreviations", {})
-        )
-    
+        excelfile,
+        abbrev=config.get("expand_name", False),
+        names=config.get("expand_name_abbreviations", {}),
+    )
+
     for object_path, object_code in utils.get_object_paths_codes():
         logging.info(f"Processing object [{object_code}]")
-        try: 
+        try:
             logging.info(f"Updating the configuration variables with voortgang...")
             voortgang = get_voortgang_params(voortgangs_data, object_code)
             config = utils.update_config_with_voortgang(config, voortgang)
             pi_report_path = find_inspectierapport(object_path)
             if not pi_report_path:
                 logging.error(f"Could not find inspectierapport for [{object_code}]")
-                raise FileNotFoundError(f"Inspectierapport not found for object [{object_code}]")
-            
+                raise FileNotFoundError(
+                    f"Inspectierapport not found for object [{object_code}]"
+                )
+
             # All needed data found and set, so start processing the pi report
-            new_xlsx_filename = process_pi_report_for_object(object_path, pi_report_path, config)
-    
+            new_xlsx_filename = process_pi_report_for_object(
+                object_path, pi_report_path, config
+            )
+
         except Exception as e:
             logging.error(f"Failed to process object [{object_code}]: {e}")
             failed_objects.append(object_code)
@@ -1066,8 +1075,10 @@ def main() -> None:
             logging.info(f"Printing PI report to PDF for [{object_code}]")
             xlsx_dir = os.path.dirname(new_xlsx_filename)
             xlsx_basename = os.path.basename(new_xlsx_filename)
-            pdf_basename = xlsx_basename.replace('.xlsx', '.pdf')
-            pdf_filename = os.path.join(xlsx_dir, config.get("output_folder", ""), pdf_basename)
+            pdf_basename = xlsx_basename.replace(".xlsx", ".pdf")
+            pdf_filename = os.path.join(
+                xlsx_dir, config.get("output_folder", ""), pdf_basename
+            )
             utilsxls.export_to_pdf(new_xlsx_filename, pdf_filename)
             logging.info(f"PI report printed to PDF for [{object_code}] successfully.")
 

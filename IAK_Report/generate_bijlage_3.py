@@ -29,15 +29,14 @@ Usage:
 Run this script directly to generate "Bijlage 3" documents for all objects in the batch.
 """
 
+import datetime as dt
+import logging
+
 # Built-in modules
 import os
-import logging
-import datetime as dt
 
 # Local imports
-from . import utils
-from . import utilsxls
-
+from IAK_Report import utils, utilsxls
 
 def file_starts_with_bijlage3(directory: str) -> str | None:
     """
