@@ -7,11 +7,11 @@
 """module to retrieve and process voortgang data from an Excel file."""
 
 # Built-in modules
+import logging
 import os
 import re
-import logging
 
-# External imports
+# External modules
 import pandas as pd
 
 COLS = [
@@ -156,7 +156,14 @@ def get_voortgang_params(df_voortgang: pd.DataFrame, bh_code: str):
     #     inspecteurs = get_value("Inspecteur 2")
     # else:
     #     inspecteurs = ""
-    inspecteurs = ", ".join([get_value("Inspecteur 1") or "", get_value("Inspecteur 2") or "", get_value("Inspecteur 3") or "", get_value("Inspecteur 4") or ""]).strip(", ")
+    inspecteurs = ", ".join(
+        [
+            get_value("Inspecteur 1") or "",
+            get_value("Inspecteur 2") or "",
+            get_value("Inspecteur 3") or "",
+            get_value("Inspecteur 4") or "",
+        ]
+    ).strip(", ")
 
     result = {
         "opsteller": get_value("door"),

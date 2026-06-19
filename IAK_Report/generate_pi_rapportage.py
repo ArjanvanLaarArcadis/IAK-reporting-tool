@@ -35,14 +35,13 @@ TODO:
 - The sc
 """
 
+# Built-in modules
 import datetime as dt
 import logging
 import math
-
-# Built-in modules
 import os
 
-# External imports
+# External modules
 import openpyxl
 from openpyxl.cell.rich_text import CellRichText, TextBlock
 from openpyxl.cell.text import InlineFont

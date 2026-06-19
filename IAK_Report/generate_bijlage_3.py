@@ -29,14 +29,14 @@ Usage:
 Run this script directly to generate "Bijlage 3" documents for all objects in the batch.
 """
 
+# Built-in modules
 import datetime as dt
 import logging
-
-# Built-in modules
 import os
 
 # Local imports
 from IAK_Report import utils, utilsxls
+
 
 def file_starts_with_bijlage3(directory: str) -> str | None:
     """
@@ -67,17 +67,19 @@ if __name__ == "__main__":
     # Generate timestamped log filename
     timestamp = dt.datetime.now().strftime("%Y%m%d-%H%M%S")
     log_filename = f"generate_bijlage_3_{timestamp}.log"
-    
+
     # Set up logging and load configuration
     logger = utils.setup_logger(log_filename)
     logging.info("Starting the script to generate Bijlage 3...")
     config = utils.load_config(config_path="./config.json")
 
     for object_path, object_code in utils.get_object_paths_codes():
-        logging.info(f"Processing object path: {object_path}, object code: {object_code}")
+        logging.info(
+            f"Processing object path: {object_path}, object code: {object_code}"
+        )
         try:
-            #bijlage_3 = file_starts_with_bijlage3(object_path)
-            #if not bijlage_3:
+            # bijlage_3 = file_starts_with_bijlage3(object_path)
+            # if not bijlage_3:
             logging.info(f"Generating ORA for object [{object_code}]...")
             logging.info("Checking if ORA exists...")
             ora_path = utils.return_most_recent_ora(object_path)
@@ -86,15 +88,20 @@ if __name__ == "__main__":
             ora_sheetname = utilsxls.find_ora_sheet_name(ora_path)
 
             logging.info("Generating the PDF...")
-            
+
             # Defining the name (with "Bijlage 3" and ".pdf")
             filename, ext = os.path.splitext(os.path.basename(ora_path))
-            pdf_filename = os.path.join(object_path, config.get("output_folder", ""), f"Bijlage 3 - {filename}.pdf")
+            pdf_filename = os.path.join(
+                object_path,
+                config.get("output_folder", ""),
+                f"Bijlage 3 - {filename}.pdf",
+            )
             utilsxls.export_to_pdf(ora_path, pdf_filename, sheet_name=ora_sheetname)
             logging.info(f"Successfully generated ORA for object [{object_code}].")
-            #else:
+            # else:
             #    logging.info(f"ORA for object [{object_code}] already exists with name [{bijlage_3}].")
         except Exception as e:
             logging.error(f"An error occurred: {e}")
             logging.error("Failed to generate ORA for object [{object_code}].")
+            continue  # Continue to the next object in case of an error
             continue  # Continue to the next object in case of an error

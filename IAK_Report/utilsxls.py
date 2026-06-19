@@ -13,15 +13,13 @@ It includes functionalities to:
 - Find and delete references to images with `.mpo` extensions in the workbook.
 """
 
+# Built-in modules
 import logging
-
-# Built-in imports
 import os
 import re
 
+# External modules
 import openpyxl
-
-# External imports
 import pandas as pd
 import win32com.client
 from openpyxl.cell.rich_text import CellRichText, TextBlock
