@@ -7,11 +7,11 @@
 """module to retrieve and process voortgang data from an Excel file."""
 
 # Built-in modules
+import logging
 import os
 import re
-import logging
 
-# External imports
+# External modules
 import pandas as pd
 
 COLS = [
@@ -23,6 +23,8 @@ COLS = [
     "Inspecteur 2",
     "door",
     "door.1",
+    "Inspecteur 3",
+    "Inspecteur 4",
     # "V&R-indicatie",
     # "Nader onderzoek",
     # "Directe maatregelen",
@@ -51,9 +53,7 @@ def expand_abbreviations(df, names=NAMES) -> pd.DataFrame:
     for col in name_cols:
         df[col] = df[col].apply(
             lambda x: ", ".join(
-                names.get(
-                    name.strip(), name.strip()
-                )  # Apply mapping or keep the original name
+                names.get(name.strip(), name.strip())  # Apply mapping or keep the original name
                 for name in re.split(r"[\W]+", str(x))  # Split on non-word characters
             )
         )
@@ -154,7 +154,14 @@ def get_voortgang_params(df_voortgang: pd.DataFrame, bh_code: str):
     #     inspecteurs = get_value("Inspecteur 2")
     # else:
     #     inspecteurs = ""
-    inspecteurs = ", ".join([get_value("Inspecteur 1") or "", get_value("Inspecteur 2") or ""])
+    inspecteurs = ", ".join(
+        [
+            get_value("Inspecteur 1") or "",
+            get_value("Inspecteur 2") or "",
+            get_value("Inspecteur 3") or "",
+            get_value("Inspecteur 4") or "",
+        ]
+    ).strip(", ")
 
     result = {
         "opsteller": get_value("door"),

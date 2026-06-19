@@ -18,20 +18,23 @@ Original Author for v0: tersteer0528
 Refactored: Sammie Knoppert (W. AGPT)
 """
 
-# Built-in modules
-import os
 import glob
 import logging
 
+# Built-in modules
+import os
+
+import docx
+
 # External modules
 import pandas as pd
-import docx
-from docx.shared import Pt, RGBColor
 from docx.enum.style import WD_STYLE_TYPE
+from docx.shared import Pt, RGBColor
+
+from . import utilsxls
 
 # Local modules
 from .utils import load_config
-from . import utilsxls
 
 
 def load_opleverlijst(filepath: str) -> pd.DataFrame:
@@ -57,45 +60,92 @@ def extract_complexcode(object_code: str) -> str:
     Returns:
         str: The complex code.
     """
-    parts = object_code.split('-')
-    complex_code = ''.join(parts[:3])  # Adjust slicing as necessary
+    parts = object_code.split("-")
+    complex_code = "".join(parts[:3])  # Adjust slicing as necessary
     return complex_code
 
 
 def load_ora(path_ora: str) -> pd.DataFrame:
     """
     Load ORA data from an Excel file.
- 
+
     Parameters:
         path_ora (str): Path to the ORA Excel file.
- 
+
     Returns:
         pd.DataFrame: Processed ORA DataFrame.
     """
     try:
         logging.info(f"Loading ORA data from: {path_ora}")
- 
+
         # Get all sheet names and find the one that starts with "ORA"
         ora_sheet = utilsxls.find_ora_sheet_name(path_ora)
         if ora_sheet is None:
             raise ValueError(f"No sheet starting with 'ORA' found in the Excel file [{path_ora}]")
 
         # The first 9 rows are skipped as they contain metadata. Further, the 11th row is dropped, it is a empty row below the header.
-        ora = pd.read_excel(path_ora, sheet_name=ora_sheet, skiprows=list(range(9)) + [10], dtype=str)
-        
+        ora = pd.read_excel(
+            path_ora, sheet_name=ora_sheet, skiprows=list(range(9)) + [10], dtype=str
+        )
+
         # Many cells (grayed) are left empty to indicate that the value is the same as the cell above. These are filled with the value from above.
         ora["Element"] = ora["Element"].ffill()
         ora["Bouwdeel"] = ora["Bouwdeel"].ffill()
-        # Remark that the (blue) row of an "Element" is empty in all other columns, also the "Bouwdeel" column. Hence, the "Bouwdeel" column is 
+        # Remark that the (blue) row of an "Element" is empty in all other columns, also the "Bouwdeel" column. Hence, the "Bouwdeel" column is
         # filled with the value from above as well, which is incorrect. However, this has no influence on the final output, and is therefore not handled.
 
         # Additions are marked with a "(Ontbost)" or "(+)" or "+" in the "Bouwdeel" column.
         # These are removed to keep the "Bouwdeel" column clean.
-        ora["Bouwdeel"] = ora["Bouwdeel"].str.replace(r"\(Ontbost\)|\(\+\)|\+", "", regex=True).str.strip()
+        ora["Bouwdeel"] = (
+            ora["Bouwdeel"].str.replace(r"\(Ontbost\)|\(\+\)|\+", "", regex=True).str.strip()
+        )
 
         return ora
     except Exception as e:
         logging.error(f"Error loading ORA data: {e}")
+        raise
+
+
+def load_inspectie_data(path_ora: str) -> pd.DataFrame:
+    """
+    Load "Inspectie Data" sheet from an ORA Excel file.
+
+    Parameters:
+        path_ora (str): Path to the ORA Excel file.
+
+    Returns:
+        pd.DataFrame: Processed ORA DataFrame.
+    """
+    try:
+        logging.info(f"Loading Inspectie Data from: {path_ora}")
+
+        inspectie_data_sheet = "Inspectie Data"
+
+        # The first 9 rows are skipped as they contain metadata. Further, the 11th row is dropped, it is a empty row below the header.
+        inspectie_data = pd.read_excel(
+            path_ora,
+            sheet_name=inspectie_data_sheet,
+            skiprows=list(range(2)),
+            dtype=str,
+        )
+
+        # Many cells (grayed) are left empty to indicate that the value is the same as the cell above. These are filled with the value from above.
+        inspectie_data["Element"] = inspectie_data["Element"].ffill()
+        inspectie_data["Bouwdeel"] = inspectie_data["Bouwdeel"].ffill()
+        # Remark that the (blue) row of an "Element" is empty in all other columns, also the "Bouwdeel" column. Hence, the "Bouwdeel" column is
+        # filled with the value from above as well, which is incorrect. However, this has no influence on the final output, and is therefore not handled.
+
+        # Additions are marked with a "(Ontbost)" or "(+)" or "+" in the "Bouwdeel" column.
+        # These are removed to keep the "Bouwdeel" column clean.
+        inspectie_data["Bouwdeel"] = (
+            inspectie_data["Bouwdeel"]
+            .str.replace(r"\(Ontbost\)|\(\+\)|\+", "", regex=True)
+            .str.strip()
+        )
+
+        return inspectie_data
+    except Exception as e:
+        logging.error(f"Error loading Inspectie data: {e}")
         raise
 
 
@@ -112,7 +162,7 @@ def configure_document_styles(document: docx.Document, style_name: str, font_siz
     cell_style = styles.add_style(style_name, WD_STYLE_TYPE.PARAGRAPH)
     cell_style.font.underline = False
     cell_style.font.size = Pt(font_size)
-    cell_style.font.name = 'Arial'
+    cell_style.font.name = "Arial"
     cell_style.font.color.rgb = RGBColor(0, 0, 0)
 
 
@@ -126,19 +176,21 @@ def extract_relevant_ora_data(ora: pd.DataFrame) -> pd.DataFrame:
     Returns:
         pd.DataFrame: Filtered ORA DataFrame.
     """
-    idx_schades = ora[ora['Schade nummer'].notnull()].index
-    idx_aandachtspunt = ora[ora['Advies mutatie I-ORA & Onderhoud'] == 'Aandachtspunt voor de volgende inspectie'].index
-    idx_prestatie_do = ora[ora['Advies mutatie I-ORA & Onderhoud'] == 'Valt onder prestatiecontract / dagelijks onderhoud.'].index
+    idx_schades = ora[ora["Schade nummer"].notnull()].index
+    idx_aandachtspunt = ora[
+        ora["Advies mutatie I-ORA & Onderhoud"] == "Aandachtspunt voor de volgende inspectie"
+    ].index
+    idx_prestatie_do = ora[
+        ora["Advies mutatie I-ORA & Onderhoud"]
+        == "Valt onder prestatiecontract / dagelijks onderhoud."
+    ].index
 
     combined_indices = idx_schades.append([idx_aandachtspunt, idx_prestatie_do]).sort_values()
     return ora.loc[combined_indices]
 
 
 def add_photos_to_document(
-    document: docx.Document,
-    measure: pd.Series,
-    photo_loc: str,
-    row_idx: int
+    document: docx.Document, measure: pd.Series, photo_loc: str, row_idx: int
 ) -> None:
     """
     Add photos to the Word document based on the measure data.
@@ -149,23 +201,27 @@ def add_photos_to_document(
         photo_loc (str): Directory location of photos.
         row_idx (int): Current row index in the Word table.
     """
-    fotonummers = str(measure['Fotonummers'])
-    fotonummers_list = fotonummers.split(',') if ',' in fotonummers else [fotonummers]
+    fotonummers = str(measure["Fotonummers"])
+    fotonummers_list = fotonummers.split(",") if "," in fotonummers else [fotonummers]
 
     table = document.tables[0]
     num_columns = len(table.columns)
 
     for i, foto_nummer in enumerate(fotonummers_list):
         foto_nummer = foto_nummer.strip()
-        if foto_nummer and foto_nummer.lower() != 'nan':
+        if foto_nummer and foto_nummer.lower() != "nan":
             photo_path = glob.glob(os.path.join(photo_loc, f"**/{foto_nummer}.*"), recursive=True)
             if photo_path:
                 # Calculate the target column index for the photo
                 target_col = 6 + i  # Columns 6 and 7 for two photos
                 if target_col < num_columns:
-                    table.cell(row_idx, target_col).paragraphs[0].add_run().add_picture(photo_path[0], width=Pt(100))  # Adjust width as needed
+                    table.cell(row_idx, target_col).paragraphs[0].add_run().add_picture(
+                        photo_path[0], width=Pt(100)
+                    )  # Adjust width as needed
                 else:
-                    print(f"Warning: Table does not have column index {target_col} for photo insertion.")
+                    print(
+                        f"Warning: Table does not have column index {target_col} for photo insertion."
+                    )
 
 
 def create_word_document(template_path: str, objectnaam: str, objectcode: str) -> docx.Document:
@@ -181,10 +237,10 @@ def create_word_document(template_path: str, objectnaam: str, objectcode: str) -
         docx.Document: Configured Word document.
     """
     document = docx.Document(template_path)
-    
+
     # Configure styles
-    configure_document_styles(document, 'Cell', 7)
-    configure_document_styles(document, 'Cell2', 10)
+    configure_document_styles(document, "Cell", 7)
+    configure_document_styles(document, "Cell2", 10)
 
     # Set header information
     if len(document.paragraphs) >= 2:
@@ -213,7 +269,7 @@ def process_measure(
     counter: int,
     idx: int,
     idx_schades: pd.Index,
-    cell_style: str
+    cell_style: str,
 ) -> None:
     """
     Process each measure and add it to the Word document table.
@@ -230,30 +286,34 @@ def process_measure(
     table.add_row()
 
     # Populate table cells
-    table.cell(counter + 1, 0).text = str(measure['Element'].partition(',')[0])
+    table.cell(counter + 1, 0).text = str(measure["Element"].partition(",")[0])
     table.cell(counter + 1, 0).paragraphs[0].style = cell_style
 
-    table.cell(counter + 1, 1).text = str(measure['Bouwdeel'])
+    table.cell(counter + 1, 1).text = str(measure["Bouwdeel"])
     table.cell(counter + 1, 1).paragraphs[0].style = cell_style
 
     schade_omschrijving = (
-        str(measure['Schade omschrijving']) if idx in idx_schades
-        else str(measure['Bevinding:\n- Inspectie\n- Onderhoud\n- Overig'])
+        str(measure["Schade omschrijving"])
+        if idx in idx_schades
+        else str(measure["Bevinding:\n- Inspectie\n- Onderhoud\n- Overig"])
     )
     table.cell(counter + 1, 2).text = schade_omschrijving
     table.cell(counter + 1, 2).paragraphs[0].style = cell_style
 
-    table.cell(counter + 1, 3).text = str(measure['Advies mutatie I-ORA & Onderhoud'])
+    table.cell(counter + 1, 3).text = str(measure["Advies mutatie I-ORA & Onderhoud"])
     table.cell(counter + 1, 3).paragraphs[0].style = cell_style
 
-    prestatie = str(measure['Maatregel omschrijving']) if idx in idx_schades else ""
+    prestatie = str(measure["Maatregel omschrijving"]) if idx in idx_schades else ""
     table.cell(counter + 1, 4).text = prestatie
     table.cell(counter + 1, 4).paragraphs[0].style = cell_style
 
     adviesjaar = (
         f"Adviesjaar: {str(measure['Optimaal JVA Onderhoud'])} \n"
         f"Uiterst jaar: {str(measure['Uiterst JVU Onderhoud'])}"
-        if idx in idx_schades else ""
+        if idx in idx_schades
+        else ""
     )
+    table.cell(counter + 1, 5).text = adviesjaar
+    table.cell(counter + 1, 5).paragraphs[0].style = cell_style
     table.cell(counter + 1, 5).text = adviesjaar
     table.cell(counter + 1, 5).paragraphs[0].style = cell_style

@@ -13,17 +13,17 @@ It includes functionalities to:
 - Find and delete references to images with `.mpo` extensions in the workbook.
 """
 
-# Built-in imports
-import os
+# Built-in modules
 import logging
+import os
+import re
 
-# External imports
-import pandas as pd
+# External modules
 import openpyxl
+import pandas as pd
+import win32com.client
 from openpyxl.cell.rich_text import CellRichText, TextBlock
 from openpyxl.cell.text import InlineFont
-import re
-import win32com.client
 
 
 def load_workbook(path: str) -> openpyxl.Workbook:
@@ -38,7 +38,7 @@ def load_workbook(path: str) -> openpyxl.Workbook:
     """
     try:
         logging.debug(f"Loading Excel workbook from [{path}]...")
-        wb = openpyxl.load_workbook(path)  #, rich_text=True)
+        wb = openpyxl.load_workbook(path)  # , rich_text=True)
         logging.debug("Workbook loaded successfully.")
         return wb
     except FileNotFoundError:
@@ -47,7 +47,6 @@ def load_workbook(path: str) -> openpyxl.Workbook:
     except Exception as e:
         logging.error(f"An unexpected error occurred while loading the workbook: {e}")
         raise
-
 
 
 def styling_cell_with_colons(plain_text: str) -> openpyxl.cell.rich_text.CellRichText:
@@ -60,17 +59,16 @@ def styling_cell_with_colons(plain_text: str) -> openpyxl.cell.rich_text.CellRic
     Returns:
         openpyxl.cell.rich_text.CellRichText: Rich text object ready for Excel cell.
     """
-    
 
     rich_text = CellRichText()
     for line in plain_text.splitlines():
-        if ':' in line:
-            before_colon, after_colon = line.split(':', 1)
-            rich_text.append(TextBlock(text=before_colon + ':', font=InlineFont(b=True)))
-            rich_text.append(TextBlock(text=after_colon + '\n', font=InlineFont(b=False)))
+        if ":" in line:
+            before_colon, after_colon = line.split(":", 1)
+            rich_text.append(TextBlock(text=before_colon + ":", font=InlineFont(b=True)))
+            rich_text.append(TextBlock(text=after_colon + "\n", font=InlineFont(b=False)))
         else:
             rich_text.append(TextBlock(text=line, font=InlineFont(b=False)))
-    
+
     return rich_text
 
 
@@ -87,7 +85,7 @@ def find_ora_sheet_name(workbook) -> str | None:
     Returns:
         The sheet name if found, otherwise None.
     """
-    
+
     # If a string is given, open this path, and get the workbook object
     if isinstance(workbook, str):
         list_sheets = pd.ExcelFile(workbook).sheet_names
@@ -135,10 +133,10 @@ def delete_images(workbook, image_references):
     """
     for sheet_name, img in image_references:
         # Get the sheet by name
-        sheet = workbook[sheet_name]  
+        sheet = workbook[sheet_name]
         if hasattr(sheet, "_images"):  # Ensure the sheet has images
             # Check if the image is in the sheet's images
-            if img in sheet._images:  
+            if img in sheet._images:
                 sheet._images.remove(img)  # Remove the image
                 logging.info(f"Deleted image: {img.path} from sheet: {sheet_name}")
 
@@ -188,14 +186,6 @@ def styling_bijlage3_export(worksheet, excel: win32com.client.Dispatch) -> None:
         worksheet (Worksheet): The worksheet to style.
     """
 
-    # Determine template version from cell A2
-    rws_template = worksheet.Range("A2")
-    # Extract all digits from template version (e.g., "2.1.2" -> "212")
-    digits = re.findall(r'\d+', str(rws_template.Value))
-    full_version = int(''.join(digits) if digits else 0)
-    # Check if version is 2
-    version_number = 2 if full_version == 2 else 1
-
     # Unhide all columns first
     worksheet.Columns.Hidden = False
 
@@ -204,14 +194,9 @@ def styling_bijlage3_export(worksheet, excel: win32com.client.Dispatch) -> None:
         worksheet.AutoFilterMode = False
     worksheet.Rows.Hidden = False
 
-    # Hide columns and set print area based on template version
-    if version_number == 1:
-        worksheet.PageSetup.PrintArea = "A:CZ"
-        worksheet.Columns("AJ:BI").Hidden = True
-        worksheet.Columns("CB:CG").Hidden = True
-    else:
-        worksheet.PageSetup.PrintArea = "A:CB"
-        worksheet.Columns("BB:BG").Hidden = True
+    # Hide the part Inspectieplan in coloms BB:BG
+    worksheet.PageSetup.PrintArea = "A:CB"
+    worksheet.Columns("BB:BG").Hidden = True
 
     # Set version label
     worksheet.Range("K5").Value = "1.0 - Definitief"
@@ -254,7 +239,7 @@ def export_to_pdf(excel_path: str, pdf_path: str, sheet_name: str = None) -> Non
         logging.info(f"Created directory: {save_dir}")
     try:
         import win32com.client
-        
+
         excel = win32com.client.Dispatch("Excel.Application")
         excel.Visible = False
         excel.DisplayAlerts = False  # Suppress pop-up alerts
@@ -273,4 +258,5 @@ def export_to_pdf(excel_path: str, pdf_path: str, sheet_name: str = None) -> Non
         wb.Close(False)
         excel.Quit()
     except Exception as e:
+        raise RuntimeError(f"Failed to export Excel to PDF: {e}")
         raise RuntimeError(f"Failed to export Excel to PDF: {e}")

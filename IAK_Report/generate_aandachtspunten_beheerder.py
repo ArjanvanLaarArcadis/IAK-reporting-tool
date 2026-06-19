@@ -40,33 +40,34 @@ Usage:
 Run this script directly to generate "Bijlage 9 - Aandachtspunten Beheerder" documents
 for all objects in the batch listed in config.
 """
+
 # Built-in modules
-import os
-import time
-import logging
 import copy
 import datetime as dt
+import logging
+import os
+import time
 
 # External modules
-import pandas as pd
 import docx
-from docx.shared import Pt, RGBColor
+import pandas as pd
 from docx.enum.style import WD_STYLE_TYPE
 from docx.enum.table import WD_CELL_VERTICAL_ALIGNMENT
+from docx.shared import Pt, RGBColor
 
 # Local imports
-from .utils import (
-    load_config,
-    get_object_paths_codes,
+from IAK_Report.get_voortgang import get_voortgang, get_voortgang_params
+from IAK_Report.ora_to_word import load_inspectie_data, load_ora
+from IAK_Report.utils import (
     convert_docx_to_pdf,
+    get_object_paths_codes,
     list_pictures_for_object,
-    update_config_with_voortgang,
+    load_config,
     return_most_recent_ora,
-    setup_logger,
     save_document,
+    setup_logger,
+    update_config_with_voortgang,
 )
-from .get_voortgang import get_voortgang, get_voortgang_params
-from .ora_to_word import load_ora
 
 
 def create_word_document(template_path: str, variables: dict) -> docx.Document:
@@ -153,15 +154,11 @@ def extract_relevant_data(ORA: pd.DataFrame) -> pd.DataFrame:
     logging.info(
         "Filtering ORA DataFrame for rows containing 'aandachtspunt' and 'beheerder' (case-insensitive)."
     )
-    relevant_columns = [column for column in ORA.columns if column.startswith('Categorie')]
+    relevant_columns = [column for column in ORA.columns if column.startswith("Categorie")]
     select_column = relevant_columns[0] if relevant_columns else "Advies mutatie I-ORA & Onderhoud"
     return ORA[
-        ORA[select_column].str.contains(
-            "aandachtspunt", case=False, na=False
-        )
-        & ORA[select_column].str.contains(
-            "beheerder", case=False, na=False
-        )
+        ORA[select_column].str.contains("aandachtspunt", case=False, na=False)
+        & ORA[select_column].str.contains("beheerder", case=False, na=False)
     ]
 
 
@@ -207,14 +204,14 @@ def list_of_fotonummers(fotonummers: str) -> list:
 def _normalize_filename(filename: str) -> str:
     """
     Normalize a filename by converting to lowercase and removing all non-alphanumeric characters.
-    
+
     Args:
         filename (str): The filename to normalize.
-        
+
     Returns:
         str: Normalized filename containing only lowercase alphanumeric characters.
     """
-    return ''.join(c for c in filename.lower() if c.isalnum())
+    return "".join(c for c in filename.lower() if c.isalnum())
 
 
 def find_foto_path(fotonummer: str, imgs: list) -> str:
@@ -225,7 +222,7 @@ def find_foto_path(fotonummer: str, imgs: list) -> str:
     and returns the full path of the first image file that contains the given
     photo number in its name. Both the photo number and image filenames are
     normalized (lowercase, alphanumeric only) for flexible matching.
-    
+
     If multiple images match the photo number, the smallest file (compressed version)
     is returned.
 
@@ -236,32 +233,32 @@ def find_foto_path(fotonummer: str, imgs: list) -> str:
     Returns:
         str: The full file path of the matching image (smallest if multiple found),
              or raises FileNotFoundError if no match is found.
-    
+
     Raises:
         ValueError: If the photo number has an invalid file extension.
         FileNotFoundError: If no matching image is found.
     """
-    VALID_EXTENSIONS = {'.png', '.jpg', '.jpeg'}
-    
+    VALID_EXTENSIONS = {".png", ".jpg", ".jpeg"}
+
     # Validate and strip extension if present
     original_fotonummer = fotonummer
     fotonummer_name, ext = os.path.splitext(fotonummer)
-    
+
     if ext and ext.lower() not in VALID_EXTENSIONS:
         raise ValueError(
             f"Invalid extension [{ext}] in photo number [{original_fotonummer}]. "
             f"Valid extensions: {', '.join(VALID_EXTENSIONS)}. Please repair the ORA sheets."
         )
-    
+
     # Normalize the photo number: lowercase, alphanumeric only
     fotonummer_normalized = _normalize_filename(fotonummer_name)
-    
+
     if not fotonummer_normalized:
         raise ValueError(f"Photo number [{original_fotonummer}] is empty after normalization.")
-    
+
     # Collect all matching images
     matching_images = []
-    
+
     for fullfilename in imgs:
         # Extract filename without extension and normalize it
         filename = os.path.basename(fullfilename)
@@ -271,7 +268,7 @@ def find_foto_path(fotonummer: str, imgs: list) -> str:
         # Match if filename ends with photo number (handles cases like "9252" matching "DSCN9252")
         if name_normalized.endswith(fotonummer_normalized):
             matching_images.append(fullfilename)
-    
+
     # Handle no matches
     if not matching_images:
         common_path = os.path.commonpath(imgs) if imgs else "unknown path"
@@ -279,7 +276,7 @@ def find_foto_path(fotonummer: str, imgs: list) -> str:
             f"Image with photo number [{original_fotonummer}] (normalized: '{fotonummer_normalized}') "
             f"not found in [{common_path}]."
         )
-    
+
     # Return smallest file if multiple matches (compressed version)
     if len(matching_images) > 1:
         smallest_image = min(matching_images, key=os.path.getsize)
@@ -288,9 +285,11 @@ def find_foto_path(fotonummer: str, imgs: list) -> str:
             f"using smallest: {os.path.basename(smallest_image)}"
         )
         return smallest_image
-    
+
     # Single match found
-    logging.debug(f"Found photo for '{original_fotonummer}': {os.path.basename(matching_images[0])}")
+    logging.debug(
+        f"Found photo for '{original_fotonummer}': {os.path.basename(matching_images[0])}"
+    )
     return matching_images[0]
 
 
@@ -307,13 +306,13 @@ def copy_last_table(word_document: docx.Document) -> None:
     Returns:
         None
     """
-    #logging.debug("Copying the last table in the Word document.")
+    # logging.debug("Copying the last table in the Word document.")
     template = word_document.tables[-1]
     tbl = template._tbl
     new_tbl = copy.deepcopy(tbl)
     paragraph = word_document.add_paragraph()
     paragraph._p.addnext(new_tbl)
-    #logging.debug("Successfully copied and appended the last table.")
+    # logging.debug("Successfully copied and appended the last table.")
 
 
 def remove_last_table(word_document: docx.Document) -> None:
@@ -365,11 +364,18 @@ def process_aandachtspunten_beheerder(
             copy_last_table(word_document)
         logging.info(f"Duplicated tables for {len(ora_filtered) - 1} aandachtspunten.")
 
+    # sort ora_filtered based on "Bevinding" column, only the code before the colon,
+    # which is the attention point number
+    ora_filtered["Aandachtspunt_nummer"] = ora_filtered["Bevinding"].apply(
+        lambda x: x.split(":")[0].strip()[-2:] if isinstance(x, str) and ":" in x else ""
+    )
+    ora_filtered.sort_values("Aandachtspunt_nummer", inplace=True)
+
     # Populate each table with data
     for i, (idx, row) in enumerate(ora_filtered.iterrows()):
-        #logging.debug("Processing row %d: %s", idx, row.to_dict())
+        # logging.debug("Processing row %d: %s", idx, row.to_dict())
 
-        cell_content = row["Bevinding:\n- Inspectie\n- Onderhoud\n- Overig"]
+        cell_content = row["Bevinding"]
         if not ":" in cell_content:
             raise ValueError(
                 f"Cell content does not contain ':': {cell_content}. "
@@ -385,7 +391,7 @@ def process_aandachtspunten_beheerder(
 
         # Everything after the colon is the observation
         bevinding_ora = cell_content.partition(":")[2].strip()
-        
+
         # Extract photo numbers and their paths
         foto_column = [column for column, value in row.items() if "Foto" in column][0]
         fotos = list_of_fotonummers(row[foto_column])
@@ -394,22 +400,37 @@ def process_aandachtspunten_beheerder(
         path_foto1 = find_foto_path(foto1, path_imgs) if foto1 else None
         path_foto2 = find_foto_path(foto2, path_imgs) if foto2 else None
 
-        logging.info(
-            f"Aandachtspunt: {aandachtspunt}, Foto1: {foto1}, Foto2: {foto2}"
-        )
+        logging.info(f"Aandachtspunt: {aandachtspunt}, Foto1: {foto1}, Foto2: {foto2}")
+
+        # strip element and bouwdeel such that (+) and (Kopie) are removed,
+        # and only the first part of the element is taken (before the comma)
+        element = row["Element"].partition(",")[0].replace("(+)", "").replace("(Kopie)", "").strip()
+        bouwdeel = row["Bouwdeel"].replace("(+)", "").replace("(Kopie)", "").strip()
 
         word_document.tables[i].cell(0, 0).text = str("Aandachtspunt " + aandachtspunt)
         word_document.tables[i].cell(0, 0).paragraphs[0].style = cell_style
-        word_document.tables[i].cell(1, 1).text = str(row["Element"].partition(",")[0])
+        word_document.tables[i].cell(1, 1).text = str(element)
         word_document.tables[i].cell(1, 1).paragraphs[0].style = cell_style
-        word_document.tables[i].cell(2, 1).text = str(row["Bouwdeel"])
+        word_document.tables[i].cell(2, 1).text = str(bouwdeel)
         word_document.tables[i].cell(2, 1).paragraphs[0].style = cell_style
         word_document.tables[i].cell(4, 0).text = str(bevinding_ora)
         word_document.tables[i].cell(4, 0).paragraphs[0].style = cell_style
         word_document.tables[i].cell(4, 0).vertical_alignment = WD_CELL_VERTICAL_ALIGNMENT.TOP
-        relevant_columns = [column for column, value in row.items() if column.startswith('Categorie')]
-        select_column = relevant_columns[0] if relevant_columns else "Advies mutatie I-ORA & Onderhoud"
-        word_document.tables[i].cell(6, 0).text = str(row[select_column])
+
+        # we want to get the aandachtspunt written in "MaatregelNaam" column instead of the "Categorie" column.
+        # sometimes, this column is empty, then the user needs to fill in the correct value in the Excel.
+        relevant_columns = [
+            column for column, value in row.items() if column.startswith("MaatregelNaam")
+        ]
+        select_column = (
+            relevant_columns[0] if relevant_columns else "Advies mutatie I-ORA & Onderhoud"
+        )
+        if str(row[select_column]) == "nan":
+            word_document.tables[i].cell(
+                6, 0
+            ).text = "Geen 'MaatregelNaam' ingevuld (kolom AJ in 'Inspectie Data' sheet)"
+        else:
+            word_document.tables[i].cell(6, 0).text = str(row[select_column])
         word_document.tables[i].cell(6, 0).paragraphs[0].style = cell_style
         word_document.tables[i].cell(6, 0).vertical_alignment = WD_CELL_VERTICAL_ALIGNMENT.TOP
 
@@ -451,7 +472,6 @@ def save_aandachtspunten_beheerder(document: docx.Document, save_dir: str, objec
     return os.path.join(save_dir, file_name)
 
 
-
 def main():
     """
     Main function to orchestrate the processing of the PI report.
@@ -459,7 +479,7 @@ def main():
     # Generate timestamped log filename
     timestamp = dt.datetime.now().strftime("%Y%m%d-%H%M%S")
     log_filename = f"generate_aandachtspunten_beheerder_{timestamp}.log"
-    
+
     logger = setup_logger(log_filename)
     logger.info("Starting the generation process for aandachtspunten beheerder.")
     config_path = "./config.json"
@@ -467,7 +487,9 @@ def main():
 
     template_dir = "./templates"
     TEMPLATE_WORD = os.path.join(template_dir, "FORMAT_Bijlage9_AandachtspuntBeheerder.docx")
-    TEMPLATE_WORD_GEEN = os.path.join(template_dir, "FORMAT_Bijlage9_GeenAandachtspuntBeheerder.docx")
+    TEMPLATE_WORD_GEEN = os.path.join(
+        template_dir, "FORMAT_Bijlage9_GeenAandachtspuntBeheerder.docx"
+    )
 
     # Check if both template files exist
     if not os.path.exists(TEMPLATE_WORD):
@@ -477,23 +499,23 @@ def main():
         logger.error("Template file not found: %s", TEMPLATE_WORD_GEEN)
         raise FileNotFoundError(f"Template file not found: {TEMPLATE_WORD_GEEN}")
     logger.info("Template files set successfully.")
-    
+
     # Load the voortgang data
     if not config.get("voortgangs_sheet"):
         raise KeyError("Voortgangs sheet file not found in config.")
     excelfile = config["voortgangs_sheet"]
     df_voortgang = get_voortgang(
-        excelfile, 
-        abbrev=config.get("expand_name", False), 
-        names=config.get("expand_name_abbreviations", {})
-        )
+        excelfile,
+        abbrev=config.get("expand_name", False),
+        names=config.get("expand_name_abbreviations", {}),
+    )
 
     list_of_object_codes = get_object_paths_codes(config_file=config_path)
     failed_objects = []
 
     for object_path, object_code in list_of_object_codes:
         logger.info(f"Processing object path: {object_path}, object code: {object_code}")
-        
+
         voortgang = get_voortgang_params(df_voortgang=df_voortgang, bh_code=object_code)
         variables = update_config_with_voortgang(config, voortgang)
         save_dir = os.path.join(object_path, config.get("output_folder", ""))
@@ -501,10 +523,10 @@ def main():
             path_ora = return_most_recent_ora(object_path)
             print("Checking for images...")
             path_imgs = list_pictures_for_object(object_path)
-            ora = load_ora(path_ora)
-            ora_filtered = extract_relevant_data(ora)
+            inspectie_data = load_inspectie_data(path_ora)
+            ora_filtered = extract_relevant_data(inspectie_data)
             logger.info(f"The number of aandachtspunten voor beheerder is: {len(ora_filtered)}")
-            
+
             if len(ora_filtered) == 0:
                 logger.info("Making the word document with no aandachtspunten...")
                 word_document = create_word_document(TEMPLATE_WORD_GEEN, variables)
@@ -514,7 +536,7 @@ def main():
                 word_document = process_aandachtspunten_beheerder(
                     word_document, ora_filtered, path_imgs
                 )
-            
+
             document_path = save_aandachtspunten_beheerder(word_document, save_dir, object_code)
             logging.info(f"Word document saved successfully at: {document_path}")
             time.sleep(1)
