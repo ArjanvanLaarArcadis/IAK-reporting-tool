@@ -90,9 +90,7 @@ def find_inspectierapport(directory: str) -> str:
     # Walk through the directory and its subdirectories
     for root, dirs, files in os.walk(directory):
         for file in files:
-            if file.lower().startswith("inspectierapport") and file.lower().endswith(
-                ".xlsx"
-            ):
+            if file.lower().startswith("inspectierapport") and file.lower().endswith(".xlsx"):
                 # Get the full path and modification time of the inspectie
                 file_path = os.path.join(root, file)
                 matching_files.append(file_path)
@@ -209,9 +207,7 @@ def populate_title_page(
     logging.debug("Title Page populated and formatted successfully.")
 
 
-def populate_inhoud_sheet(
-    sheet: openpyxl.worksheet.worksheet.Worksheet, variables: dict
-) -> None:
+def populate_inhoud_sheet(sheet: openpyxl.worksheet.worksheet.Worksheet, variables: dict) -> None:
     """
     Populate and format the Inhoud (Sheet3).
 
@@ -247,7 +243,9 @@ def populate_aanbeveling_sheet(
     venr_text = f"V&R-indicatie:\nDe V&R-indicatie geeft weer in welk jaar de verwachte renovatie of vervanging gepland staat. Op basis van de ORA wordt hiervan een inschatting gemaakt. Voor dit object is de V&R-indicatie gesteld op {venr}. Hierbij dient uit te worden gegaan van een volledige renovatie van het object."
     geen_nader_onderzoek_text = "Nader onderzoek:\nZowel vanuit de opgestelde (i-)ORA als vanuit de uitgevoerde inspectiewerkzaamheden is geen noodzaak gebleken voor het uitvoeren van een nader onderzoek."
     wel_nader_onderzoek_text = f"Nader onderzoek:\nVanuit de uitgevoerde inspectiewerkzaamheden wordt het volgende nader onderzoek geadviseerd: {nader_onderzoek}"
-    geen_directe_maatregel_text = "Directe maatregelen:\nBij dit object zijn geen directe maatregelen noodzakelijk geacht."
+    geen_directe_maatregel_text = (
+        "Directe maatregelen:\nBij dit object zijn geen directe maatregelen noodzakelijk geacht."
+    )
     wel_directe_maatregel_text = f"Directe maatregelen:\nBij dit object zijn de volgende directe maatregelen noodzakelijk geacht: {directe_maatregel}"
     aandachtspunten_beheerder_text = "Aandachtspunten voor de beheerder:\nIn Bijlage 9: Aandachtspunten voor de beheerder zijn de schades opgenomen die geconstateerd zijn tijdens de inspectie maar, volgens de risicoanalyse, geen risico initiëren voor het functioneren van het object. Daarnaast zijn de schades opgenomen die vallen onder standaard verzorgend onderhoud"
 
@@ -267,16 +265,8 @@ def populate_aanbeveling_sheet(
         [
             intro_text,
             # venr_text,
-            (
-                wel_nader_onderzoek_text
-                if nader_onderzoek
-                else geen_nader_onderzoek_text
-            ),
-            (
-                wel_directe_maatregel_text
-                if directe_maatregel
-                else geen_directe_maatregel_text
-            ),
+            (wel_nader_onderzoek_text if nader_onderzoek else geen_nader_onderzoek_text),
+            (wel_directe_maatregel_text if directe_maatregel else geen_directe_maatregel_text),
             aandachtspunten_beheerder_text,
         ]
     )
@@ -292,9 +282,7 @@ def populate_aanbeveling_sheet(
     logging.debug("Aanbeveling populated and formatted successfully.")
 
 
-def populate_ihp_sheet(
-    sheet: openpyxl.worksheet.worksheet.Worksheet, variables: dict
-) -> None:
+def populate_ihp_sheet(sheet: openpyxl.worksheet.worksheet.Worksheet, variables: dict) -> None:
     """
     Populates the IHP sheet with the given variables.
 
@@ -310,9 +298,7 @@ def populate_ihp_sheet(
     logging.debug("IHP populated and formatted successfully.")
 
 
-def populate_miok_sheet(
-    sheet: openpyxl.worksheet.worksheet.Worksheet, variables: dict
-) -> None:
+def populate_miok_sheet(sheet: openpyxl.worksheet.worksheet.Worksheet, variables: dict) -> None:
     """
     Populate and format the MIOK sheet.
 
@@ -514,9 +500,7 @@ def populate_bevindingenv2_sheet(
     logging.debug("Bevindingenv2 populated and formatted successfully.")
 
 
-def populate_colofon_sheet(
-    sheet: openpyxl.worksheet.worksheet.Worksheet, variables: dict
-) -> None:
+def populate_colofon_sheet(sheet: openpyxl.worksheet.worksheet.Worksheet, variables: dict) -> None:
     """
     Populate and format the Colofon (Sheet12).
 
@@ -553,9 +537,7 @@ def populate_colofon_sheet(
     logging.debug("Colofon populated and formatted successfully.")
 
 
-def populate_bijlage1_sheet(
-    sheet: openpyxl.worksheet.worksheet.Worksheet, variables: dict
-) -> None:
+def populate_bijlage1_sheet(sheet: openpyxl.worksheet.worksheet.Worksheet, variables: dict) -> None:
     """
     Populate and format the Bijlage 1 (Sheet13).
 
@@ -570,9 +552,7 @@ def populate_bijlage1_sheet(
     logging.debug("Bijlage 1 populated and formatted successfully.")
 
 
-def populate_bijlage2_sheet(
-    sheet: openpyxl.worksheet.worksheet.Worksheet, variables: dict
-) -> None:
+def populate_bijlage2_sheet(sheet: openpyxl.worksheet.worksheet.Worksheet, variables: dict) -> None:
     """
     Populate and format the Bijlage 2 (Sheet14).
 
@@ -582,15 +562,11 @@ def populate_bijlage2_sheet(
     """
     logging.debug("Populating Bijlage 2 (Sheet14)...")
     sheet["B4"].font = FONT_ARIAL_16
-    sheet[
-        "C6"
-    ].value = "Nadere onderzoeken zijn binnen deze rapportage niet van toepassing."
+    sheet["C6"].value = "Nadere onderzoeken zijn binnen deze rapportage niet van toepassing."
     logging.debug("Bijlage 2 populated and formatted successfully.")
 
 
-def populate_bijlage3_sheet(
-    sheet: openpyxl.worksheet.worksheet.Worksheet, variables: dict
-) -> None:
+def populate_bijlage3_sheet(sheet: openpyxl.worksheet.worksheet.Worksheet, variables: dict) -> None:
     """
     Populate and format the Bijlage 3 (Sheet15).
 
@@ -603,9 +579,7 @@ def populate_bijlage3_sheet(
     logging.debug("Bijlage 3 populated and formatted successfully.")
 
 
-def populate_bijlage4_sheet(
-    sheet: openpyxl.worksheet.worksheet.Worksheet, variables: dict
-) -> None:
+def populate_bijlage4_sheet(sheet: openpyxl.worksheet.worksheet.Worksheet, variables: dict) -> None:
     """
     Populate and format the Bijlage 4 (Sheet16).
 
@@ -731,9 +705,7 @@ def populate_bijlage5_plus_return_next_idx(wb: openpyxl.Workbook) -> int:
         return start_index
 
 
-def populate_bijlage6_sheet(
-    sheet: openpyxl.worksheet.worksheet.Worksheet, variables: dict
-) -> None:
+def populate_bijlage6_sheet(sheet: openpyxl.worksheet.worksheet.Worksheet, variables: dict) -> None:
     """
     Populate and format the Bijlage 6 sheet.
 
@@ -749,9 +721,7 @@ def populate_bijlage6_sheet(
     logging.debug("Bijlage 6 populated and formatted successfully.")
 
 
-def populate_bijlage7_sheet(
-    sheet: openpyxl.worksheet.worksheet.Worksheet, variables: dict
-) -> None:
+def populate_bijlage7_sheet(sheet: openpyxl.worksheet.worksheet.Worksheet, variables: dict) -> None:
     """
     Populate and format the Bijlage 7 sheet.
 
@@ -764,9 +734,7 @@ def populate_bijlage7_sheet(
     logging.debug("Bijlage 7 populated and formatted successfully.")
 
 
-def populate_bijlage8_sheet(
-    sheet: openpyxl.worksheet.worksheet.Worksheet, variables: dict
-) -> None:
+def populate_bijlage8_sheet(sheet: openpyxl.worksheet.worksheet.Worksheet, variables: dict) -> None:
     """
     Populate and format the Bijlage 8 sheet.
 
@@ -798,9 +766,7 @@ def populate_bijlage8_2_sheet(
     logging.debug("Populating Bijlage 8.2 (Sheet)...")
     opdrachtnemer = variables.get("opdrachtnemer", "UNKNOWN")
     if str(sheet["F20"].value).endswith("(IN_UITVOERING)"):
-        sheet["F20"] = str(sheet["F20"].value).replace(
-            "(IN_UITVOERING)", "(VASTGESTELD)"
-        )
+        sheet["F20"] = str(sheet["F20"].value).replace("(IN_UITVOERING)", "(VASTGESTELD)")
     sheet.row_dimensions[7].height = 45
     sheet["F23"] = opdrachtnemer
     sheet.row_dimensions[18].height = 30
@@ -826,12 +792,8 @@ def populate_bijlage8_3_sheet(
         )
     ]
 
-    empty_rows = [
-        idx + start_sheet for idx, value in enumerate(combined_range) if not value
-    ]
-    filled_rows = [
-        idx + start_sheet for idx, value in enumerate(combined_range) if value
-    ]
+    empty_rows = [idx + start_sheet for idx, value in enumerate(combined_range) if not value]
+    filled_rows = [idx + start_sheet for idx, value in enumerate(combined_range) if value]
 
     end_range = 6
 
@@ -851,9 +813,7 @@ def populate_bijlage8_3_sheet(
 
         # Find the next filled row after next_empty to set end_range
         if next_empty:
-            end_range = next(
-                (row for row in filled_rows if row > next_empty), next_empty
-            )
+            end_range = next((row for row in filled_rows if row > next_empty), next_empty)
             end_range -= 1
         else:
             end_range = max_row_count + 1
@@ -888,9 +848,7 @@ def populate_bijlage8_3_sheet(
     logging.debug("Bijlage 8.3 populated and formatted successfully.")
 
 
-def populate_bijlage9_sheet(
-    sheet: openpyxl.worksheet.worksheet.Worksheet, variables: dict
-) -> None:
+def populate_bijlage9_sheet(sheet: openpyxl.worksheet.worksheet.Worksheet, variables: dict) -> None:
     """
     Populate and format the Bijlage 9 sheet.
 
@@ -922,9 +880,7 @@ def populate_bijlage10_sheet(
     logging.debug("Bijlage 10 populated and formatted successfully.")
 
 
-def update_config_variables(
-    sheet: openpyxl.worksheet.worksheet.Worksheet, variables: dict
-) -> dict:
+def update_config_variables(sheet: openpyxl.worksheet.worksheet.Worksheet, variables: dict) -> dict:
     """
     Update the config variables with values FROM the original worksheet.
 
@@ -947,9 +903,7 @@ def update_config_variables(
     return config_variables
 
 
-def process_pi_report_for_object(
-    object_path: str, report_path: str, config: dict
-) -> str:
+def process_pi_report_for_object(object_path: str, report_path: str, config: dict) -> str:
     """
     Process the PI report for a specific object.
 
@@ -997,27 +951,13 @@ def process_pi_report_for_object(
         wb_report[sheet_names[next_sheet_idx]], config_variables
     )  # TODO: Hier moet een check komen in voortgangslijst of er inspectietekeningen zijn.
 
-    populate_bijlage7_sheet(
-        wb_report[sheet_names[next_sheet_idx + 1]], config_variables
-    )
-    populate_bijlage8_sheet(
-        wb_report[sheet_names[next_sheet_idx + 4]], config_variables
-    )
-    populate_bijlage8_2_sheet(
-        wb_report[sheet_names[next_sheet_idx + 5]], config_variables
-    )
-    populate_bijlage8_3_sheet(
-        wb_report[sheet_names[next_sheet_idx + 6]], config_variables
-    )
-    populate_bijlage9_sheet(
-        wb_report[sheet_names[next_sheet_idx + 7]], config_variables
-    )
-    populate_bijlage10_sheet(
-        wb_report[sheet_names[next_sheet_idx + 8]], config_variables
-    )
-    set_footer(
-        wb_report, wb_report.sheetnames, config_variables, len(wb_report.sheetnames)
-    )
+    populate_bijlage7_sheet(wb_report[sheet_names[next_sheet_idx + 1]], config_variables)
+    populate_bijlage8_sheet(wb_report[sheet_names[next_sheet_idx + 4]], config_variables)
+    populate_bijlage8_2_sheet(wb_report[sheet_names[next_sheet_idx + 5]], config_variables)
+    populate_bijlage8_3_sheet(wb_report[sheet_names[next_sheet_idx + 6]], config_variables)
+    populate_bijlage9_sheet(wb_report[sheet_names[next_sheet_idx + 7]], config_variables)
+    populate_bijlage10_sheet(wb_report[sheet_names[next_sheet_idx + 8]], config_variables)
+    set_footer(wb_report, wb_report.sheetnames, config_variables, len(wb_report.sheetnames))
     logging.info("Finished populating the PI report.")
 
     # Save the workbook
@@ -1039,9 +979,7 @@ def main() -> None:
 
     logger = utils.setup_logger(log_filename)
     config = utils.load_config("./config.json")
-    logging.info(
-        f"Starting PI report processing for werkpakket [{config['werkpakket']}]"
-    )
+    logging.info(f"Starting PI report processing for werkpakket [{config['werkpakket']}]")
     failed_objects = []
 
     # Get the voortgangs data, based on the excel file (as set in config.json)
@@ -1061,14 +999,10 @@ def main() -> None:
             pi_report_path = find_inspectierapport(object_path)
             if not pi_report_path:
                 logging.error(f"Could not find inspectierapport for [{object_code}]")
-                raise FileNotFoundError(
-                    f"Inspectierapport not found for object [{object_code}]"
-                )
+                raise FileNotFoundError(f"Inspectierapport not found for object [{object_code}]")
 
             # All needed data found and set, so start processing the pi report
-            new_xlsx_filename = process_pi_report_for_object(
-                object_path, pi_report_path, config
-            )
+            new_xlsx_filename = process_pi_report_for_object(object_path, pi_report_path, config)
 
         except Exception as e:
             logging.error(f"Failed to process object [{object_code}]: {e}")
@@ -1081,9 +1015,7 @@ def main() -> None:
             xlsx_dir = os.path.dirname(new_xlsx_filename)
             xlsx_basename = os.path.basename(new_xlsx_filename)
             pdf_basename = xlsx_basename.replace(".xlsx", ".pdf")
-            pdf_filename = os.path.join(
-                xlsx_dir, config.get("output_folder", ""), pdf_basename
-            )
+            pdf_filename = os.path.join(xlsx_dir, config.get("output_folder", ""), pdf_basename)
             utilsxls.export_to_pdf(new_xlsx_filename, pdf_filename)
             logging.info(f"PI report printed to PDF for [{object_code}] successfully.")
 

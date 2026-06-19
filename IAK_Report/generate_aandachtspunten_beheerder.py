@@ -154,12 +154,8 @@ def extract_relevant_data(ORA: pd.DataFrame) -> pd.DataFrame:
     logging.info(
         "Filtering ORA DataFrame for rows containing 'aandachtspunt' and 'beheerder' (case-insensitive)."
     )
-    relevant_columns = [
-        column for column in ORA.columns if column.startswith("Categorie")
-    ]
-    select_column = (
-        relevant_columns[0] if relevant_columns else "Advies mutatie I-ORA & Onderhoud"
-    )
+    relevant_columns = [column for column in ORA.columns if column.startswith("Categorie")]
+    select_column = relevant_columns[0] if relevant_columns else "Advies mutatie I-ORA & Onderhoud"
     return ORA[
         ORA[select_column].str.contains("aandachtspunt", case=False, na=False)
         & ORA[select_column].str.contains("beheerder", case=False, na=False)
@@ -258,9 +254,7 @@ def find_foto_path(fotonummer: str, imgs: list) -> str:
     fotonummer_normalized = _normalize_filename(fotonummer_name)
 
     if not fotonummer_normalized:
-        raise ValueError(
-            f"Photo number [{original_fotonummer}] is empty after normalization."
-        )
+        raise ValueError(f"Photo number [{original_fotonummer}] is empty after normalization.")
 
     # Collect all matching images
     matching_images = []
@@ -373,9 +367,7 @@ def process_aandachtspunten_beheerder(
     # sort ora_filtered based on "Bevinding" column, only the code before the colon,
     # which is the attention point number
     ora_filtered["Aandachtspunt_nummer"] = ora_filtered["Bevinding"].apply(
-        lambda x: (
-            x.split(":")[0].strip()[-2:] if isinstance(x, str) and ":" in x else ""
-        )
+        lambda x: x.split(":")[0].strip()[-2:] if isinstance(x, str) and ":" in x else ""
     )
     ora_filtered.sort_values("Aandachtspunt_nummer", inplace=True)
 
@@ -412,13 +404,7 @@ def process_aandachtspunten_beheerder(
 
         # strip element and bouwdeel such that (+) and (Kopie) are removed,
         # and only the first part of the element is taken (before the comma)
-        element = (
-            row["Element"]
-            .partition(",")[0]
-            .replace("(+)", "")
-            .replace("(Kopie)", "")
-            .strip()
-        )
+        element = row["Element"].partition(",")[0].replace("(+)", "").replace("(Kopie)", "").strip()
         bouwdeel = row["Bouwdeel"].replace("(+)", "").replace("(Kopie)", "").strip()
 
         word_document.tables[i].cell(0, 0).text = str("Aandachtspunt " + aandachtspunt)
@@ -429,34 +415,24 @@ def process_aandachtspunten_beheerder(
         word_document.tables[i].cell(2, 1).paragraphs[0].style = cell_style
         word_document.tables[i].cell(4, 0).text = str(bevinding_ora)
         word_document.tables[i].cell(4, 0).paragraphs[0].style = cell_style
-        word_document.tables[i].cell(
-            4, 0
-        ).vertical_alignment = WD_CELL_VERTICAL_ALIGNMENT.TOP
+        word_document.tables[i].cell(4, 0).vertical_alignment = WD_CELL_VERTICAL_ALIGNMENT.TOP
 
         # we want to get the aandachtspunt written in "MaatregelNaam" column instead of the "Categorie" column.
         # sometimes, this column is empty, then the user needs to fill in the correct value in the Excel.
         relevant_columns = [
-            column
-            for column, value in row.items()
-            if column.startswith("MaatregelNaam")
+            column for column, value in row.items() if column.startswith("MaatregelNaam")
         ]
         select_column = (
-            relevant_columns[0]
-            if relevant_columns
-            else "Advies mutatie I-ORA & Onderhoud"
+            relevant_columns[0] if relevant_columns else "Advies mutatie I-ORA & Onderhoud"
         )
         if str(row[select_column]) == "nan":
             word_document.tables[i].cell(
                 6, 0
-            ).text = (
-                "Geen 'MaatregelNaam' ingevuld (kolom AJ in 'Inspectie Data' sheet)"
-            )
+            ).text = "Geen 'MaatregelNaam' ingevuld (kolom AJ in 'Inspectie Data' sheet)"
         else:
             word_document.tables[i].cell(6, 0).text = str(row[select_column])
         word_document.tables[i].cell(6, 0).paragraphs[0].style = cell_style
-        word_document.tables[i].cell(
-            6, 0
-        ).vertical_alignment = WD_CELL_VERTICAL_ALIGNMENT.TOP
+        word_document.tables[i].cell(6, 0).vertical_alignment = WD_CELL_VERTICAL_ALIGNMENT.TOP
 
         if foto1:
             logging.debug(f"Adding Foto1 to table {i}.")
@@ -474,9 +450,7 @@ def process_aandachtspunten_beheerder(
     return word_document
 
 
-def save_aandachtspunten_beheerder(
-    document: docx.Document, save_dir: str, object_code: str
-) -> str:
+def save_aandachtspunten_beheerder(document: docx.Document, save_dir: str, object_code: str) -> str:
     """
     Save the Word document (Bijlage 9 - Aandachtspunten Beheerder) to the specified location.
 
@@ -512,9 +486,7 @@ def main():
     config = load_config(config_path=config_path)
 
     template_dir = "./templates"
-    TEMPLATE_WORD = os.path.join(
-        template_dir, "FORMAT_Bijlage9_AandachtspuntBeheerder.docx"
-    )
+    TEMPLATE_WORD = os.path.join(template_dir, "FORMAT_Bijlage9_AandachtspuntBeheerder.docx")
     TEMPLATE_WORD_GEEN = os.path.join(
         template_dir, "FORMAT_Bijlage9_GeenAandachtspuntBeheerder.docx"
     )
@@ -542,9 +514,7 @@ def main():
     failed_objects = []
 
     for object_path, object_code in list_of_object_codes:
-        logger.info(
-            f"Processing object path: {object_path}, object code: {object_code}"
-        )
+        logger.info(f"Processing object path: {object_path}, object code: {object_code}")
 
         voortgang = get_voortgang_params(df_voortgang=df_voortgang, bh_code=object_code)
         variables = update_config_with_voortgang(config, voortgang)
@@ -555,9 +525,7 @@ def main():
             path_imgs = list_pictures_for_object(object_path)
             inspectie_data = load_inspectie_data(path_ora)
             ora_filtered = extract_relevant_data(inspectie_data)
-            logger.info(
-                f"The number of aandachtspunten voor beheerder is: {len(ora_filtered)}"
-            )
+            logger.info(f"The number of aandachtspunten voor beheerder is: {len(ora_filtered)}")
 
             if len(ora_filtered) == 0:
                 logger.info("Making the word document with no aandachtspunten...")
@@ -569,20 +537,14 @@ def main():
                     word_document, ora_filtered, path_imgs
                 )
 
-            document_path = save_aandachtspunten_beheerder(
-                word_document, save_dir, object_code
-            )
+            document_path = save_aandachtspunten_beheerder(word_document, save_dir, object_code)
             logging.info(f"Word document saved successfully at: {document_path}")
             time.sleep(1)
             pdf_document_path = convert_docx_to_pdf(document_path)
-            logging.info(
-                f"PDF document for object code: {object_code} at [{pdf_document_path}]"
-            )
+            logging.info(f"PDF document for object code: {object_code} at [{pdf_document_path}]")
         except Exception as e:
             failed_objects.append(object_code)
-            logging.error(
-                f"Failed to generate for object code: {object_code}. Error: {e}"
-            )
+            logging.error(f"Failed to generate for object code: {object_code}. Error: {e}")
 
     if failed_objects:
         logger.error(f"Failed to process the following objects: {failed_objects}")

@@ -81,9 +81,7 @@ def load_ora(path_ora: str) -> pd.DataFrame:
         # Get all sheet names and find the one that starts with "ORA"
         ora_sheet = utilsxls.find_ora_sheet_name(path_ora)
         if ora_sheet is None:
-            raise ValueError(
-                f"No sheet starting with 'ORA' found in the Excel file [{path_ora}]"
-            )
+            raise ValueError(f"No sheet starting with 'ORA' found in the Excel file [{path_ora}]")
 
         # The first 9 rows are skipped as they contain metadata. Further, the 11th row is dropped, it is a empty row below the header.
         ora = pd.read_excel(
@@ -99,9 +97,7 @@ def load_ora(path_ora: str) -> pd.DataFrame:
         # Additions are marked with a "(Ontbost)" or "(+)" or "+" in the "Bouwdeel" column.
         # These are removed to keep the "Bouwdeel" column clean.
         ora["Bouwdeel"] = (
-            ora["Bouwdeel"]
-            .str.replace(r"\(Ontbost\)|\(\+\)|\+", "", regex=True)
-            .str.strip()
+            ora["Bouwdeel"].str.replace(r"\(Ontbost\)|\(\+\)|\+", "", regex=True).str.strip()
         )
 
         return ora
@@ -153,9 +149,7 @@ def load_inspectie_data(path_ora: str) -> pd.DataFrame:
         raise
 
 
-def configure_document_styles(
-    document: docx.Document, style_name: str, font_size: int
-) -> None:
+def configure_document_styles(document: docx.Document, style_name: str, font_size: int) -> None:
     """
     Configure styles for the Word document.
 
@@ -184,17 +178,14 @@ def extract_relevant_ora_data(ora: pd.DataFrame) -> pd.DataFrame:
     """
     idx_schades = ora[ora["Schade nummer"].notnull()].index
     idx_aandachtspunt = ora[
-        ora["Advies mutatie I-ORA & Onderhoud"]
-        == "Aandachtspunt voor de volgende inspectie"
+        ora["Advies mutatie I-ORA & Onderhoud"] == "Aandachtspunt voor de volgende inspectie"
     ].index
     idx_prestatie_do = ora[
         ora["Advies mutatie I-ORA & Onderhoud"]
         == "Valt onder prestatiecontract / dagelijks onderhoud."
     ].index
 
-    combined_indices = idx_schades.append(
-        [idx_aandachtspunt, idx_prestatie_do]
-    ).sort_values()
+    combined_indices = idx_schades.append([idx_aandachtspunt, idx_prestatie_do]).sort_values()
     return ora.loc[combined_indices]
 
 
@@ -219,9 +210,7 @@ def add_photos_to_document(
     for i, foto_nummer in enumerate(fotonummers_list):
         foto_nummer = foto_nummer.strip()
         if foto_nummer and foto_nummer.lower() != "nan":
-            photo_path = glob.glob(
-                os.path.join(photo_loc, f"**/{foto_nummer}.*"), recursive=True
-            )
+            photo_path = glob.glob(os.path.join(photo_loc, f"**/{foto_nummer}.*"), recursive=True)
             if photo_path:
                 # Calculate the target column index for the photo
                 target_col = 6 + i  # Columns 6 and 7 for two photos
@@ -235,9 +224,7 @@ def add_photos_to_document(
                     )
 
 
-def create_word_document(
-    template_path: str, objectnaam: str, objectcode: str
-) -> docx.Document:
+def create_word_document(template_path: str, objectnaam: str, objectcode: str) -> docx.Document:
     """
     Create and configure a Word document based on a template.
 

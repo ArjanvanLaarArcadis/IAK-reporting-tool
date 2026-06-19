@@ -74,9 +74,7 @@ if __name__ == "__main__":
     config = utils.load_config(config_path="./config.json")
 
     for object_path, object_code in utils.get_object_paths_codes():
-        logging.info(
-            f"Processing object path: {object_path}, object code: {object_code}"
-        )
+        logging.info(f"Processing object path: {object_path}, object code: {object_code}")
         try:
             # bijlage_3 = file_starts_with_bijlage3(object_path)
             # if not bijlage_3:

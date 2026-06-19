@@ -53,9 +53,7 @@ def expand_abbreviations(df, names=NAMES) -> pd.DataFrame:
     for col in name_cols:
         df[col] = df[col].apply(
             lambda x: ", ".join(
-                names.get(
-                    name.strip(), name.strip()
-                )  # Apply mapping or keep the original name
+                names.get(name.strip(), name.strip())  # Apply mapping or keep the original name
                 for name in re.split(r"[\W]+", str(x))  # Split on non-word characters
             )
         )

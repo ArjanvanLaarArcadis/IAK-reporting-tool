@@ -64,12 +64,8 @@ def styling_cell_with_colons(plain_text: str) -> openpyxl.cell.rich_text.CellRic
     for line in plain_text.splitlines():
         if ":" in line:
             before_colon, after_colon = line.split(":", 1)
-            rich_text.append(
-                TextBlock(text=before_colon + ":", font=InlineFont(b=True))
-            )
-            rich_text.append(
-                TextBlock(text=after_colon + "\n", font=InlineFont(b=False))
-            )
+            rich_text.append(TextBlock(text=before_colon + ":", font=InlineFont(b=True)))
+            rich_text.append(TextBlock(text=after_colon + "\n", font=InlineFont(b=False)))
         else:
             rich_text.append(TextBlock(text=line, font=InlineFont(b=False)))
 
@@ -145,9 +141,7 @@ def delete_images(workbook, image_references):
                 logging.info(f"Deleted image: {img.path} from sheet: {sheet_name}")
 
 
-def save_and_finalize_workbook(
-    wb: openpyxl.Workbook, variables: dict, save_dir: str
-) -> str:
+def save_and_finalize_workbook(wb: openpyxl.Workbook, variables: dict, save_dir: str) -> str:
     """
     Save and finalize the workbook.
 
