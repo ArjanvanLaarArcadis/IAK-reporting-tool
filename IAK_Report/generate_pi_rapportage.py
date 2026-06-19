@@ -566,6 +566,8 @@ def populate_bijlage1_sheet(
     """
     logging.debug("Populating Bijlage 1 (Sheet13)...")
     sheet["B4"].font = FONT_ARIAL_16
+    # remove text in cell C6
+    sheet["C6"].value = ""
     logging.debug("Bijlage 1 populated and formatted successfully.")
 
 
@@ -581,6 +583,9 @@ def populate_bijlage2_sheet(
     """
     logging.debug("Populating Bijlage 2 (Sheet14)...")
     sheet["B4"].font = FONT_ARIAL_16
+    sheet[
+        "C6"
+    ].value = "Nadere onderzoeken zijn binnen deze rapportage niet van toepassing."
     logging.debug("Bijlage 2 populated and formatted successfully.")
 
 
@@ -913,6 +918,7 @@ def populate_bijlage10_sheet(
     criam = variables.get("criam", "UNKNOWN")
 
     sheet["C5"].font = FONT_ARIAL_16
+    sheet["D7"].value = "Het CRIAM is binnen deze rapportage niet van toepassing."
     sheet["D7"].font = FONT_ARIAL_10
     logging.debug("Bijlage 10 populated and formatted successfully.")
 
